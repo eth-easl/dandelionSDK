@@ -6,7 +6,12 @@
 #define dandelion __dandelion_global_data
 
 // does some computation and returns an owning pointer to the result
-int compute(void* data, size_t size, void** out_data, size_t* out_size);
+int compute(void* data, size_t size, void** out_data, size_t* out_size) {
+    *out_data = malloc(size);
+    memcpy(*out_data, data, size);
+    *out_size = size;
+    return 0;
+}
 
 int main() {
     // check that sets are long enough
