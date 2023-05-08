@@ -1,0 +1,4 @@
+set(SOURCES runtime.c)
+add_library(${RUNTIME_LIB} ${SOURCES})
+target_include_directories(${RUNTIME_LIB} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(${RUNTIME_LIB} ${SYSTEM_LIB})

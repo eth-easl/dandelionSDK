@@ -1,16 +1,26 @@
-project(dandelion-io)
-cmake_minimum_required(VERSION ${CMAKE_VERSION})
+project(dandelion-sdk)
+cmake_minimum_required(VERSION 3.20)
 
 set(LIBRARY "dandelion")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# target for compartment library
-add_library(${LIBRARY} STATIC
-  src/dandelion.c
-)
+set(LINUX_SYSCALL_LIB "linux_syscall")
+set(FREEBSD_SYSCALL_LIB "freebsd_syscall")
+set(SYSTEM_LIB "system")
+set(RUNTIME_LIB "runtime")
 
-# export include directory
-target_include_directories(${LIBRARY} PUBLIC include)
+add_subdirectory(syscall/linux)
+add_subdirectory(syscall/freebsd)
+add_subdirectory(system)
+add_subdirectory(runtime)
+
+# # target for compartment library
+# add_library(${LIBRARY} STATIC
+#   src/dandelion.c
+# )
+
+# # export include directory
+# target_include_directories(${LIBRARY} PUBLIC include)
 
 #set_target_properties(${LIBRARY} PROPERTIES LINKER_LANGUAGE C)
 #target_compile_options(${LIBRARY} PRIVATE ${NOCAP_COMPILE_FLAGS})
