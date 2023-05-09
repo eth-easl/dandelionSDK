@@ -9,8 +9,6 @@ set(FREEBSD_SYSCALL_LIB "freebsd_syscall")
 set(SYSTEM_LIB "system")
 set(RUNTIME_LIB "runtime")
 
-add_subdirectory(syscall/linux)
-add_subdirectory(syscall/freebsd)
 add_subdirectory(system)
 add_subdirectory(runtime)
 
