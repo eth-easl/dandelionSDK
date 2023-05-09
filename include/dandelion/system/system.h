@@ -6,6 +6,14 @@
 
 #include "dandelion/io_buffer.h"
 
+/*
+    This file contains the interface between the platform and the runtime.
+    It is not necessarily intented to be consumed directly by the user. Instead,
+    the user should use the runtime API, which is defined in runtime.h.
+    However, this interface is what the platform must implement.
+*/
+
+// Information about an input/output set
 struct io_set_info {
     // Name of the set (not necessarily null-terminated)
     const char* ident;

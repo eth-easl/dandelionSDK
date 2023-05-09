@@ -1,5 +1,5 @@
-#ifndef DANDELION_RUNTIME_H
-#define DANDELION_RUNTIME_H
+#ifndef _DANDELION_RUNTIME_H
+#define _DANDELION_RUNTIME_H
 
 #include <stddef.h>
 
