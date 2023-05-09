@@ -1,9 +1,9 @@
 #ifndef DANDELION_RUNTIME_H
 #define DANDELION_RUNTIME_H
 
-#include "dandelion/system/system.h"
+#include <stddef.h>
 
-#include "stddef.h"
+#include "dandelion/io_buffer.h"
 
 void dandelion_runtime_init(void);
 _Noreturn void dandelion_runtime_exit(void);

@@ -21,8 +21,8 @@ _Noreturn void _start() {
 
     struct io_buffer* input_buf = dandelion_runtime_get_input(0, 0);
     struct io_buffer* output_buf = dandelion_runtime_alloc(sizeof(struct io_buffer), _Alignof(struct io_buffer));
-    output_buf->ident = NULL;
-    output_buf->ident_len = 0;
+    output_buf->ident = "output_file";
+    output_buf->ident_len = sizeof("output_file") - 1;
     compute(input_buf->data, input_buf->data_len, &output_buf->data, &output_buf->data_len);
     dandelion_runtime_add_output(0, output_buf);
 

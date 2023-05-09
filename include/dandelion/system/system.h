@@ -1,21 +1,21 @@
-#ifndef DANDELION_SYSTEM_H
-#define DANDELION_SYSTEM_H
+#ifndef _DANDELION_SYSTEM_H
+#define _DANDELION_SYSTEM_H
 
 #include <stddef.h>
 #include <stdint.h>
 
-struct io_buffer {
-	const char* ident;
-	size_t ident_len;
-
-	void* data;
-	size_t data_len;
-};
+#include "dandelion/io_buffer.h"
 
 struct io_set_info {
+    // Name of the set (not necessarily null-terminated)
     const char* ident;
+    // Length of the name of the set
     size_t ident_len;
 
+    // Offset of the first buffer in the set in the list of all buffers
+    // NOTE: effectively, the number of buffers in set i is set[i + 1].offset - set[i].offset
+    // This is also the reason why the last set is a sentinel set; because it has an offset
+    // one past the end of the last input buffer.
     size_t offset;
 };
 
@@ -23,21 +23,32 @@ void __dandelion_system_init(void);
 _Noreturn void __dandelion_system_exit(void);
 
 struct dandelion_system_data {
+    // Exit code of the process, set by the runtime at exit
 	int exit_code;
 
+    // Heap bounds, initialized by platform before entry
 	uintptr_t heap_begin;
 	uintptr_t heap_end;
 
+    // Number of input sets (excluding the sentinel set)
     size_t input_sets_len;
+    // Input sets, initialized by the platform before entry.
+    // The last set is a sentinel set, which has an `offset`
+    // one past the end of the last input buffer.
     struct io_set_info* input_sets;
 
+    // Number of output sets (excluding the sentinel set)
     size_t output_sets_len;
+    // Same as input sets, but for output sets
     struct io_set_info* output_sets;
 
+    // Input buffers, initialized by the platform before entry
     struct io_buffer* input_bufs;
+    // Output buffers, set by the runtime at exit
     struct io_buffer* output_bufs;
 };
 
+// Global symbol available to the platform
 extern struct dandelion_system_data __dandelion_system_data;
 
 #endif // DANDELION_SYSTEM_H

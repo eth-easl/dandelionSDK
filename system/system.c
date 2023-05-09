@@ -1,4 +1,4 @@
-#include <dandelion/system/system.h>
+#include "dandelion/system/system.h"
 #include "system.h"
 
 struct dandelion_system_data __dandelion_system_data;
