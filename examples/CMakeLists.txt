@@ -1,3 +1,3 @@
-add_executable(simple_example simple.c)
-target_link_libraries(simple_example dandelion_runtime)
-target_compile_options(simple_example PRIVATE -nostdlib)
+add_executable(simple simple.c)
+target_link_libraries(simple dandelion_runtime)
+target_link_options(simple PRIVATE -nostdlib -static)

@@ -22,7 +22,7 @@ static void my_memcpy(void* dest, const void* src, size_t size) {
 	}
 }
 
-static int write(int fd, const void *buffer, size_t size, long *bytes_written) {
+static int my_write(int fd, const void *buffer, size_t size, long *bytes_written) {
 	long ret = __syscall(SYS_write, fd, buffer, size);
 	if (ret < 0) {
 		return -ret;
@@ -35,7 +35,7 @@ static int write_all(int fd, const void *buffer, size_t size) {
 	size_t written = 0;
 	while (written < size) {
 		long bytes_written;
-		int e = write(fd, (const char*)buffer + written, size - written, &bytes_written);
+		int e = my_write(fd, (const char*)buffer + written, size - written, &bytes_written);
 		if (e < 0) {
 			return e;
 		}
@@ -102,16 +102,16 @@ void __dandelion_system_platform_init(void) {
 
 	sysdata.input_bufs = input_bufs;
 	sysdata.input_sets = input_sets;
-	sysdata.input_sets_len = sizeof(input_sets) / sizeof(input_sets[0]);
+	sysdata.input_sets_len = sizeof(input_sets) / sizeof(input_sets[0]) - 1;
 
 	sysdata.output_bufs = NULL;
 	sysdata.output_sets = output_sets;
-	sysdata.output_sets_len = sizeof(output_sets) / sizeof(output_sets[0]);
+	sysdata.output_sets_len = sizeof(output_sets) / sizeof(output_sets[0]) - 1;
 
 
 	size_t alloc_size = 1ull << 32;
 	void* heap_ptr = vm_alloc(alloc_size);
-	if (heap_ptr != 0) {
+	if (heap_ptr == NULL) {
 		__syscall(SYS_exit_group, 1);
 	}
 

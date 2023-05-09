@@ -4,7 +4,8 @@ endif()
 
 add_library(${SYSTEM_LIB} STATIC system.c)
 target_include_directories(${SYSTEM_LIB} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_compile_options(${SYSTEM_LIB} PRIVATE -nostdlib)
+target_compile_options(${SYSTEM_LIB} PRIVATE -fno-stack-protector)
+target_link_options(${SYSTEM_LIB} PRIVATE -nostdlib)
 
 if(DANDELION_SYSTEM MATCHES "debug")
     add_subdirectory(platform/debug)

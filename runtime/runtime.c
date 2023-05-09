@@ -77,8 +77,9 @@ void* dandelion_runtime_alloc(size_t size, size_t alignment) {
 	if (alloc_base + size > sysdata.heap_end) {
 		return NULL;
 	}
+    void* result = (void*)alloc_base;
 	alloc_base += size;
-	return (void*)alloc_base;
+	return result;
 }
 
 struct io_buffer* dandelion_runtime_get_input(size_t set_idx, size_t buf_idx) {
