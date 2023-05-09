@@ -23,7 +23,8 @@ struct io_set_info {
     // Offset of the first buffer in the set in the list of all buffers
     // NOTE: effectively, the number of buffers in set i is set[i + 1].offset - set[i].offset
     // This is also the reason why the last set is a sentinel set; because it has an offset
-    // one past the end of the last input buffer.
+    // one past the end of the last input buffer, allowing us to find the number of buffers
+    // in the last set.
     size_t offset;
 };
 
@@ -38,14 +39,16 @@ struct dandelion_system_data {
 	uintptr_t heap_begin;
 	uintptr_t heap_end;
 
-    // Number of input sets (excluding the sentinel set)
+    // Number of input sets (excluding the sentinel set).
+    // Initialized by the platform before entry.
     size_t input_sets_len;
     // Input sets, initialized by the platform before entry.
     // The last set is a sentinel set, which has an `offset`
     // one past the end of the last input buffer.
     struct io_set_info* input_sets;
 
-    // Number of output sets (excluding the sentinel set)
+    // Number of output sets (excluding the sentinel set).
+    // Initialized by the platform before entry
     size_t output_sets_len;
     // Same as input sets, but for output sets
     struct io_set_info* output_sets;
