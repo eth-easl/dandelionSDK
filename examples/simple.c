@@ -11,7 +11,7 @@ static void my_memcpy(void* dst, const void* src, size_t size) {
 // does some computation and returns an owning pointer to the result
 int compute(void* data, size_t size, void** out_data, size_t* out_size) {
     *out_data = dandelion_runtime_alloc(size, 1);
-    my_memcpy(out_data, data, size);
+    my_memcpy(*out_data, data, size);
     *out_size = size;
     return 0;
 }
