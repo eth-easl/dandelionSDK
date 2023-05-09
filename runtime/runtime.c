@@ -67,6 +67,7 @@ _Noreturn void dandelion_runtime_exit(void) {
     __dandelion_system_exit();
 }
 
+
 void* dandelion_runtime_alloc(size_t size, size_t alignment) {
 	static uintptr_t alloc_base = 0;
     if (alloc_base == 0) {
@@ -78,4 +79,34 @@ void* dandelion_runtime_alloc(size_t size, size_t alignment) {
 	}
 	alloc_base += size;
 	return (void*)alloc_base;
+}
+
+struct io_buffer* dandelion_runtime_get_input(size_t set_idx, size_t buf_idx) {
+    if (set_idx >= sysdata.input_sets_len) {
+        return NULL;
+    }
+    if (buf_idx >= rtdata.input_sets[set_idx].buffers_len) {
+        return NULL;
+    }
+    return &rtdata.input_sets[set_idx].buffers[buf_idx];
+}
+
+void dandelion_runtime_add_output(size_t set_idx, struct io_buffer* buf) {
+    if (set_idx >= sysdata.output_sets_len) {
+        return;
+    }
+    struct io_set* set = &rtdata.output_sets[set_idx];
+    if (set->buffers_len == set->buffers_cap) {
+        size_t new_cap = set->buffers_cap * 2;
+        if (new_cap == 0) {
+            new_cap = 1;
+        }
+        struct io_buffer* new_bufs = dandelion_runtime_alloc(new_cap * sizeof(struct io_buffer), _Alignof(struct io_buffer));
+        for (size_t i = 0; i < set->buffers_len; ++i) {
+            new_bufs[i] = set->buffers[i];
+        }
+        set->buffers = new_bufs;
+        set->buffers_cap = new_cap;
+    }
+    set->buffers[set->buffers_len++] = *buf;
 }

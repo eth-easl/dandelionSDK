@@ -1,16 +1,17 @@
 project(dandelion-sdk)
 cmake_minimum_required(VERSION 3.20)
 
-set(LIBRARY "dandelion")
+# set(LIBRARY "dandelion")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(LINUX_SYSCALL_LIB "linux_syscall")
 set(FREEBSD_SYSCALL_LIB "freebsd_syscall")
-set(SYSTEM_LIB "system")
-set(RUNTIME_LIB "runtime")
+set(SYSTEM_LIB "dandelion_system")
+set(RUNTIME_LIB "dandelion_runtime")
 
 add_subdirectory(system)
 add_subdirectory(runtime)
+add_subdirectory(examples)
 
 # # target for compartment library
 # add_library(${LIBRARY} STATIC

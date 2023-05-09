@@ -1,22 +1,40 @@
-#include <dandelion/system/system.h>
+#include "dandelion/system/system.h"
 
 #include <stddef.h>
 #include <stdint.h>
-#include <sys/types.h>
-#include <syscall.h>
+#include "syscall.h"
 
-static int write(int fd, const void *buffer, size_t size, ssize_t *bytes_written) {
-	auto ret = do_cp_syscall(SYS_write, fd, buffer, size);
-	if(int e = sc_error(ret); e)
-		return e;
-	*bytes_written = sc_int_result<ssize_t>(ret);
+#define sysdata __dandelion_system_data
+
+static size_t my_strlen(const char* string) {
+	size_t len = 0;
+	while (string[len]) {
+		++len;
+	}
+	return len;
+}
+
+static void my_memcpy(void* dest, const void* src, size_t size) {
+	char* d = (char*)dest;
+	const char* s = (const char*)src;
+	for (size_t i = 0; i < size; ++i) {
+		d[i] = s[i];
+	}
+}
+
+static int write(int fd, const void *buffer, size_t size, long *bytes_written) {
+	long ret = __syscall(SYS_write, fd, buffer, size);
+	if (ret < 0) {
+		return -ret;
+	}
+	*bytes_written = ret;
 	return 0;
 }
 
 static int write_all(int fd, const void *buffer, size_t size) {
 	size_t written = 0;
 	while (written < size) {
-		ssize_t bytes_written;
+		long bytes_written;
 		int e = write(fd, (const char*)buffer + written, size - written, &bytes_written);
 		if (e < 0) {
 			return e;
@@ -26,17 +44,17 @@ static int write_all(int fd, const void *buffer, size_t size) {
 	return 0;
 }
 
-static void dump_io_buf(const char* setid, io_buffer* buf) {
+static void dump_io_buf(const char* setid, struct io_buffer* buf) {
 	char tmp[256];
 	size_t setidlen = 0;
 	if (setid) {
-		setidlen = strlen(setid);
-		memcpy(tmp, setid, setidlen);
+		setidlen = my_strlen(setid);
+		my_memcpy(tmp, setid, setidlen);
 	}
 	size_t identlen = buf->ident_len;
 	if (buf->ident) {
 		tmp[setidlen] = ' ';
-		memcpy(tmp + setidlen + 1, buf->ident, identlen);
+		my_memcpy(tmp + setidlen + 1, buf->ident, identlen);
 		++identlen;
 	}
 	tmp[setidlen + identlen] = ':';
@@ -46,69 +64,59 @@ static void dump_io_buf(const char* setid, io_buffer* buf) {
 	write_all(1, "\n", 1);
 }
 
-static void dump_io_set(io_set* set) {
-	for (io_buffer* buf = set->buffers; buf != set->buffers + set->buffers_len; ++buf) {
-		dump_io_buf(set->ident, buf);
-	}
-}
-
 static void dump_global_data() {
-
-	dump_io_buf("stdout", &dandelion.stdout);
-	dump_io_buf("stderr", &dandelion.stderr);
-
-	for (auto* set = dandelion.output_sets; set != dandelion.output_sets + dandelion.output_sets_len; ++set) {
-		debug::dump_io_set(set);
+	for (size_t i = 0; i < sysdata.output_sets_len; ++i) {
+		struct io_set_info* set = &sysdata.output_sets[i];
+		size_t num_elems = sysdata.output_sets[i + 1].offset - set->offset;
+		for (size_t j = 0; j < num_elems; ++j) {
+			dump_io_buf(set->ident, &sysdata.output_bufs[set->offset + j]);
+		}
 	}
 }
 
-static int vm_map(void *hint, size_t size, int prot, int flags,
-		int fd, off_t offset, void **window) {
-	auto ret = do_syscall(SYS_mmap, hint, size, prot, flags, fd, offset);
-	// TODO: musl fixes up EPERM errors from the kernel.
-	if(int e = sc_error(ret); e)
-		return e;
-	*window = sc_ptr_result<void>(ret);
-	return 0;
-}
-
-static int vm_unmap(void *pointer, size_t size) {
-	auto ret = do_syscall(SYS_munmap, pointer, size);
-	if(int e = sc_error(ret); e)
-		return e;
-	return 0;
+static void* vm_alloc(size_t size) {
+	long ret = __syscall(SYS_mmap, NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (ret < 0 && ret > -4096) {
+		return NULL;
+	}
+	return (void*)ret;
 }
 
 void __dandelion_system_platform_init(void) {
 	static const char input_file_content[] = "This is an example input file";
 	static const char input_file_name[] = "input.txt";
-	static const char output_file_name[] = "root_output.txt";
-	static io_buffer example_input_file{input_file_name, sizeof(input_file_name) - 1, (void*)input_file_content, sizeof(input_file_content)};
-	static io_buffer example_output_file{output_file_name, sizeof(output_file_name) - 1, nullptr, 0};
 
-	static io_set input_sets[] = {
-		{nullptr, 0, &example_input_file, 1},
+	static struct io_set_info input_sets[] = {
+		{NULL, 0, 0},
+		{NULL, 0, 1},
 	};
-	static io_set output_sets[] = {
-		{nullptr, 0, &example_output_file, 1},
-		{"output", 6, nullptr, 0},
+	static struct io_set_info output_sets[] = {
+		{NULL, 0, 0},
+		{"output", sizeof("output") - 1, 0},
+		{NULL, 0, 0},
 	};
 
-	dandelion.stdin = {nullptr, 0, nullptr, 0};
+	static struct io_buffer input_bufs[] = {
+		{input_file_name, sizeof(input_file_name) - 1, (void*)input_file_content, sizeof(input_file_content)},
+	};
 
-	dandelion.input_sets = input_sets;
-	dandelion.input_sets_len = sizeof(input_sets) / sizeof(input_sets[0]);
+	sysdata.input_bufs = input_bufs;
+	sysdata.input_sets = input_sets;
+	sysdata.input_sets_len = sizeof(input_sets) / sizeof(input_sets[0]);
 
-	dandelion.output_sets = output_sets;
-	dandelion.output_sets_len = sizeof(output_sets) / sizeof(output_sets[0]);
+	sysdata.output_bufs = NULL;
+	sysdata.output_sets = output_sets;
+	sysdata.output_sets_len = sizeof(output_sets) / sizeof(output_sets[0]);
+
 
 	size_t alloc_size = 1ull << 32;
-	void* heap_ptr = nullptr;
+	void* heap_ptr = vm_alloc(alloc_size);
+	if (heap_ptr != 0) {
+		__syscall(SYS_exit_group, 1);
+	}
 
-	vm_map(nullptr, alloc_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0, &heap_ptr);
-
-	dandelion.heap_begin = (uintptr_t)heap_ptr;
-	dandelion.heap_end = dandelion.heap_begin + alloc_size;
+	sysdata.heap_begin = (uintptr_t)heap_ptr;
+	sysdata.heap_end = sysdata.heap_begin + alloc_size;
 }
 
 _Noreturn void __dandelion_system_platform_exit(void) {
