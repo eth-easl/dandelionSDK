@@ -63,6 +63,8 @@ _Noreturn void dandelion_runtime_exit(void) {
             raw_buf->data_len = tree_buf->data_len;
         }
     }
+    // sentinel set output
+    sysdata.output_sets[sysdata.output_sets_len].offset = current_offset;
 
     __dandelion_system_exit();
 }
