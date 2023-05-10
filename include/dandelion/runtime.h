@@ -6,8 +6,9 @@
 #include "dandelion/io_buffer.h"
 
 void dandelion_init(void);
-_Noreturn void dandelion_exit(void);
+_Noreturn void dandelion_exit(int exit_code);
 
+void dandelion_set_thread_pointer(void* ptr);
 void* dandelion_alloc(size_t size, size_t alignment);
 
 size_t dandelion_get_input_set_count(void);

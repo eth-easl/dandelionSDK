@@ -39,7 +39,8 @@ void dandelion_init(void) {
     }
 }
 
-_Noreturn void dandelion_exit(void) {
+_Noreturn void dandelion_exit(int exit_code) {
+    sysdata.exit_code = exit_code;
     // convert tree structure into raw output data
     size_t num_output_bufs = 0;
     for (size_t i = 0; i < sysdata.output_sets_len; ++i) {
@@ -69,6 +70,9 @@ _Noreturn void dandelion_exit(void) {
     __dandelion_system_exit();
 }
 
+void dandelion_set_thread_pointer(void* ptr) {
+    return __dandelion_system_set_thread_pointer(ptr);
+}
 
 void* dandelion_alloc(size_t size, size_t alignment) {
 	static uintptr_t alloc_base = 0;

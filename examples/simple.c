@@ -26,5 +26,5 @@ _Noreturn void _start() {
     compute(input_buf->data, input_buf->data_len, &output_buf->data, &output_buf->data_len);
     dandelion_add_output(0, output_buf);
 
-    dandelion_exit();
+    dandelion_exit(0);
 }
