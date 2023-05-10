@@ -1,6 +1,10 @@
 #ifndef _DANDELION_SYSTEM_H
 #define _DANDELION_SYSTEM_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -62,5 +66,9 @@ struct dandelion_system_data {
 
 // Global symbol available to the platform
 extern struct dandelion_system_data __dandelion_system_data;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // DANDELION_SYSTEM_H
