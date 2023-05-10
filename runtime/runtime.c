@@ -39,7 +39,7 @@ void dandelion_init(void) {
     }
 }
 
-_Noreturn void dandelion_exit(int exit_code) {
+void dandelion_exit(int exit_code) {
     sysdata.exit_code = exit_code;
     // convert tree structure into raw output data
     size_t num_output_bufs = 0;

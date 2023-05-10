@@ -8,7 +8,7 @@ void __dandelion_system_init(void) {
 
 }
 
-_Noreturn void __dandelion_system_exit(void) {
+void __dandelion_system_exit(void) {
 
     __dandelion_platform_exit();
 }

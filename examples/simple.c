@@ -16,7 +16,7 @@ int compute(void* data, size_t size, void** out_data, size_t* out_size) {
     return 0;
 }
 
-_Noreturn void _start() {
+void _start() {
     dandelion_init();
 
     struct io_buffer* input_buf = dandelion_get_input(0, 0);

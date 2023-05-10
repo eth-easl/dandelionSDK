@@ -120,7 +120,7 @@ void __dandelion_platform_init(void) {
 	sysdata.heap_end = sysdata.heap_begin + alloc_size;
 }
 
-_Noreturn void __dandelion_platform_exit(void) {
+void __dandelion_platform_exit(void) {
     dump_global_data();
 	__syscall(SYS_exit_group, 0);
     __builtin_unreachable();

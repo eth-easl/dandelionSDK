@@ -3,7 +3,7 @@
 
 void __dandelion_platform_init(void) {}
 
-_Noreturn void __dandelion_platform_exit(void) {
+void __dandelion_platform_exit(void) {
     __syscall(SYS_exit_group, 0);
     __builtin_unreachable();
 }
