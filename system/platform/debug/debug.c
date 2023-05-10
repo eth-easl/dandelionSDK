@@ -1,4 +1,5 @@
 #include "dandelion/system/system.h"
+#include "../../system.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -82,7 +83,7 @@ static void* vm_alloc(size_t size) {
 	return (void*)ret;
 }
 
-void __dandelion_system_platform_init(void) {
+void __dandelion_platform_init(void) {
 	static const char input_file_content[] = "This is an example input file";
 	static const char input_file_name[] = "input.txt";
 
@@ -119,8 +120,13 @@ void __dandelion_system_platform_init(void) {
 	sysdata.heap_end = sysdata.heap_begin + alloc_size;
 }
 
-_Noreturn void __dandelion_system_platform_exit(void) {
+_Noreturn void __dandelion_platform_exit(void) {
     dump_global_data();
 	__syscall(SYS_exit_group, 0);
     __builtin_unreachable();
+}
+
+void __dandelion_platform_set_thread_pointer(void *ptr) {
+	long ret = __syscall(SYS_arch_prctl, ARCH_SET_FS, ptr);
+	(void)ret;
 }

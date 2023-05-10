@@ -13,7 +13,9 @@ The target system is defined as an argument to cmake, i.e.
 - `CHERI`, for the platform using cheri isolation
 - `MMU_FREEBSD`, for the mmu-based platforms running on freebsd
 - `MMU_LINUX`, for mmu-based platforms running on linux
-- `DEBUG` (default), for running applications locally on a linux system, with mock inputs and outputs.
+- `DEBUG` (default), for running applications locally on a linux system with mock inputs,
+dumping outputs to the terminal when terminating.
+
 If no value is set, `DEBUG` will be used for the platform value.
 
 ## Examples

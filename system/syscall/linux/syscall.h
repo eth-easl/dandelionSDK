@@ -8,6 +8,8 @@
 #define SYS_arch_prctl 158
 #define SYS_exit_group 231
 
+#define ARCH_SET_FS 0x1002
+
 #define PROT_READ 0x1
 #define PROT_WRITE 0x2
 #define PROT_EXEC 0x4

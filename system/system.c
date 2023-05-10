@@ -4,11 +4,15 @@
 struct dandelion_system_data __dandelion_system_data;
 
 void __dandelion_system_init(void) {
-    __dandelion_system_platform_init();
+    __dandelion_platform_init();
 
 }
 
 _Noreturn void __dandelion_system_exit(void) {
 
-    __dandelion_system_platform_exit();
+    __dandelion_platform_exit();
+}
+
+void __dandelion_system_set_thread_pointer(void *ptr) {
+    return __dandelion_platform_set_thread_pointer(ptr);
 }

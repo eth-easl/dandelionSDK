@@ -5,12 +5,15 @@
 
 #include "dandelion/io_buffer.h"
 
-void dandelion_runtime_init(void);
-_Noreturn void dandelion_runtime_exit(void);
+void dandelion_init(void);
+_Noreturn void dandelion_exit(void);
 
-void* dandelion_runtime_alloc(size_t size, size_t alignment);
+void* dandelion_alloc(size_t size, size_t alignment);
 
-struct io_buffer* dandelion_runtime_get_input(size_t set_idx, size_t buf_idx);
-void dandelion_runtime_add_output(size_t set_idx, struct io_buffer* buf);
+size_t dandelion_get_input_set_count(void);
+size_t dandelion_get_output_set_count(void);
+size_t dandelion_input_get_buffer_count(size_t set_idx);
+struct io_buffer* dandelion_get_input(size_t set_idx, size_t buf_idx);
+void dandelion_add_output(size_t set_idx, struct io_buffer* buf);
 
 #endif

@@ -7,17 +7,17 @@
 
 struct runtime_data __runtime_global_data;
 
-void dandelion_runtime_init(void) {
+void dandelion_init(void) {
     __dandelion_system_init();
 
     // parse raw input data into tree structure
-    rtdata.input_sets = dandelion_runtime_alloc(sysdata.input_sets_len * sizeof(struct io_set), _Alignof(struct io_set));
+    rtdata.input_sets = dandelion_alloc(sysdata.input_sets_len * sizeof(struct io_set), _Alignof(struct io_set));
     for (size_t i = 0; i < sysdata.input_sets_len; ++i) {
         struct io_set* set = &rtdata.input_sets[i];
         size_t num_bufs = sysdata.input_sets[i + 1].offset - sysdata.input_sets[i].offset;
         set->ident = sysdata.input_sets[i].ident;
         set->ident_len = sysdata.input_sets[i].ident_len;
-        set->buffers = dandelion_runtime_alloc(num_bufs * sizeof(struct io_buffer), _Alignof(struct io_buffer));
+        set->buffers = dandelion_alloc(num_bufs * sizeof(struct io_buffer), _Alignof(struct io_buffer));
         set->buffers_len = num_bufs;
         set->buffers_cap = num_bufs;
         for (size_t j = 0; j < num_bufs; ++j) {
@@ -29,7 +29,7 @@ void dandelion_runtime_init(void) {
         }
     }
 
-    rtdata.output_sets = dandelion_runtime_alloc(sysdata.output_sets_len * sizeof(struct io_set), _Alignof(struct io_set));
+    rtdata.output_sets = dandelion_alloc(sysdata.output_sets_len * sizeof(struct io_set), _Alignof(struct io_set));
     for (size_t i = 0; i < sysdata.output_sets_len; ++i) {
         rtdata.output_sets[i].ident = sysdata.output_sets[i].ident;
         rtdata.output_sets[i].ident_len = sysdata.output_sets[i].ident_len;
@@ -39,14 +39,14 @@ void dandelion_runtime_init(void) {
     }
 }
 
-_Noreturn void dandelion_runtime_exit(void) {
+_Noreturn void dandelion_exit(void) {
     // convert tree structure into raw output data
     size_t num_output_bufs = 0;
     for (size_t i = 0; i < sysdata.output_sets_len; ++i) {
         num_output_bufs += rtdata.output_sets[i].buffers_len;
     }
 
-    sysdata.output_bufs = dandelion_runtime_alloc(num_output_bufs * sizeof(struct io_buffer), _Alignof(struct io_buffer));
+    sysdata.output_bufs = dandelion_alloc(num_output_bufs * sizeof(struct io_buffer), _Alignof(struct io_buffer));
 
     size_t current_offset = 0;
     for (size_t i = 0; i < sysdata.output_sets_len; ++i) {
@@ -70,7 +70,7 @@ _Noreturn void dandelion_runtime_exit(void) {
 }
 
 
-void* dandelion_runtime_alloc(size_t size, size_t alignment) {
+void* dandelion_alloc(size_t size, size_t alignment) {
 	static uintptr_t alloc_base = 0;
     if (alloc_base == 0) {
         alloc_base = sysdata.heap_begin;
@@ -84,7 +84,22 @@ void* dandelion_runtime_alloc(size_t size, size_t alignment) {
 	return result;
 }
 
-struct io_buffer* dandelion_runtime_get_input(size_t set_idx, size_t buf_idx) {
+size_t dandelion_get_input_set_count(void) {
+    return sysdata.input_sets_len;
+}
+
+size_t dandelion_get_output_set_count(void) {
+    return sysdata.output_sets_len;
+}
+
+size_t dandelion_input_get_buffer_count(size_t set_idx) {
+    if (set_idx >= sysdata.input_sets_len) {
+        return 0;
+    }
+    return rtdata.input_sets[set_idx].buffers_len;
+}
+
+struct io_buffer* dandelion_get_input(size_t set_idx, size_t buf_idx) {
     if (set_idx >= sysdata.input_sets_len) {
         return NULL;
     }
@@ -94,7 +109,7 @@ struct io_buffer* dandelion_runtime_get_input(size_t set_idx, size_t buf_idx) {
     return &rtdata.input_sets[set_idx].buffers[buf_idx];
 }
 
-void dandelion_runtime_add_output(size_t set_idx, struct io_buffer* buf) {
+void dandelion_add_output(size_t set_idx, struct io_buffer* buf) {
     if (set_idx >= sysdata.output_sets_len) {
         return;
     }
@@ -104,7 +119,7 @@ void dandelion_runtime_add_output(size_t set_idx, struct io_buffer* buf) {
         if (new_cap == 0) {
             new_cap = 1;
         }
-        struct io_buffer* new_bufs = dandelion_runtime_alloc(new_cap * sizeof(struct io_buffer), _Alignof(struct io_buffer));
+        struct io_buffer* new_bufs = dandelion_alloc(new_cap * sizeof(struct io_buffer), _Alignof(struct io_buffer));
         for (size_t i = 0; i < set->buffers_len; ++i) {
             new_bufs[i] = set->buffers[i];
         }
