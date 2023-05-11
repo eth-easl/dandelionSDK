@@ -3,17 +3,17 @@
 
 #include "syscall_arch.h"
 
-#define SYS_EXIT 1
-#define SYS_SYSARCH 165
+#define FREEBSD_SYS_exit 1
+#define FREEBSD_SYS_sysarch 165
 
 // from freebsd sources
-#define	AMD64_GET_FSBASE	128
-#define	AMD64_SET_FSBASE	129
-#define	AMD64_GET_GSBASE	130
-#define	AMD64_SET_GSBASE	131
-#define	AMD64_GET_XFPUSTATE	132
-#define	AMD64_SET_PKRU		133
-#define	AMD64_CLEAR_PKRU	134
+#define	FREEBSD_AMD64_GET_FSBASE	128
+#define	FREEBSD_AMD64_SET_FSBASE	129
+#define	FREEBSD_AMD64_GET_GSBASE	130
+#define	FREEBSD_AMD64_SET_GSBASE	131
+#define	FREEBSD_AMD64_GET_XFPUSTATE	132
+#define	FREEBSD_AMD64_SET_PKRU		133
+#define	FREEBSD_AMD64_CLEAR_PKRU	134
 
 #ifndef __scc
 #define __scc(X) ((long) (X))
