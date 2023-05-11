@@ -88,15 +88,15 @@ void* dandelion_alloc(size_t size, size_t alignment) {
 	return result;
 }
 
-size_t dandelion_get_input_set_count(void) {
+size_t dandelion_input_set_count(void) {
     return sysdata.input_sets_len;
 }
 
-size_t dandelion_get_output_set_count(void) {
+size_t dandelion_output_set_count(void) {
     return sysdata.output_sets_len;
 }
 
-size_t dandelion_input_get_buffer_count(size_t set_idx) {
+size_t dandelion_input_buffer_count(size_t set_idx) {
     if (set_idx >= sysdata.input_sets_len) {
         return 0;
     }
@@ -113,7 +113,7 @@ struct io_buffer* dandelion_get_input(size_t set_idx, size_t buf_idx) {
     return &rtdata.input_sets[set_idx].buffers[buf_idx];
 }
 
-void dandelion_add_output(size_t set_idx, struct io_buffer* buf) {
+void dandelion_add_output(size_t set_idx, struct io_buffer buf) {
     if (set_idx >= sysdata.output_sets_len) {
         return;
     }
@@ -130,5 +130,40 @@ void dandelion_add_output(size_t set_idx, struct io_buffer* buf) {
         set->buffers = new_bufs;
         set->buffers_cap = new_cap;
     }
-    set->buffers[set->buffers_len++] = *buf;
+    set->buffers[set->buffers_len++] = buf;
+}
+
+size_t dandelion_output_buffer_count(size_t set_idx) {
+    if (set_idx >= sysdata.output_sets_len) {
+        return 0;
+    }
+    return rtdata.output_sets[set_idx].buffers_len;
+}
+
+const char* dandelion_input_set_ident(size_t set_idx) {
+    if (set_idx >= sysdata.input_sets_len) {
+        return NULL;
+    }
+    return rtdata.input_sets[set_idx].ident;
+}
+
+size_t dandelion_input_set_ident_len(size_t set_idx) {
+    if (set_idx >= sysdata.input_sets_len) {
+        return 0;
+    }
+    return rtdata.input_sets[set_idx].ident_len;
+}
+
+const char* dandelion_output_set_ident(size_t set_idx) {
+    if (set_idx >= sysdata.output_sets_len) {
+        return NULL;
+    }
+    return rtdata.output_sets[set_idx].ident;
+}
+
+size_t dandelion_output_set_ident_len(size_t set_idx) {
+    if (set_idx >= sysdata.output_sets_len) {
+        return 0;
+    }
+    return rtdata.output_sets[set_idx].ident_len;
 }
