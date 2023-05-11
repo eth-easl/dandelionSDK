@@ -1,0 +1,41 @@
+#ifndef _LINUX_SYSCALL_H
+#define _LINUX_SYSCALL_H
+
+#include "syscall_arch.h"
+
+#define SYS_write 1
+#define SYS_mmap 9
+#define SYS_arch_prctl 158
+#define SYS_exit_group 231
+
+#define ARCH_SET_FS 0x1002
+
+#define PROT_READ 0x1
+#define PROT_WRITE 0x2
+#define PROT_EXEC 0x4
+
+#define MAP_ANONYMOUS 0x20
+#define MAP_PRIVATE 0x2
+
+#ifndef __scc
+#define __scc(X) ((long) (X))
+typedef long syscall_arg_t;
+#endif
+
+#define __syscall1(n,a) __syscall1(n,__scc(a))
+#define __syscall2(n,a,b) __syscall2(n,__scc(a),__scc(b))
+#define __syscall3(n,a,b,c) __syscall3(n,__scc(a),__scc(b),__scc(c))
+#define __syscall4(n,a,b,c,d) __syscall4(n,__scc(a),__scc(b),__scc(c),__scc(d))
+#define __syscall5(n,a,b,c,d,e) __syscall5(n,__scc(a),__scc(b),__scc(c),__scc(d),__scc(e))
+#define __syscall6(n,a,b,c,d,e,f) __syscall6(n,__scc(a),__scc(b),__scc(c),__scc(d),__scc(e),__scc(f))
+#define __syscall7(n,a,b,c,d,e,f,g) __syscall7(n,__scc(a),__scc(b),__scc(c),__scc(d),__scc(e),__scc(f),__scc(g))
+
+#define __SYSCALL_NARGS_X(a,b,c,d,e,f,g,h,n,...) n
+#define __SYSCALL_NARGS(...) __SYSCALL_NARGS_X(__VA_ARGS__,7,6,5,4,3,2,1,0,)
+#define __SYSCALL_CONCAT_X(a,b) a##b
+#define __SYSCALL_CONCAT(a,b) __SYSCALL_CONCAT_X(a,b)
+#define __SYSCALL_DISP(b,...) __SYSCALL_CONCAT(b,__SYSCALL_NARGS(__VA_ARGS__))(__VA_ARGS__)
+
+#define __syscall(...) __SYSCALL_DISP(__syscall,__VA_ARGS__)
+
+#endif
