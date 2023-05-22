@@ -75,7 +75,7 @@ void dandelion_set_thread_pointer(void* ptr) {
 }
 
 void* dandelion_alloc(size_t size, size_t alignment) {
-	static uintptr_t alloc_base = 0;
+	static size_t alloc_base = 0;
     if (alloc_base == 0) {
         alloc_base = sysdata.heap_begin;
     }

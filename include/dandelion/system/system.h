@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 #include <stddef.h>
-#include <stdint.h>
 
 #include "dandelion/io_buffer.h"
 
@@ -41,8 +40,8 @@ struct dandelion_system_data {
 	int exit_code;
 
     // Heap bounds, initialized by platform before entry
-	uintptr_t heap_begin;
-	uintptr_t heap_end;
+	size_t heap_begin;
+	size_t heap_end;
 
     // Number of input sets (excluding the sentinel set).
     // Initialized by the platform before entry.
