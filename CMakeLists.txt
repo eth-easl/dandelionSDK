@@ -1,6 +1,9 @@
 project(dandelion-sdk)
 cmake_minimum_required(VERSION 3.20)
 
+set(CMAKE_C_COMPILER_WORKS TRUE)
+set(CMAKE_CXX_COMPILER_WORKS TRUE)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SYSTEM_LIB "dandelion_system")
