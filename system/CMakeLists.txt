@@ -3,7 +3,7 @@ set(DANDELION_PLATFORM "debug")
 endif()
 
 add_library(${SYSTEM_LIB} STATIC system.c)
-target_include_directories(${SYSTEM_LIB} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(${SYSTEM_LIB} PRIVATE ${DANDELION_ROOT}/include)
 target_compile_options(${SYSTEM_LIB} PRIVATE -fno-stack-protector)
 target_link_options(${SYSTEM_LIB} PRIVATE -nostdlib)
 
