@@ -20,3 +20,15 @@ If no value is set, `DEBUG` will be used for the platform value.
 
 ## Examples
 The examples are automatically built when compiling the library. 
+
+## Freestanding
+The GCC/Clang standard expects 4 functions to allways be provided in any environment (even freestanding), which allow the compiler to always just insert them.
+(https://gcc.gnu.org/onlinedocs/gcc/Standards.html)
+Because of this we also provide them.
+They are:
+- memcpy
+- memset
+- memmove
+- memcmp
+
+Currently they are just implemented somewhat sloppily, could optimize, have better QA or pull in a dependency if this becomes an issue

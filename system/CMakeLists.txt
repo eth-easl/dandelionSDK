@@ -2,10 +2,10 @@ if(NOT DANDELION_PLATFORM)
 set(DANDELION_PLATFORM "debug")
 endif()
 
-add_library(${SYSTEM_LIB} STATIC system.c)
+add_library(${SYSTEM_LIB} STATIC system.c freestanding.c)
 target_include_directories(${SYSTEM_LIB} PRIVATE ${DANDELION_ROOT}/include)
 target_compile_options(${SYSTEM_LIB} PRIVATE -fno-stack-protector)
-target_link_options(${SYSTEM_LIB} PRIVATE -nostdlib)
+target_link_options(${SYSTEM_LIB} PUBLIC -nostdlib)
 
 if(DANDELION_PLATFORM MATCHES "debug")
     add_subdirectory(platform/debug)

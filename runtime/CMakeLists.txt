@@ -1,5 +1,5 @@
 set(SOURCES runtime.c)
 add_library(${RUNTIME_LIB} STATIC ${SOURCES})
-target_link_options(${RUNTIME_LIB} PRIVATE -nostdlib)
+target_link_options(${RUNTIME_LIB} PUBLIC -nostdlib)
 target_include_directories(${RUNTIME_LIB} PUBLIC ${DANDELION_ROOT}/include)
-target_link_libraries(${RUNTIME_LIB} ${SYSTEM_LIB})
+target_link_libraries(${RUNTIME_LIB} PRIVATE ${SYSTEM_LIB})
