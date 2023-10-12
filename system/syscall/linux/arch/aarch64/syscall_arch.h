@@ -1,6 +1,10 @@
 #define __SYSCALL_LL_E(x) (x)
 #define __SYSCALL_LL_O(x) (x)
 
+#define SYS_write 64
+#define SYS_mmap 222
+#define SYS_exit_group 94
+
 #define __asm_syscall(...) do { \
 	__asm__ __volatile__ ( "svc 0" \
 	: "=r"(x0) : __VA_ARGS__ : "memory", "cc"); \

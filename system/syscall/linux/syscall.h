@@ -3,10 +3,6 @@
 
 #include "syscall_arch.h"
 
-#define SYS_write 1
-#define SYS_mmap 9
-#define SYS_exit_group 231
-
 #define PROT_READ 0x1
 #define PROT_WRITE 0x2
 #define PROT_EXEC 0x4
