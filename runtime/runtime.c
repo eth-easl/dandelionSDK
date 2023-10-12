@@ -70,10 +70,6 @@ void dandelion_exit(int exit_code) {
     __dandelion_system_exit();
 }
 
-void dandelion_set_thread_pointer(void* ptr) {
-    return __dandelion_system_set_thread_pointer(ptr);
-}
-
 void* dandelion_alloc(size_t size, size_t alignment) {
 	static size_t alloc_base = 0;
     if (alloc_base == 0) {

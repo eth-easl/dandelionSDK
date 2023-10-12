@@ -12,7 +12,3 @@ void __dandelion_system_exit(void) {
 
     __dandelion_platform_exit();
 }
-
-void __dandelion_system_set_thread_pointer(void *ptr) {
-    return __dandelion_platform_set_thread_pointer(ptr);
-}
