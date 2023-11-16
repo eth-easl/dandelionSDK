@@ -1,6 +1,13 @@
 #define __SYSCALL_LL_E(x) (x)
 #define __SYSCALL_LL_O(x) (x)
 
+#define SYS_write 1
+#define SYS_mmap 9
+#define SYS_arch_prctl 158
+#define SYS_exit_group 231
+
+#define ARCH_SET_FS 0x1002
+
 static __inline long __syscall0(long n)
 {
 	unsigned long ret;
