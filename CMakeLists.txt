@@ -5,6 +5,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 project(dandelion-sdk)
 
+option(FREESTANDING "toogles the include of memcpy, memset, memmove and memcmp" ON)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SYSTEM_LIB "dandelion_system")
