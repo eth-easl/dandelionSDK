@@ -20,6 +20,9 @@ dumping outputs to the terminal when terminating.
 
 If no value is set, `DEBUG` will be used for the platform value.
 
+To enable debug build set the cmake variable `CMAKE_BUILD_TYPE` to `Debug`.
+This can be done by adding `-DCMAKE_BUILD_TYPE=Debug` to the cmake command or setting it as an env variable. 
+
 ## Examples
 The examples are automatically built when compiling the library. 
 

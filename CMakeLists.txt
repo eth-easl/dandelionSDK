@@ -5,7 +5,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 project(dandelion-sdk)
 
-option(FREESTANDING "toogles the include of memcpy, memset, memmove and memcmp" ON)
+option(FREESTANDING "toggles the include of memcpy, memset, memmove and memcmp" ON)
+option(DEBUG "toggles debug build" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

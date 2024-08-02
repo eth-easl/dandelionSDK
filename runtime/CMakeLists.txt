@@ -1,5 +1,9 @@
-set(SOURCES runtime.c)
-add_library(${RUNTIME_LIB} STATIC ${SOURCES})
-target_link_options(${RUNTIME_LIB} PUBLIC -nostdlib)
+add_library(${RUNTIME_LIB} STATIC runtime.c)
+
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+target_compile_definitions(${RUNTIME_LIB} PRIVATE DEBUG)
+endif()
+
 target_include_directories(${RUNTIME_LIB} PUBLIC ${DANDELION_ROOT}/include)
+target_link_options(${RUNTIME_LIB} PUBLIC -nostdlib)
 target_link_libraries(${RUNTIME_LIB} PRIVATE ${SYSTEM_LIB})
