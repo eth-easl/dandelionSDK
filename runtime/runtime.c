@@ -42,7 +42,7 @@ void dandelion_init(void) {
     set->ident_len = sysdata.input_sets[i].ident_len;
     set->buffers =
         dandelion_alloc(num_bufs * sizeof(IoBuffer), _Alignof(IoBuffer));
-    if (set->buffers == NULL) {
+    if (set->buffers == NULL && num_bufs != 0) {
       sysdata.exit_code = DANDELION_OOM;
       __dandelion_system_exit();
       return;
@@ -84,7 +84,7 @@ void dandelion_exit(int exit_code) {
 
   sysdata.output_bufs =
       dandelion_alloc(num_output_bufs * sizeof(IoBuffer), _Alignof(IoBuffer));
-  if (sysdata.output_bufs == NULL) {
+  if (sysdata.output_bufs == NULL && num_output_bufs != 0) {
     sysdata.exit_code = DANDELION_OOM;
     __dandelion_system_exit();
     return;
@@ -194,21 +194,21 @@ void *dandelion_alloc(size_t size, size_t alignment) {
     return NULL;
   }
 
-  if (size == NULL) {
+  if (size == 0) {
     return NULL;
   }
 
   // convert to multiples of sizeof(size_t)
-  size = (size + sizeof(size_t) - 1) / sizeof(size_t);
+  size_t local_size = (size + sizeof(size_t) - 1) / sizeof(size_t);
   // convert alignment to multiples of sizeof(size_t), and at least 1
-  alignment = (alignment + sizeof(size_t) - 1) / sizeof(size_t);
-  alignment = alignment == 0 ? 1 : alignment;
+  size_t local_alignment = (alignment + sizeof(size_t) - 1) / sizeof(size_t);
+  local_alignment = local_alignment == 0 ? 1 : local_alignment;
 
   if (free_root == NULL) {
     // add 2 size_t to  ask size for minimal bookkeeping we need and alignment
     // so we guarantee to get a usable allocation. Round size to multiple of
     // default allocation.
-    size_t allocation_size = get_sbrk_size(size, alignment);
+    size_t allocation_size = get_sbrk_size(local_size, local_alignment);
     free_root = dandelion_sbrk(allocation_size);
     if (free_root == NULL) {
       return NULL;
@@ -234,11 +234,12 @@ void *dandelion_alloc(size_t size, size_t alignment) {
     }
     // is not occupied, check if allocation could fit
     // find how many indices until alignment
-    size_t index_mod = (current + 1) % alignment;
-    size_t rounding_indices = index_mod == 0 ? 0 : alignment - (index_mod);
+    size_t index_mod = (current + 1) % local_alignment;
+    size_t rounding_indices =
+        index_mod == 0 ? 0 : local_alignment - (index_mod);
     // need to subtract one as current is occupied
     size_t potential_size = end_index - (current + rounding_indices) - 1;
-    if (size <= potential_size && potential_size < smallest_size) {
+    if (local_size <= potential_size && potential_size < smallest_size) {
       smallest = current;
       smallest_size = potential_size;
     }
@@ -247,7 +248,7 @@ void *dandelion_alloc(size_t size, size_t alignment) {
 
   // if we have not found allocation that fits ask for more space
   if (smallest_size == MAX_VAL) {
-    size_t allocation_size = get_sbrk_size(size, alignment);
+    size_t allocation_size = get_sbrk_size(local_size, local_alignment);
     size_t *new_allocation = dandelion_sbrk(allocation_size);
     if (new_allocation == NULL) {
       return NULL;
@@ -274,7 +275,7 @@ void *dandelion_alloc(size_t size, size_t alignment) {
       size_t skip_end_index = new_allocation - free_root;
       free_root[last_descriptor] = skip_end_index | OCCUPIED_FLAG;
       free_root[skip_end_index] = last_descriptor | OCCUPIED_FLAG;
-      last_descriptor = skip_end_index + new_size;
+      last_descriptor = skip_end_index + new_size - 1;
       free_root[skip_end_index + 1] = last_descriptor - 1;
       free_root[last_descriptor - 1] = skip_end_index + 1;
       free_root[last_descriptor] = MAX_VAL;
@@ -284,17 +285,19 @@ void *dandelion_alloc(size_t size, size_t alignment) {
   // smallest has the index ready to take the allocation
 
   // check for alignment
-  size_t skip_indices = (smallest + 1) % alignment;
-  skip_indices = skip_indices == 0 ? 0 : alignment - skip_indices;
+  size_t start = smallest;
+  size_t end = free_root[start];
+  size_t skip_indices = (start + 1) % local_alignment;
+  skip_indices = skip_indices == 0 ? 0 : local_alignment - skip_indices;
   // if less than 3 indices are skipped not worth to make a new allocation,
   // try to extend previous one,
-  size_t actual_start = smallest + skip_indices;
+  size_t actual_start = start + skip_indices;
   if (skip_indices != 0) {
     if (skip_indices < 3) {
-      if (smallest != 0) {
+      if (start != 0) {
         // know that previous was occupied, otherwise would have been fused with
-        // smallest
-        size_t previous_start = free_root[smallest - 1] & ~OCCUPIED_FLAG;
+        // start
+        size_t previous_start = free_root[start - 1] & ~OCCUPIED_FLAG;
         free_root[previous_start] = (actual_start - 1) | OCCUPIED_FLAG;
         free_root[actual_start - 1] = previous_start | OCCUPIED_FLAG;
       } else {
@@ -305,13 +308,12 @@ void *dandelion_alloc(size_t size, size_t alignment) {
         free_root[actual_start - 1] = 0;
       }
     } else {
-      free_root[smallest] = actual_start - 1;
-      free_root[actual_start - 1] = smallest;
+      free_root[start] = actual_start - 1;
+      free_root[actual_start - 1] = start;
     }
   }
 
-  size_t end = free_root[smallest]; // know that it is not occupied
-  size_t actual_end = actual_start + size + 1;
+  size_t actual_end = actual_start + local_size + 1;
   // check distance between actual end and end
   if (end < actual_end) {
     // should never happend, as the allocation should be big enough at this
@@ -323,10 +325,8 @@ void *dandelion_alloc(size_t size, size_t alignment) {
     // make a new allocation after the end of this
     // can never merge with next one, since next is occupied, would have been
     // merge on free otherwise
-    if (actual_end + 1 < last_descriptor) {
-      free_root[actual_end + 1] = end;
-      free_root[end] = actual_end + 1;
-    }
+    free_root[actual_end + 1] = end;
+    free_root[end] = actual_end + 1;
   } else {
     // only one or two indices to spare before next allocation, so just extend
     // this allocation

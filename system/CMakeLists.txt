@@ -5,10 +5,11 @@ endif()
 add_library(${SYSTEM_LIB} STATIC system.c)
 if(FREESTANDING)
     target_sources(${SYSTEM_LIB} PRIVATE freestanding.c)
-endif(FREESTANDING)
+endif()
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(${SYSTEM_LIB} PRIVATE DEBUG)
+    target_compile_options(${SYSTEM_LIB} PRIVATE -g)
 endif()
 
 target_include_directories(${SYSTEM_LIB} PRIVATE ${DANDELION_ROOT}/include)

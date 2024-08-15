@@ -1,0 +1,543 @@
+use libc::{
+    __errno_location, c_char, c_int, mode_t, stat as stat_struct, O_CREAT, O_RDONLY, O_WRONLY,
+    S_IWUSR,
+};
+
+use crate::{
+    dandelion_structures::{
+        dandelion_exit_check, initialize_dandelion, DandelionItem, DandelionSet,
+    },
+    runtime::dandelion_exit,
+};
+
+extern "C" {
+    /// check if the file corresponding to the descriptor is connected to a terminal
+    fn dandelion_isatty(file: c_int) -> c_int;
+    /// link the file at one path to another path
+    fn dandelion_link(old: *const c_char, new: *const c_char) -> c_int;
+    /// remove path from pointing to file, if last path leading to file and if it is not open, remove file
+    fn dandelion_unlink(name: *const c_char) -> c_int;
+    /// open file at path with flags and read/write mode
+    fn dandelion_open(name: *const c_char, flags: c_int, mode: mode_t) -> c_int;
+    /// reposition file reading/writing offset
+    fn dandelion_lseek(file: c_int, offset: c_int, whenece: c_int) -> c_int;
+    /// read bytes from file corresponding to descriptor
+    fn dandelion_read(file: c_int, buffer: *mut c_char, length: c_int) -> c_int;
+    /// write data to file corresponding to file descriptor
+    fn dandelion_write(file: c_int, buffer: *const c_char, length: c_int) -> c_int;
+    /// close file corresponding to descriptor
+    fn dandelion_close(file: c_int) -> c_int;
+    /// get the stat for the file corresponding to the descriptor
+    fn dandelion_fstat(file: c_int, st: *mut stat_struct) -> c_int;
+    /// get stat for a file using path
+    fn dandelion_stat(name: *const c_char, st: *mut stat_struct) -> c_int;
+    /// initialize file system from input sets and create stdio
+    fn fs_initialize() -> c_int;
+    /// write files into contiguous buffers when necessary and add files as output buffers
+    fn fs_terminate() -> c_int;
+}
+
+fn test_write(test_slice: &[u8], file_descriptor: i32, item_name: &str) {
+    let heap_size = 16 * 4096;
+    let setup = initialize_dandelion(heap_size, Vec::new(), vec!["stdio"]);
+    dandelion_exit_check!(setup, "Should have initialized without error");
+
+    // initialize file system
+    let initialize_val = unsafe { fs_initialize() };
+    assert_eq!(0, initialize_val, "Failed to initialize file system");
+
+    // write to stdout
+    let written_bytes = unsafe {
+        dandelion_write(
+            file_descriptor,
+            test_slice.as_ptr() as *const i8,
+            test_slice.len() as i32,
+        )
+    };
+    assert_eq!(
+        test_slice.len() as i32,
+        written_bytes,
+        "Should have written the entire string, errno: {}",
+        unsafe { *__errno_location() }
+    );
+    // should always be able to write to STDOUT and STDERR, which are filedescriptors 1 and 2 respectively
+    // these should also be available without explicitly opening them
+    let finalize_error = unsafe { fs_terminate() };
+    assert_eq!(
+        0, finalize_error,
+        "finalizing file system should not have any errors"
+    );
+
+    unsafe { dandelion_exit(0) };
+    dandelion_exit_check!(setup, "Should have exited at end of test without errors");
+    // check that stdout and stderr are items in the set
+    let item_slice = setup.get_item_data("stdio", item_name);
+    assert_eq!(Some(test_slice), item_slice);
+}
+
+#[test]
+fn write_test() {
+    // test if writing works when write fits in a sinlge file chunk
+    // use stdout and stderr, as they do not rely on file open to be able to write
+    test_write("test".as_bytes(), 1, "stdout");
+    test_write("test".as_bytes(), 2, "stderr");
+    // write more that default chunck size so we know it works with mutliple file chunks
+    let large_size = 4096 * 2 + 77;
+    let mut large_vec = Vec::with_capacity(large_size);
+    large_vec.resize(large_size, 7u8);
+    test_write(&large_vec, 1, "stdout");
+    test_write(&large_vec, 2, "stderr");
+}
+
+fn test_read(stdin_content: &[u8], read_buffer_size: usize) {
+    let heap_size = 16 * 4096;
+    let setup = initialize_dandelion(
+        heap_size,
+        vec![DandelionSet {
+            ident: "stdio",
+            items: vec![DandelionItem {
+                ident: "stdin",
+                key: 0,
+                data: stdin_content.to_vec(),
+            }],
+        }],
+        Vec::new(),
+    );
+    dandelion_exit_check!(setup, "Should have initialized without error");
+
+    // // initialize file system
+    let initialize_val = unsafe { fs_initialize() };
+    assert_eq!(0, initialize_val, "Failed to initialize file system");
+
+    // // read to stdin
+    let mut read_buffer = Vec::with_capacity(read_buffer_size);
+    read_buffer.resize(read_buffer_size, 0u8);
+    for chunk in stdin_content.chunks(read_buffer_size) {
+        let read_bytes = unsafe {
+            dandelion_read(
+                0,
+                read_buffer.as_mut_ptr() as *mut i8,
+                read_buffer.len() as i32,
+            )
+        };
+        assert_eq!(
+            chunk.len() as i32,
+            read_bytes,
+            "Reading returning not the expected amount of bytes for chunk size {}",
+            read_buffer_size
+        );
+        assert_eq!(
+            chunk,
+            &read_buffer[0..read_bytes as usize],
+            "Read content no what was expected",
+        )
+    }
+}
+
+#[test]
+fn read_test() {
+    // test if reading works, using stdin as it does not rely on open to work.
+    // attempt to read from empty stdin as that should always be fine
+
+    // start with no input to stdin to check default behaviour
+    {
+        let heap_size = 16 * 4096;
+        let setup = initialize_dandelion(heap_size, Vec::new(), Vec::new());
+        dandelion_exit_check!(setup, "Should have initialized without error");
+
+        // initialize file system
+        let initialize_val = unsafe { fs_initialize() };
+        assert_eq!(0, initialize_val, "Failed to initialize file system");
+
+        // read to stdin
+        let mut read_buffer = [0i8; 12];
+        let read_bytes = unsafe {
+            dandelion_read(
+                0,
+                read_buffer.as_mut_ptr() as *mut i8,
+                read_buffer.len() as i32,
+            )
+        };
+        assert_eq!(
+            0, read_bytes,
+            "Reading empty stdin should always read 0 bytes",
+        );
+    }
+    // test with different input and buffer lengths
+    test_read("test".as_bytes(), 1);
+    test_read("test".as_bytes(), 2);
+    test_read("test".as_bytes(), 3);
+    test_read("test".as_bytes(), 4);
+    test_read("test".as_bytes(), 7);
+    // 16 bit pattern to cycle through
+    // use 2 8 bit counters, one counting up, the other counting down
+    let mut lower_half = (1u8..=255u8).cycle();
+    let mut upper_half = (1u8..=255u8).rev().cycle();
+    let total_size = 2 * 4096 + 77;
+    let mut data = Vec::new();
+    for _ in 0..total_size {
+        data.push(upper_half.next().unwrap());
+        data.push(lower_half.next().unwrap());
+    }
+    test_read(&data, 1);
+    test_read(&data, 2);
+    test_read(&data, 3);
+    test_read(&data, 4);
+    test_read(&data, 77);
+    test_read(&data, 999);
+}
+
+fn open_and_read(path: &str, expected_filedescriptor: c_int, expected_content: &[u8]) {
+    let input_file_desc = unsafe { dandelion_open(path.as_ptr() as *const i8, O_RDONLY, 0) };
+    assert_eq!(
+        expected_filedescriptor, input_file_desc,
+        "input file unexpected file descriptor for file {}",
+        path
+    );
+    // read to stdin
+    let mut read_buffer = Vec::with_capacity(expected_content.len());
+    read_buffer.resize(expected_content.len(), 0u8);
+    let read_bytes = unsafe {
+        dandelion_read(
+            input_file_desc,
+            read_buffer.as_mut_ptr() as *mut i8,
+            read_buffer.len() as i32,
+        )
+    };
+    assert_eq!(
+        expected_content.len(),
+        read_bytes as usize,
+        "Should be able to read entire expected content"
+    );
+    assert_eq!(expected_content, &read_buffer);
+}
+
+fn create_and_write(path: &str, expected_filedescriptor: c_int, content: &[u8]) {
+    let file_desc =
+        unsafe { dandelion_open(path.as_ptr() as *const i8, O_WRONLY | O_CREAT, S_IWUSR) };
+    assert_eq!(
+        expected_filedescriptor, file_desc,
+        "input file unexpected file descriptor for file {}",
+        path
+    );
+    // read to stdin
+    let written_bytes =
+        unsafe { dandelion_write(file_desc, content.as_ptr() as *mut i8, content.len() as i32) };
+    assert_eq!(
+        content.len(),
+        written_bytes as usize,
+        "Should be able to write entire content"
+    );
+}
+
+#[test]
+fn open_test() {
+    {
+        let heap_size = 16 * 4096;
+        let input_file_content = "abc".as_bytes();
+        let file_in_folder_content = "def".as_bytes();
+        let another_file_content = "ghi".as_bytes();
+        let input_sets = vec![
+            DandelionSet {
+                ident: "input_folder",
+                items: vec![DandelionItem {
+                    ident: "input_file",
+                    key: 0,
+                    data: input_file_content.to_vec(),
+                }],
+            },
+            DandelionSet {
+                ident: "input_nested",
+                items: vec![
+                    DandelionItem {
+                        ident: "nested_file/file_in_folder",
+                        key: 0,
+                        data: file_in_folder_content.to_vec(),
+                    },
+                    DandelionItem {
+                        ident: "nested_file/another_folder/another_file",
+                        key: 0,
+                        data: another_file_content.to_vec(),
+                    },
+                ],
+            },
+        ];
+        let output_sets = vec!["output_folder", "output_nested"];
+        let setup = initialize_dandelion(heap_size, input_sets, output_sets);
+        dandelion_exit_check!(setup, "Should have initialized without error");
+
+        // initialize file system
+        let initialize_val = unsafe { fs_initialize() };
+        assert_eq!(0, initialize_val, "Failed to initialize file system");
+
+        // open the input files
+        open_and_read("/input_folder/input_file\0", 3, input_file_content);
+        // check that folders inside the item name works
+        open_and_read(
+            "/input_nested/nested_file/file_in_folder\0",
+            4,
+            file_in_folder_content,
+        );
+        open_and_read(
+            "/input_nested/nested_file/another_folder/another_file\0",
+            5,
+            another_file_content,
+        );
+        create_and_write("/output_folder/output_file\0", 6, input_file_content);
+        create_and_write(
+            "/output_nested/nested_file/file_in_folder\0",
+            7,
+            file_in_folder_content,
+        );
+        create_and_write(
+            "/output_nested/nested_file/another_folder/another_file\0",
+            8,
+            another_file_content,
+        );
+        // get all files written to the setup struct
+        let finalize_error = unsafe { fs_terminate() };
+        assert_eq!(
+            0, finalize_error,
+            "finalizing file system should not have any errors"
+        );
+        unsafe { dandelion_exit(0) };
+        dandelion_exit_check!(setup, "Should have exited at end of test without errors");
+        // check the correct output was presented
+        let output_file_result = setup.get_item_data("output_folder", "output_file");
+        assert_eq!(Some(input_file_content), output_file_result);
+        let nested_file_result = setup.get_item_data("output_nested", "nested_file/file_in_folder");
+        assert_eq!(Some(file_in_folder_content), nested_file_result);
+        let another_file_result =
+            setup.get_item_data("output_nested", "nested_file/another_folder/another_file");
+        assert_eq!(Some(another_file_content), another_file_result);
+    }
+}
+
+#[test]
+fn close_test() {
+    // set up dandelion and initialize file system
+    let heap_size = 16 * 4096;
+    let setup = initialize_dandelion(heap_size, Vec::new(), Vec::new());
+    dandelion_exit_check!(setup, "Should have initialized without error");
+    let initialize_val = unsafe { fs_initialize() };
+    assert_eq!(0, initialize_val, "Failed to initialize file system");
+
+    // we can close stdin and check that we cannot read from it anymore
+    let stdin_close = unsafe { dandelion_close(0) };
+    assert_eq!(0, stdin_close);
+    // check that we can't close it again
+    let stdin_reclose = unsafe { dandelion_close(0) };
+    assert_eq!(-1, stdin_reclose);
+    // check that we can't read from it
+    let mut test_slice = [0u8; 1];
+    let read_bytes = unsafe {
+        dandelion_read(
+            0,
+            test_slice.as_mut_ptr() as *mut i8,
+            test_slice.len() as i32,
+        )
+    };
+    assert_eq!(-1, read_bytes);
+
+    // close stdout and check we can't write to it
+    let stdout_close = unsafe { dandelion_close(1) };
+    assert_eq!(0, stdout_close);
+    // check that we can't close it again
+    let stdout_reclose = unsafe { dandelion_close(1) };
+    assert_eq!(-1, stdout_reclose);
+    let written_bytes =
+        unsafe { dandelion_write(1, test_slice.as_ptr() as *const i8, test_slice.len() as i32) };
+    assert_eq!(-1, written_bytes);
+}
+
+#[test]
+fn link_test() {
+    // setup inputs, relink them to output folders and check if the outputs are available
+    let heap_size = 16 * 4096;
+    let file_name = "file";
+    let file_content = "abc".as_bytes();
+    let file_in_folder_name = "nested_file/file_in_folder";
+    let file_in_folder_content = "def".as_bytes();
+    let another_file_name = "nested_file/another_folder/another_file";
+    let another_file_content = "ghi".as_bytes();
+    let input_sets = vec![
+        DandelionSet {
+            ident: "input_folder",
+            items: vec![DandelionItem {
+                ident: file_name,
+                key: 0,
+                data: file_content.to_vec(),
+            }],
+        },
+        DandelionSet {
+            ident: "input_nested",
+            items: vec![
+                DandelionItem {
+                    ident: file_in_folder_name,
+                    key: 0,
+                    data: file_in_folder_content.to_vec(),
+                },
+                DandelionItem {
+                    ident: another_file_name,
+                    key: 0,
+                    data: another_file_content.to_vec(),
+                },
+            ],
+        },
+    ];
+    let output_sets = vec!["output_folder", "output_nested"];
+    let setup = initialize_dandelion(heap_size, input_sets, output_sets);
+    dandelion_exit_check!(setup, "Should have initialized without error");
+    let initialize_val = unsafe { fs_initialize() };
+    assert_eq!(0, initialize_val, "Failed to initialize file system");
+
+    // relink inputs to output folders
+    let file_old_path = format!("/input_folder/{}\0", file_name);
+    let file_new_path = format!("/output_folder/{}\0", file_name);
+    let link_result = unsafe {
+        dandelion_link(
+            file_old_path.as_ptr() as *const i8,
+            file_new_path.as_ptr() as *const i8,
+        )
+    };
+    assert_eq!(0, link_result);
+    let file_old_path = format!("/input_nested/{}\0", file_in_folder_name);
+    let file_new_path = format!("/output_nested/{}\0", file_in_folder_name);
+    let link_result = unsafe {
+        dandelion_link(
+            file_old_path.as_ptr() as *const i8,
+            file_new_path.as_ptr() as *const i8,
+        )
+    };
+    assert_eq!(0, link_result);
+    let file_old_path = format!("/input_nested/{}\0", another_file_name);
+    let file_new_path = format!("/output_nested/{}\0", another_file_name);
+    let link_result = unsafe {
+        dandelion_link(
+            file_old_path.as_ptr() as *const i8,
+            file_new_path.as_ptr() as *const i8,
+        )
+    };
+    assert_eq!(0, link_result);
+
+    // try different linkings that should produce error
+    // not existing old path
+    let link_result = unsafe {
+        dandelion_link(
+            "/non_exitent/file\0".as_ptr() as *const i8,
+            "\0".as_ptr() as *const i8,
+        )
+    };
+    assert_eq!(-1, link_result);
+    // already exsiting new_path
+    let link_result = unsafe {
+        dandelion_link(
+            file_old_path.as_ptr() as *const i8,
+            file_new_path.as_ptr() as *const i8,
+        )
+    };
+    assert_eq!(-1, link_result);
+    // should fail if the old file is a directory
+    let link_result = unsafe {
+        dandelion_link(
+            "/input_nested".as_ptr() as *const i8,
+            "/test_file".as_ptr() as *const i8,
+        )
+    };
+    assert_eq!(-1, link_result);
+
+    // check the files we expect in the output with the expected content
+    let finalize_error = unsafe { fs_terminate() };
+    assert_eq!(
+        0, finalize_error,
+        "finalizing file system should not have any errors"
+    );
+    unsafe { dandelion_exit(0) };
+    dandelion_exit_check!(setup, "Should have exited at end of test without errors");
+    // check the correct output was presented
+    let file_result = setup.get_item_data("output_folder", &file_name);
+    assert_eq!(Some(file_content), file_result);
+    let nested_file_result = setup.get_item_data("output_nested", "nested_file/file_in_folder");
+    assert_eq!(Some(file_in_folder_content), nested_file_result);
+    let another_file_result =
+        setup.get_item_data("output_nested", "nested_file/another_folder/another_file");
+    assert_eq!(Some(another_file_content), another_file_result);
+}
+
+#[test]
+fn unlink_test() {
+    // setup inputs, relink them to output folders and check if the outputs are available
+    let heap_size = 16 * 4096;
+    let file_name = "file";
+    let file_content = "abc".as_bytes();
+    let file_in_folder_name = "nested_file/file_in_folder";
+    let file_in_folder_content = "def".as_bytes();
+    let another_file_name = "nested_file/another_folder/another_file";
+    let another_file_content = "ghi".as_bytes();
+    let input_sets = vec![
+        DandelionSet {
+            ident: "folder",
+            items: vec![DandelionItem {
+                ident: file_name,
+                key: 0,
+                data: file_content.to_vec(),
+            }],
+        },
+        DandelionSet {
+            ident: "nested",
+            items: vec![
+                DandelionItem {
+                    ident: file_in_folder_name,
+                    key: 0,
+                    data: file_in_folder_content.to_vec(),
+                },
+                DandelionItem {
+                    ident: another_file_name,
+                    key: 0,
+                    data: another_file_content.to_vec(),
+                },
+            ],
+        },
+    ];
+    let output_sets = vec!["folder", "nested"];
+    let setup = initialize_dandelion(heap_size, input_sets, output_sets);
+    dandelion_exit_check!(setup, "Should have initialized without error");
+    let initialize_val = unsafe { fs_initialize() };
+    assert_eq!(0, initialize_val, "Failed to initialize file system");
+
+    // unlink folder so they are not added to output
+    let unlink_error = unsafe { dandelion_unlink("/folder/file\0".as_ptr() as *const i8) };
+    assert_eq!(0, unlink_error);
+    let unlink_error =
+        unsafe { dandelion_unlink("/nested/nested_file/file_in_folder\0".as_ptr() as *const i8) };
+    assert_eq!(0, unlink_error);
+    let unlink_error = unsafe {
+        dandelion_unlink("/nested/nested_file/another_folder/another_file\0".as_ptr() as *const i8)
+    };
+    assert_eq!(0, unlink_error);
+
+    // check that doing it twice fails
+    let unlink_error = unsafe {
+        dandelion_unlink("/nested/nested_file/another_folder/another_file\0".as_ptr() as *const i8)
+    };
+    assert_eq!(-1, unlink_error);
+
+    // check the files we expect in the output with the expected content
+    let finalize_error = unsafe { fs_terminate() };
+    assert_eq!(
+        0, finalize_error,
+        "finalizing file system should not have any errors"
+    );
+    unsafe { dandelion_exit(0) };
+    setup.print_sets_and_items();
+    dandelion_exit_check!(setup, "Should have exited at end of test without errors");
+    // check the correct output was presented
+    let file_result = setup.get_item_data("folder", &file_name);
+    assert_eq!(None, file_result);
+    let nested_file_result = setup.get_item_data("nested", &file_in_folder_name);
+    assert_eq!(None, nested_file_result);
+    let another_file_result = setup.get_item_data("nested", &another_file_name);
+    assert_eq!(None, another_file_result);
+}
+
+// TODO permission checks, write to read only file, etc.
