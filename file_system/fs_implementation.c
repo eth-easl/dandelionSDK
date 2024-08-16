@@ -412,12 +412,52 @@ int dandelion_write(int file, char *ptr, int len) {
   return writen_bytes;
 }
 
-int dandelion_fstat(int file, struct stat *st) {
-  // st->st_mode = S_IFCHR;
+static inline int __dandelion_stat(D_File *file, struct stat *st) {
+  // assume file is non null, caller is supposed to check that
+  struct stat local = {};
+  // local.st_dev = 0;
+  // local.st_ino = 0;
+  local.st_mode = file->mode;
+  local.st_nlink = file->hard_links;
+  // st->st_uid = 0;
+  // st->st_gid = 0;
+  // st->st_rdev = 0;
+  if (file->type == FILE) {
+    size_t total_size = 0;
+    for (FileChunk *current = file->content; current != 0;
+         current = current->next) {
+      total_size += current->used;
+    }
+    local.st_size = total_size;
+  } else {
+    local.st_size = 0;
+  }
+  local.st_blksize = FS_CHUNCK_SIZE;
+  local.st_blocks = (local.st_size + 511) / 512;
+  // struct timespec last_access = {};
+  // struct timespec last_modified = {};
+  // struct timespec last_change = {};
+  // local.st_atime = access_time;
+  // local.st_mtime = {};
+  // local.st_ctime = {};
+  *st = local;
   return 0;
 }
 
+int dandelion_fstat(int file, struct stat *st) {
+  D_File *current_file = open_files[file].file;
+  if (current_file == NULL) {
+    errno = EBADF;
+    return -1;
+  }
+  return __dandelion_stat(current_file, st);
+}
+
 int dandelion_stat(char *file, struct stat *st) {
-  // st->st_mode = S_IFCHR;
-  return 0;
+  D_File *current_file = find_file(file);
+  if (current_file == NULL) {
+    errno = ENOTDIR;
+    return -1;
+  }
+  return __dandelion_stat(current_file, st);
 }

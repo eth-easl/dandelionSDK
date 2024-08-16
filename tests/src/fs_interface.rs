@@ -29,7 +29,7 @@ extern "C" {
     /// close file corresponding to descriptor
     fn dandelion_close(file: c_int) -> c_int;
     /// get the stat for the file corresponding to the descriptor
-    fn dandelio_nfstat(file: c_int, st: *mut stat_struct) -> c_int;
+    fn dandelion_fstat(file: c_int, st: *mut stat_struct) -> c_int;
     /// get stat for a file using path
     fn dandelion_stat(name: *const c_char, st: *mut stat_struct) -> c_int;
     /// initialize file system from input sets and create stdio
@@ -612,4 +612,63 @@ fn unlink_test() {
     assert_eq!(None, another_file_result);
 }
 
+#[test]
+fn stat_test() {
+    // setup inputs, relink them to output folders and check if the outputs are available
+    let heap_size = 16 * 4096;
+    let file_name = "file";
+    let file_content = "abcdefg".as_bytes();
+    let input_sets = vec![DandelionSet {
+        ident: "folder",
+        items: vec![DandelionItem {
+            ident: file_name,
+            key: 0,
+            data: file_content.to_vec(),
+        }],
+    }];
+
+    let output_sets = vec!["folder", "nested"];
+    let setup = initialize_dandelion(heap_size, input_sets, output_sets);
+    dandelion_exit_check!(setup, "Should have initialized without error");
+    let initialize_val = unsafe { fs_initialize() };
+    assert_eq!(0, initialize_val, "Failed to initialize file system");
+
+    let mut stat: libc::stat = unsafe { std::mem::zeroed() };
+    let stat_result = unsafe { dandelion_stat("/folder/file\0".as_ptr() as *const i8, &mut stat) };
+    assert_eq!(0, stat_result);
+    assert_eq!(1, stat.st_nlink);
+    assert_eq!(7, stat.st_size);
+    assert_eq!(1, stat.st_blocks);
+}
+
+#[test]
+fn fstat_test() {
+    // setup inputs, relink them to output folders and check if the outputs are available
+    let heap_size = 16 * 4096;
+    let file_name = "file";
+    let file_content = "abcdefg".as_bytes();
+    let input_sets = vec![DandelionSet {
+        ident: "folder",
+        items: vec![DandelionItem {
+            ident: file_name,
+            key: 0,
+            data: file_content.to_vec(),
+        }],
+    }];
+
+    let output_sets = vec!["folder", "nested"];
+    let setup = initialize_dandelion(heap_size, input_sets, output_sets);
+    dandelion_exit_check!(setup, "Should have initialized without error");
+    let initialize_val = unsafe { fs_initialize() };
+    assert_eq!(0, initialize_val, "Failed to initialize file system");
+
+    let file_descriptor = unsafe { dandelion_open("/folder/file\0".as_ptr() as *const i8, 0, 0) };
+    assert_ne!(-1, file_descriptor);
+    let mut stat: libc::stat = unsafe { std::mem::zeroed() };
+    let stat_result = unsafe { dandelion_fstat(file_descriptor, &mut stat) };
+    assert_eq!(0, stat_result);
+    assert_eq!(2, stat.st_nlink);
+    assert_eq!(7, stat.st_size);
+    assert_eq!(1, stat.st_blocks);
+}
 // TODO permission checks, write to read only file, etc.
