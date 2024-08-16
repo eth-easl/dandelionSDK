@@ -1,6 +1,6 @@
 use libc::{
-    __errno_location, c_char, c_int, mode_t, stat as stat_struct, O_CREAT, O_RDONLY, O_WRONLY,
-    S_IWUSR,
+    __errno_location, c_char, c_int, mode_t, stat as stat_struct, O_CREAT, O_RDONLY, O_RDWR,
+    O_WRONLY, SEEK_CUR, SEEK_END, SEEK_SET, S_IWUSR,
 };
 
 use crate::{
@@ -12,7 +12,8 @@ use crate::{
 
 extern "C" {
     /// check if the file corresponding to the descriptor is connected to a terminal
-    fn dandelion_isatty(file: c_int) -> c_int;
+    /// not testing isatty for now, as it is hard coded to be true on stdin, stdout and stderr and false otherwise
+    // fn dandelion_isatty(file: c_int) -> c_int;
     /// link the file at one path to another path
     fn dandelion_link(old: *const c_char, new: *const c_char) -> c_int;
     /// remove path from pointing to file, if last path leading to file and if it is not open, remove file
@@ -28,7 +29,7 @@ extern "C" {
     /// close file corresponding to descriptor
     fn dandelion_close(file: c_int) -> c_int;
     /// get the stat for the file corresponding to the descriptor
-    fn dandelion_fstat(file: c_int, st: *mut stat_struct) -> c_int;
+    fn dandelio_nfstat(file: c_int, st: *mut stat_struct) -> c_int;
     /// get stat for a file using path
     fn dandelion_stat(name: *const c_char, st: *mut stat_struct) -> c_int;
     /// initialize file system from input sets and create stdio
@@ -348,6 +349,77 @@ fn close_test() {
     let written_bytes =
         unsafe { dandelion_write(1, test_slice.as_ptr() as *const i8, test_slice.len() as i32) };
     assert_eq!(-1, written_bytes);
+}
+
+#[test]
+fn lseek_test() {
+    let heap_size = 16 * 4096;
+    let mut input_slice = [1u8; 128];
+    for index in 0..128 {
+        input_slice[index] = (index + 1) as u8;
+    }
+    let inputs = vec![DandelionSet {
+        ident: "input",
+        items: vec![DandelionItem {
+            ident: "input_file",
+            key: 0,
+            data: input_slice.to_vec(),
+        }],
+    }];
+    let setup = initialize_dandelion(heap_size, inputs, Vec::new());
+    dandelion_exit_check!(setup, "Should have initialized without error");
+
+    // initialize file system
+    let initialize_val = unsafe { fs_initialize() };
+    assert_eq!(0, initialize_val, "Failed to initialize file system");
+
+    // open file
+    let file_descriptor =
+        unsafe { dandelion_open("/input/input_file\0".as_ptr() as *const i8, O_RDWR, 0) };
+    assert!(file_descriptor > 0);
+
+    let mut read_buffer = [0i8; 1];
+
+    // seek into middle from begginning
+    let mut expected_offset = 64;
+    let mut current_offset = unsafe { dandelion_lseek(file_descriptor, expected_offset, SEEK_SET) };
+    assert_eq!(expected_offset, current_offset);
+    // try reading to check it is actually at the expected place
+    let mut read_bytes = unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1) };
+    assert_eq!(1, read_bytes);
+    expected_offset += 1;
+    assert_eq!([expected_offset as i8], read_buffer);
+    // seek from current position
+    current_offset = unsafe { dandelion_lseek(file_descriptor, 4, SEEK_CUR) };
+    expected_offset += 4;
+    assert_eq!(expected_offset, current_offset);
+    read_bytes = unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1) };
+    assert_eq!(1, read_bytes);
+    expected_offset += 1;
+    assert_eq!([expected_offset as i8], read_buffer);
+    // seek from end
+    current_offset = unsafe { dandelion_lseek(file_descriptor, 4, SEEK_END) };
+    expected_offset = input_slice.len() as i32 + 4;
+    assert_eq!(
+        expected_offset,
+        current_offset,
+        "failed with errno {}",
+        unsafe { *__errno_location() }
+    );
+    // try read, should get nothing
+    read_bytes = unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1) };
+    assert_eq!(0, read_bytes);
+    // set from begginning to previous length and read a zero
+    current_offset =
+        unsafe { dandelion_lseek(file_descriptor, input_slice.len() as i32, SEEK_SET) };
+    assert_eq!(input_slice.len() as i32, current_offset);
+    read_bytes = unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1) };
+    assert_eq!(1, read_bytes);
+    assert_eq!([0i8], read_buffer);
+    // set from current and read a zero
+    current_offset = unsafe { dandelion_lseek(file_descriptor, 1, SEEK_CUR) };
+    assert_eq!(input_slice.len() as i32 + 2, current_offset);
+    assert_eq!([0i8], read_buffer);
 }
 
 #[test]

@@ -5,6 +5,7 @@
 #include <dandelion/system/system.h>
 
 #include <sys/fcntl.h>
+#include <unistd.h>
 
 extern D_File *fs_root;
 extern OpenFile *open_files;
@@ -156,7 +157,117 @@ int dandelion_close(int file) {
   return 0;
 }
 
-int dandelion_lseek(int file, int ptr, int dir) { return 0; }
+int dandelion_lseek(int file, int offset, int whence) {
+  int return_val = 0;
+  int total_offset = 0;
+  OpenFile *open_file = &open_files[file];
+  D_File *backing_file = open_file->file;
+  if (backing_file == NULL || backing_file->type != FILE) {
+    errno = EBADF;
+    return -1;
+  }
+  // perform seek in phases
+  // advance current reader to where the seek is supposed to start from
+  // advancing in the existing file
+  // appending 0ed gap at the end
+
+  // advance current reader to where seek wants to start
+  switch (whence) {
+  // set file offset to offset, if offset goes beyond fill gap with 0s
+  // could optimize by having flag in chunk that marks as gap chunk
+  case SEEK_SET:
+    open_file->offset = 0;
+    open_file->current_chunk = backing_file->content;
+    total_offset = 0;
+    break;
+  case SEEK_CUR:
+    // find current offset
+    if (open_file->current_chunk == NULL) {
+      open_file->current_chunk = backing_file->content;
+      open_file->offset = 0;
+    }
+    for (FileChunk *chunk = backing_file->content; chunk != NULL;
+         chunk = chunk->next) {
+      if (chunk != open_file->current_chunk) {
+        total_offset += chunk->used;
+      } else {
+        total_offset += open_file->offset;
+        break;
+      }
+    }
+    break;
+  case SEEK_END:; // need a statement after label
+    FileChunk *chunk = backing_file->content;
+    while (chunk != NULL) {
+      total_offset += chunk->used;
+      if (chunk->next == NULL) {
+        break;
+      } else {
+        chunk = chunk->next;
+      }
+    }
+    open_file->current_chunk = chunk;
+    open_file->offset = chunk->used;
+    break;
+  default:
+    errno = EINVAL;
+    return -1;
+  }
+  // current chunk is now set to the chunk we are supposed to append to
+  // if we can advance inside file do that
+  if (open_file->current_chunk != NULL) {
+    // check if we can advance in the current chunk, otherwise go to next
+    size_t to_advance = open_file->current_chunk->used - open_file->offset;
+    while (to_advance < offset && open_file->current_chunk->next != NULL) {
+      offset -= to_advance;
+      total_offset += to_advance;
+      open_file->current_chunk = open_file->current_chunk->next;
+      open_file->offset = 0;
+      to_advance = open_file->current_chunk->used;
+    }
+    // either advancing inside chunk is enough or there is no next chunk to
+    // advance to. That means we can take the smaller and advance by that much
+    // in any case.
+    to_advance = to_advance >= offset ? offset : to_advance;
+    open_file->offset += to_advance;
+    total_offset += to_advance;
+    offset -= to_advance;
+  }
+
+  // if offset is zero we can return otherwise need to append that much to
+  // current chunk
+  if (offset == 0) {
+    return total_offset;
+  }
+  FileChunk *new_chunk =
+      dandelion_alloc(sizeof(FileChunk), _Alignof(FileChunk));
+  if (new_chunk == NULL) {
+    errno = ENOMEM;
+    return -1;
+  }
+  // round allocation size to next multiple of usual block size
+  size_t allocation_size =
+      ((offset + FS_CHUNCK_SIZE - 1) / FS_CHUNCK_SIZE) * FS_CHUNCK_SIZE;
+  new_chunk->data = dandelion_alloc(allocation_size, _Alignof(max_align_t));
+  if (new_chunk->data == NULL) {
+    errno = ENOMEM;
+    return -1;
+  }
+  new_chunk->capacity = allocation_size;
+  new_chunk->used = offset;
+  new_chunk->next = NULL;
+  // have set current chunk in first phase to be up to date with backing file
+  // if still NULL, that means backing file also was NULL
+  if (open_file->current_chunk == NULL) {
+    backing_file->content = new_chunk;
+  } else {
+    open_file->current_chunk->next = new_chunk;
+  }
+  open_file->current_chunk = new_chunk;
+  open_file->offset = offset;
+
+  return total_offset + offset;
+}
 
 int dandelion_read(int file, char *ptr, int len) {
   // get the file descriptor

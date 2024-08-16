@@ -76,7 +76,7 @@ typedef struct OpenFile {
 D_File *find_file_in_dir(D_File *directory, Path file);
 
 // find a file using a absolute string path
-D_File *find_file(char *name);
+D_File *find_file(const char *name);
 
 // follow a path and create all directories on the way that do not already
 // exist prevent up prevents moving up in the file tree, to prevent input

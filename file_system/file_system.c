@@ -112,7 +112,7 @@ D_File *find_file_in_dir(D_File *directory, Path file) {
   return NULL;
 }
 
-D_File *find_file(char *name) {
+D_File *find_file(const char *name) {
   Path file_path = path_from_string(name);
   D_File *current = fs_root;
   for (Path subpath = get_component_advance(&file_path); subpath.length != 0;
