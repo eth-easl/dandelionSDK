@@ -1,0 +1,115 @@
+diff --git a/config.sub b/config.sub
+index 63c1f1c8b..2971cb107 100755
+--- a/config.sub
++++ b/config.sub
+@@ -1325,6 +1325,9 @@ case $os in
+ 	# First match some system type aliases that might get confused
+ 	# with valid system types.
+ 	# solaris* is a basic system type, with this one exception.
++	dandelion)
++		os=dandelion
++		;;
+ 	auroraux)
+ 		os=auroraux
+ 		;;
+@@ -1683,6 +1686,8 @@ fi
+ 
+ # Now, validate our (potentially fixed-up) OS.
+ case $os in
++	dandelion*)
++		;;
+ 	# Sometimes we do "kernel-libc", so those need to count as OSes.
+ 	musl* | newlib* | uclibc*)
+ 		;;
+diff --git a/newlib/Makefile.am b/newlib/Makefile.am
+index 4ab36b8d8..0eacadd84 100644
+--- a/newlib/Makefile.am
++++ b/newlib/Makefile.am
+@@ -113,19 +113,19 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *
+ # both libc.a and libm.a.  We build them in libm.a and copy them over,
+ # along with some required supporting routines.
+ MATHOBJS_IN_LIBC = \
+-	libm_a-s_fpclassify.o libm_a-sf_fpclassify.o \
+-	libm_a-s_isinf.o libm_a-sf_isinf.o \
+-	libm_a-s_isnan.o libm_a-sf_isnan.o \
+-	libm_a-s_isinfd.o libm_a-sf_isinff.o \
+-	libm_a-s_isnand.o libm_a-sf_isnanf.o \
+-	libm_a-s_nan.o libm_a-sf_nan.o \
+-	libm_a-s_ldexp.o libm_a-sf_ldexp.o \
+-	libm_a-s_frexp.o libm_a-sf_frexp.o libm_a-frexpl.o \
+-	libm_a-s_modf.o \
+-	libm_a-sf_modf.o libm_a-s_scalbn.o \
+-	libm_a-sf_scalbn.o \
+-	libm_a-s_finite.o libm_a-sf_finite.o \
+-	libm_a-s_copysign.o libm_a-sf_copysign.o
++	a-s_fpclassify.o a-sf_fpclassify.o \
++	a-s_isinf.o a-sf_isinf.o \
++	a-s_isnan.o a-sf_isnan.o \
++	a-s_isinfd.o a-sf_isinff.o \
++	a-s_isnand.o a-sf_isnanf.o \
++	a-s_nan.o a-sf_nan.o \
++	a-s_ldexp.o a-sf_ldexp.o \
++	a-s_frexp.o a-sf_frexp.o a-frexpl.o \
++	a-s_modf.o \
++	a-sf_modf.o a-s_scalbn.o \
++	a-sf_scalbn.o \
++	a-s_finite.o a-sf_finite.o \
++	a-s_copysign.o a-sf_copysign.o
+ 
+ ## Place the libm_a objects in libc/ to keep the top dir tidy.
+ stamp-libc-math-objects: libm.a
+diff --git a/newlib/configure.host b/newlib/configure.host
+index 386183466..9a1f02ac2 100644
+--- a/newlib/configure.host
++++ b/newlib/configure.host
+@@ -430,6 +430,10 @@ case "${host}" in
+ 	posix_dir=posix
+ 	xdr_dir=xdr
+ 	;;
++  *-*-dandelion*)
++	sys_dir=dandelion
++	have_crt0="no"
++	;;
+   *-*-netware*)
+ 	signal_dir=
+ 	sys_dir=netware
+diff --git a/newlib/libc/acinclude.m4 b/newlib/libc/acinclude.m4
+index 24148b13f..063723483 100644
+--- a/newlib/libc/acinclude.m4
++++ b/newlib/libc/acinclude.m4
+@@ -13,7 +13,7 @@ AM_CONDITIONAL(HAVE_UNIX_DIR, test x${unix_dir} != x)
+ dnl We always recur into sys and machine, and let them decide what to do.
+ m4_foreach_w([SYS_DIR], [
+   a29khif amdgcn arm
+-  d10v
++  d10v dandelion
+   epiphany
+   h8300hms h8500hms
+   m88kbug mmixware
+diff --git a/newlib/libc/include/sys/stat.h b/newlib/libc/include/sys/stat.h
+index 98f5addb4..046cb91bd 100644
+--- a/newlib/libc/include/sys/stat.h
++++ b/newlib/libc/include/sys/stat.h
+@@ -142,8 +142,10 @@ int	mkfifo (const char *__path, mode_t __mode );
+ int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
+ mode_t	umask (mode_t __mask );
+ 
+-#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
++#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__) || defined(__DANDELION__)
+ int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
++#endif
++#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
+ int	mknod (const char *__path, mode_t __mode, dev_t __dev );
+ #endif
+ 
+diff --git a/newlib/libc/sys/Makefile.inc b/newlib/libc/sys/Makefile.inc
+index 24d8407d5..c22987333 100644
+--- a/newlib/libc/sys/Makefile.inc
++++ b/newlib/libc/sys/Makefile.inc
+@@ -1,3 +1,6 @@
++if HAVE_LIBC_SYS_DANDELION_DIR
++include %D%/dandelion/Makefile.inc
++endif
+ if HAVE_LIBC_SYS_A29KHIF_DIR
+ include %D%/a29khif/Makefile.inc
+ endif

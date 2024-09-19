@@ -1,6 +1,8 @@
+use std::ptr::null;
+
 use libc::{
-    __errno_location, c_char, c_int, mode_t, stat as stat_struct, O_CREAT, O_RDONLY, O_RDWR,
-    O_WRONLY, SEEK_CUR, SEEK_END, SEEK_SET, S_IWUSR,
+    __errno_location, c_char, c_int, mode_t, size_t, O_CREAT, O_RDONLY, O_RDWR, O_WRONLY, SEEK_CUR,
+    SEEK_END, SEEK_SET, S_IWUSR,
 };
 
 use crate::{
@@ -9,6 +11,14 @@ use crate::{
     },
     runtime::dandelion_exit,
 };
+
+#[repr(C)]
+struct DandelionStat {
+    st_mode: size_t,
+    hard_links: size_t,
+    file_size: size_t,
+    blk_size: size_t,
+}
 
 extern "C" {
     /// check if the file corresponding to the descriptor is connected to a terminal
@@ -29,11 +39,15 @@ extern "C" {
     /// close file corresponding to descriptor
     fn dandelion_close(file: c_int) -> c_int;
     /// get the stat for the file corresponding to the descriptor
-    fn dandelion_fstat(file: c_int, st: *mut stat_struct) -> c_int;
+    fn dandelion_fstat(file: c_int, st: *mut DandelionStat) -> c_int;
     /// get stat for a file using path
-    fn dandelion_stat(name: *const c_char, st: *mut stat_struct) -> c_int;
+    fn dandelion_stat(name: *const c_char, st: *mut DandelionStat) -> c_int;
     /// initialize file system from input sets and create stdio
-    fn fs_initialize() -> c_int;
+    fn fs_initialize(
+        argc: *mut c_int,
+        argv: *mut *const *const c_char,
+        environ: *mut *const *const c_char,
+    ) -> c_int;
     /// write files into contiguous buffers when necessary and add files as output buffers
     fn fs_terminate() -> c_int;
 }
@@ -44,7 +58,10 @@ fn test_write(test_slice: &[u8], file_descriptor: i32, item_name: &str) {
     dandelion_exit_check!(setup, "Should have initialized without error");
 
     // initialize file system
-    let initialize_val = unsafe { fs_initialize() };
+    let mut argc = 0;
+    let mut argv = null();
+    let mut environ = null();
+    let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
     assert_eq!(0, initialize_val, "Failed to initialize file system");
 
     // write to stdout
@@ -107,7 +124,10 @@ fn test_read(stdin_content: &[u8], read_buffer_size: usize) {
     dandelion_exit_check!(setup, "Should have initialized without error");
 
     // // initialize file system
-    let initialize_val = unsafe { fs_initialize() };
+    let mut argc = 0;
+    let mut argv = null();
+    let mut environ = null();
+    let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
     assert_eq!(0, initialize_val, "Failed to initialize file system");
 
     // // read to stdin
@@ -147,7 +167,10 @@ fn read_test() {
         dandelion_exit_check!(setup, "Should have initialized without error");
 
         // initialize file system
-        let initialize_val = unsafe { fs_initialize() };
+        let mut argc = 0;
+        let mut argv = null();
+        let mut environ = null();
+        let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
         assert_eq!(0, initialize_val, "Failed to initialize file system");
 
         // read to stdin
@@ -268,7 +291,10 @@ fn open_test() {
         dandelion_exit_check!(setup, "Should have initialized without error");
 
         // initialize file system
-        let initialize_val = unsafe { fs_initialize() };
+        let mut argc = 0;
+        let mut argv = null();
+        let mut environ = null();
+        let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
         assert_eq!(0, initialize_val, "Failed to initialize file system");
 
         // open the input files
@@ -320,7 +346,10 @@ fn close_test() {
     let heap_size = 16 * 4096;
     let setup = initialize_dandelion(heap_size, Vec::new(), Vec::new());
     dandelion_exit_check!(setup, "Should have initialized without error");
-    let initialize_val = unsafe { fs_initialize() };
+    let mut argc = 0;
+    let mut argv = null();
+    let mut environ = null();
+    let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
     assert_eq!(0, initialize_val, "Failed to initialize file system");
 
     // we can close stdin and check that we cannot read from it anymore
@@ -370,7 +399,10 @@ fn lseek_test() {
     dandelion_exit_check!(setup, "Should have initialized without error");
 
     // initialize file system
-    let initialize_val = unsafe { fs_initialize() };
+    let mut argc = 0;
+    let mut argv = null();
+    let mut environ = null();
+    let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
     assert_eq!(0, initialize_val, "Failed to initialize file system");
 
     // open file
@@ -460,7 +492,10 @@ fn link_test() {
     let output_sets = vec!["output_folder", "output_nested"];
     let setup = initialize_dandelion(heap_size, input_sets, output_sets);
     dandelion_exit_check!(setup, "Should have initialized without error");
-    let initialize_val = unsafe { fs_initialize() };
+    let mut argc = 0;
+    let mut argv = null();
+    let mut environ = null();
+    let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
     assert_eq!(0, initialize_val, "Failed to initialize file system");
 
     // relink inputs to output folders
@@ -574,7 +609,10 @@ fn unlink_test() {
     let output_sets = vec!["folder", "nested"];
     let setup = initialize_dandelion(heap_size, input_sets, output_sets);
     dandelion_exit_check!(setup, "Should have initialized without error");
-    let initialize_val = unsafe { fs_initialize() };
+    let mut argc = 0;
+    let mut argv = null();
+    let mut environ = null();
+    let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
     assert_eq!(0, initialize_val, "Failed to initialize file system");
 
     // unlink folder so they are not added to output
@@ -630,15 +668,17 @@ fn stat_test() {
     let output_sets = vec!["folder", "nested"];
     let setup = initialize_dandelion(heap_size, input_sets, output_sets);
     dandelion_exit_check!(setup, "Should have initialized without error");
-    let initialize_val = unsafe { fs_initialize() };
+    let mut argc = 0;
+    let mut argv = null();
+    let mut environ = null();
+    let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
     assert_eq!(0, initialize_val, "Failed to initialize file system");
 
-    let mut stat: libc::stat = unsafe { std::mem::zeroed() };
+    let mut stat: DandelionStat = unsafe { std::mem::zeroed() };
     let stat_result = unsafe { dandelion_stat("/folder/file\0".as_ptr() as *const i8, &mut stat) };
     assert_eq!(0, stat_result);
-    assert_eq!(1, stat.st_nlink);
-    assert_eq!(7, stat.st_size);
-    assert_eq!(1, stat.st_blocks);
+    assert_eq!(1, stat.hard_links);
+    assert_eq!(7, stat.file_size);
 }
 
 #[test]
@@ -659,16 +699,18 @@ fn fstat_test() {
     let output_sets = vec!["folder", "nested"];
     let setup = initialize_dandelion(heap_size, input_sets, output_sets);
     dandelion_exit_check!(setup, "Should have initialized without error");
-    let initialize_val = unsafe { fs_initialize() };
+    let mut argc = 0;
+    let mut argv = null();
+    let mut environ = null();
+    let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
     assert_eq!(0, initialize_val, "Failed to initialize file system");
 
     let file_descriptor = unsafe { dandelion_open("/folder/file\0".as_ptr() as *const i8, 0, 0) };
     assert_ne!(-1, file_descriptor);
-    let mut stat: libc::stat = unsafe { std::mem::zeroed() };
+    let mut stat: DandelionStat = unsafe { std::mem::zeroed() };
     let stat_result = unsafe { dandelion_fstat(file_descriptor, &mut stat) };
     assert_eq!(0, stat_result);
-    assert_eq!(2, stat.st_nlink);
-    assert_eq!(7, stat.st_size);
-    assert_eq!(1, stat.st_blocks);
+    assert_eq!(2, stat.hard_links);
+    assert_eq!(7, stat.file_size);
 }
 // TODO permission checks, write to read only file, etc.

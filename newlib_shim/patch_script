@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+# expect $1 to be the source dir and $2 the bin dir
+# check if patch already has been applied
+THIS_DIR=$(dirname $0)
+if ! test -f $2/patch_applied
+then
+    git apply $THIS_DIR/newlib-cygwin-3.5.3.patch
+    touch $2/patch_applied
+fi
+# create folder for source if it does not exist
+if ! test -d $1/newlib/libc/sys/dandelion
+then 
+    mkdir $1/newlib/libc/sys/dandelion
+fi
+if test -d $1/newlib/libc/sys/dandelion
+then 
+    rm -rf $1/newlib/libc/sys/dandelion/*
+fi
+cp $THIS_DIR/Makefile.inc $1/newlib/libc/sys/dandelion/Makefile.inc
+cp $THIS_DIR/shim.c $1/newlib/libc/sys/dandelion/shim.c
+cp $THIS_DIR/dirent.c $1/newlib/libc/sys/dandelion/dirent.c
+cp $THIS_DIR/time.c $1/newlib/libc/sys/dandelion/time.c
+cp $THIS_DIR/../include/dandelion/crt.h $1/newlib/libc/sys/dandelion/crt.h
+if ! test -d $1/newlib/libc/sys/dandelion/sys
+then
+    mkdir $1/newlib/libc/sys/dandelion/sys
+fi
+cp $THIS_DIR/dirent.h $1/newlib/libc/sys/dandelion/sys/dirent.h
+cp $THIS_DIR/statvfs.h $1/newlib/libc/sys/dandelion/sys/statvfs.h
+cd $1
+autoreconf
+cd newlib
+autoreconf 

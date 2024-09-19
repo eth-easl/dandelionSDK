@@ -16,6 +16,10 @@ target_include_directories(${SYSTEM_LIB} PRIVATE ${DANDELION_ROOT}/include)
 target_compile_options(${SYSTEM_LIB} PRIVATE -fno-stack-protector)
 target_link_options(${SYSTEM_LIB} PUBLIC -nostdlib)
 
+install(TARGETS ${SYSTEM_LIB}
+    ARCHIVE 
+)
+
 if(DANDELION_PLATFORM MATCHES "debug")
     add_subdirectory(platform/debug)
     add_subdirectory(syscall/linux)

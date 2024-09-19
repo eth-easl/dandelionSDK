@@ -77,6 +77,8 @@ D_File *find_file_in_dir(D_File *directory, Path file);
 
 // find a file using a absolute string path
 D_File *find_file(const char *name);
+// find a file using a path of the absolute name
+D_File *find_file_path(Path file_path);
 
 // follow a path and create all directories on the way that do not already
 // exist prevent up prevents moving up in the file tree, to prevent input

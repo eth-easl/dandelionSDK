@@ -2,9 +2,6 @@
 #include "include/fs_interface.h"
 
 #include <stdint.h>
-#include <sys/fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #include "dandelion/runtime.h"
 #include "dandelion/system/system.h"
@@ -112,8 +109,7 @@ D_File *find_file_in_dir(D_File *directory, Path file) {
   return NULL;
 }
 
-D_File *find_file(const char *name) {
-  Path file_path = path_from_string(name);
+D_File *find_file_path(Path file_path) {
   D_File *current = fs_root;
   for (Path subpath = get_component_advance(&file_path); subpath.length != 0;
        subpath = get_component_advance(&file_path)) {
@@ -126,6 +122,11 @@ D_File *find_file(const char *name) {
     }
   }
   return current;
+}
+
+D_File *find_file(const char *name) {
+  Path file_path = path_from_string(name);
+  return find_file_path(file_path);
 }
 
 // follow a path and create all directories on the way that do not already
@@ -175,7 +176,7 @@ D_File *create_directories(D_File *directory, Path path, char prevent_up) {
 }
 
 // free all file chunks in a chunk list and their data
-int free_file_chunks(FileChunk *first) {
+void free_file_chunks(FileChunk *first) {
   FileChunk *next_chunk = NULL;
   for (FileChunk *chunck = first; chunck != NULL; chunck = next_chunk) {
     next_chunk = chunck->next;
@@ -246,7 +247,7 @@ int open_existing_file(unsigned int index, D_File *file, int flags, mode_t mode,
   //  O_NDELAY | O_PATH | O_SYNC);
   // the original posix only knows there so we don't need to zero the others
   // out for now
-  flags &= ~(O_ASYNC | O_NOCTTY | O_NONBLOCK | O_NDELAY | O_SYNC);
+  // flags &= ~(O_ASYNC | O_NOCTTY | O_NONBLOCK | O_NDELAY | O_SYNC);
 
   // check access mode is valid
   int access_mode = flags & O_ACCMODE;
@@ -304,9 +305,60 @@ int open_existing_file(unsigned int index, D_File *file, int flags, mode_t mode,
   return 0;
 }
 
-int close_file(unsigned int index) {}
+void setup_charpparray(char *data, size_t length, int *entries,
+                       char ***pp_array) {
+  if (data == NULL || length == 0) {
+    *entries = 0;
+    *pp_array = dandelion_alloc(sizeof(char *), _Alignof(char *));
+    pp_array[0] = NULL;
+    return;
+  }
+  // find the number of arguments
+  size_t arguments = 0;
+  size_t had_char = 0;
+  for (size_t data_index = 0; data_index < length; data_index++) {
+    if (data[data_index] == ' ' && had_char != 0) {
+      arguments++;
+    }
+    had_char = data[data_index] != ' ' ? 1 : 0;
+  }
+  // account for possible arg at the end of the string
+  arguments += had_char;
+  // allocate space for the string pointers
+  char **pp_local =
+      dandelion_alloc(sizeof(char *) * arguments + 1, _Alignof(char *));
+  pp_local[arguments] = NULL;
+  size_t last_start = 0;
+  size_t current_arg = 0;
+  size_t data_index = 0;
+  for (; data_index < length; data_index++) {
+    if (data[data_index] == ' ' && had_char != 0) {
+      // find size of the string we need to allocate
+      size_t chars_in_arg = data_index - last_start;
+      pp_local[current_arg] = dandelion_alloc(chars_in_arg + 1, _Alignof(char));
+      pp_local[current_arg][chars_in_arg] = '\0';
+      memcpy(pp_local[current_arg], &data[last_start], chars_in_arg);
+      current_arg++;
+    }
+    if (data[data_index] != ' ' && had_char != 1) {
+      last_start = data_index;
+    }
+    had_char = data[data_index] != ' ' ? 1 : 0;
+  }
+  // process last item if there is one
+  if (had_char != 0) {
+    // find size of the string we need to allocate
+    size_t chars_in_arg = data_index - last_start;
+    pp_local[current_arg] = dandelion_alloc(chars_in_arg + 1, _Alignof(char));
+    pp_local[current_arg][chars_in_arg] = '\0';
+    memcpy(pp_local[current_arg], data + last_start, chars_in_arg);
+  }
+  *entries = arguments;
+  *pp_array = pp_local;
+  return;
+}
 
-int fs_initialize() {
+int fs_initialize(int *argc, char ***argv, char ***environ) {
   // error value
   int error;
 
@@ -370,6 +422,11 @@ int fs_initialize() {
   if (link_file_to_folder(stdio_folder, stdout_file) != 0)
     return -1;
 
+  // set to NULL to be able to check if it was set by inputs
+  *argc = 0;
+  *argv = NULL;
+  *environ = NULL;
+
   // add all names items from all names sets
   size_t input_sets = dandelion_input_set_count();
   for (size_t set_index = 0; set_index < input_sets; set_index++) {
@@ -382,6 +439,8 @@ int fs_initialize() {
       // TODO write to stderr on what happened
       return -1;
     }
+    int is_stdio_folder =
+        namecmp(set_path.path, "stdio", MIN(set_path.length, 5));
     // TODO check for stdin file to open at file 0
     size_t input_items = dandelion_input_buffer_count(set_index);
     for (size_t item_index = 0; item_index < input_items; item_index++) {
@@ -405,10 +464,26 @@ int fs_initialize() {
         // TODO write to stderr on what happened
         return -1;
       }
-      if (namecmp(file_path.path, "stdin", MIN(file_path.length, 5)) == 0) {
-        if ((error = open_existing_file(STDIN_FILENO, item_file, O_RDONLY, 0,
-                                        0)) != 0)
-          return error;
+      if (is_stdio_folder == 0) {
+        int is_stdin =
+            namecmp(file_path.path, "stdin", MIN(file_path.length, 5));
+        if (is_stdin == 0) {
+          if ((error = open_existing_file(STDIN_FILENO, item_file, O_RDONLY, 0,
+                                          0)) != 0)
+            return error;
+        }
+        int is_argv = namecmp(file_path.path, "argv", MIN(file_path.length, 4));
+        if (is_argv == 0) {
+          setup_charpparray(item_buffer->data, item_buffer->data_len, argc,
+                            argv);
+        }
+        int is_environ =
+            namecmp(file_path.path, "environ", MIN(file_path.length, 7));
+        if (is_environ == 0) {
+          int envc;
+          setup_charpparray(item_buffer->data, item_buffer->data_len, &envc,
+                            environ);
+        }
       }
     }
   }
@@ -429,6 +504,16 @@ int fs_initialize() {
     if (link_file_to_folder(stdio_folder, stdin_file) != 0) {
       return -1;
     }
+  }
+
+  // if argc or argv have not been initialized do it now
+  if (*argv == NULL) {
+    *argv = dandelion_alloc(sizeof(char *), _Alignof(char *));
+    **argv = NULL;
+  }
+  if (*environ == NULL) {
+    *environ = dandelion_alloc(sizeof(char *), _Alignof(char *));
+    **environ = NULL;
   }
   return 0;
 }

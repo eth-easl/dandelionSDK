@@ -37,7 +37,7 @@ Path get_next_component(const Path path) {
 
 Path get_component_advance(Path *path) {
   Path new_component = get_next_component(*path);
-  char *new_end = new_component.path + new_component.length;
+  const char *new_end = new_component.path + new_component.length;
   path->length = path->path + path->length - new_end;
   path->path = new_component.path + new_component.length;
   return new_component;

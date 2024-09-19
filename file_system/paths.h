@@ -8,7 +8,6 @@
 #include "dandelion/runtime.h"
 
 #include <errno.h>
-#include <sys/types.h>
 #ifndef TEST
 #undef errno
 extern int errno;

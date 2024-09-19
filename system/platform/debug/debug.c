@@ -4,6 +4,7 @@
 #include "syscall.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 #define sysdata __dandelion_system_data
 
@@ -23,35 +24,33 @@ static void my_memcpy(void *dest, const void *src, size_t size) {
   }
 }
 
-static int my_write(int fd, const void *buffer, size_t size,
-                    long *bytes_written) {
-  long ret = __syscall(SYS_write, fd, buffer, size);
-  if (ret < 0) {
-    return -ret;
-  }
-  *bytes_written = ret;
-  return 0;
+static void print_and_exit(char *message, int exit_code) {
+  size_t string_length = my_strlen(message);
+  __syscall(SYS_write, 2, message, string_length);
+  __syscall(SYS_exit_group, exit_code);
+  __builtin_unreachable();
 }
 
-static int write_all(int fd, const void *buffer, size_t size) {
+static ssize_t write_all(int fd, const void *buffer, size_t size) {
   size_t written = 0;
   while (written < size) {
-    long bytes_written;
-    int e = my_write(fd, (const char *)buffer + written, size - written,
-                     &bytes_written);
+    ssize_t e = __syscall(SYS_write, fd, (const char *)buffer + written,
+                          size - written);
     if (e < 0) {
       return e;
     }
-    written += bytes_written;
+    written += e;
   }
   return 0;
 }
 
-static void dump_io_buf(const char *setid, IoBuffer *buf) {
+static ssize_t read(int fd, const char *buffer, size_t size) {
+  return __syscall(SYS_read, fd, buffer, size);
+}
+
+static void dump_io_buf(const char *setid, size_t setidlen, IoBuffer *buf) {
   char tmp[256];
-  size_t setidlen = 0;
   if (setid) {
-    setidlen = my_strlen(setid);
     my_memcpy(tmp, setid, setidlen);
   }
   size_t identlen = buf->ident_len;
@@ -72,7 +71,8 @@ static void dump_global_data() {
     struct io_set_info *set = &sysdata.output_sets[i];
     size_t num_elems = sysdata.output_sets[i + 1].offset - set->offset;
     for (size_t j = 0; j < num_elems; ++j) {
-      dump_io_buf(set->ident, &sysdata.output_bufs[set->offset + j]);
+      dump_io_buf(set->ident, set->ident_len,
+                  &sysdata.output_bufs[set->offset + j]);
     }
   }
 }
@@ -86,41 +86,193 @@ static void *vm_alloc(size_t size) {
   return (void *)ret;
 }
 
+static size_t read_number(char const *const stream, size_t *const number,
+                          char const *const stream_end) {
+  size_t local_number = 0;
+  size_t read_bytes = 0;
+  for (; stream + read_bytes < stream_end - 1 && stream[read_bytes] < 58 &&
+         stream[read_bytes] > 47;
+       read_bytes++) {
+    local_number = 10 * local_number + (stream[read_bytes] - 48);
+  }
+  if (read_bytes == 0)
+    print_and_exit("No number found when trying to read number\n", -1);
+  if (stream[read_bytes] != ' ')
+    print_and_exit("Character after number not a space\n", -1);
+  // have read the ' '
+  read_bytes++;
+  *number = local_number;
+  return read_bytes;
+}
+
+size_t read_name(char const *const stream, char const *const stream_end) {
+  size_t read_bytes = 0;
+  // check we are reading characters, A = 65, Z = 90, a = 97, z = 122, _ = 95
+  while (stream + read_bytes < stream_end - 1 &&
+         ((64 < stream[read_bytes] && stream[read_bytes] < 91) ||
+          (96 < stream[read_bytes] && stream[read_bytes] < 123) ||
+          stream[read_bytes] == 95)) {
+    read_bytes++;
+  }
+  // check that it is terminated by a space
+  if (stream[read_bytes] != ' ')
+    print_and_exit("Name string not terminated by space\n", -1);
+
+  read_bytes++;
+  return read_bytes;
+}
+
+size_t read_data(char const *const stream, char const *const stream_end) {
+  size_t read_bytes = 0;
+  // check first character is a '"'
+  if (stream[read_bytes] != '"')
+    print_and_exit("Data string not started by quote\n", -1);
+  read_bytes++;
+
+  // must have at least 1 characters left, one for the ending quote
+  // new line after that
+  unsigned int has_escape = 0;
+  while (stream + read_bytes < stream_end - 1 &&
+         (stream[read_bytes] != '"' || has_escape != 0)) {
+    if (stream[read_bytes] == '\\' && has_escape != 0) {
+      has_escape = 1;
+    } else {
+      has_escape = 0;
+    }
+    read_bytes++;
+  }
+  // check that it is terminated by a quote that is not escaped
+  if (stream[read_bytes] != '"' || has_escape)
+    print_and_exit("Data string not terminated by quote\n", -1);
+
+  read_bytes++;
+  return read_bytes;
+}
+
+static inline char *round_up_to(char *original, size_t alignment) {
+  size_t mod = ((uintptr_t)original) % alignment;
+  size_t additional = alignment - (mod == 0 ? alignment : mod);
+  return original + additional;
+}
+
 void __dandelion_platform_init(void) {
-  static const char input_file_content[] = "This is an example input file";
-  static const char input_file_name[] = "input.txt";
 
-  static struct io_set_info input_sets[] = {
-      {NULL, 0, 0},
-      {NULL, 0, 1},
-  };
-  static struct io_set_info output_sets[] = {
-      {NULL, 0, 0},
-      {"output", sizeof("output") - 1, 0},
-      {NULL, 0, 0},
-  };
-
-  static IoBuffer input_bufs[] = {
-      {input_file_name, sizeof(input_file_name) - 1, (void *)input_file_content,
-       sizeof(input_file_content)},
-  };
-
-  sysdata.input_bufs = input_bufs;
-  sysdata.input_sets = input_sets;
-  sysdata.input_sets_len = sizeof(input_sets) / sizeof(input_sets[0]) - 1;
-
-  sysdata.output_bufs = NULL;
-  sysdata.output_sets = output_sets;
-  sysdata.output_sets_len = sizeof(output_sets) / sizeof(output_sets[0]) - 1;
-
-  size_t alloc_size = 1ull << 32;
+  size_t alloc_size = 1ull << 31;
   void *heap_ptr = vm_alloc(alloc_size);
+  void *heap_end = (void *)((char *)heap_ptr + alloc_size);
   if (heap_ptr == NULL) {
     __syscall(SYS_exit_group, 1);
   }
 
+  size_t input_sets_len = 0;
+  size_t output_sets_len = 0;
+
+  // attempt to open file with input and output definitions
+  int config_fd = __syscall(SYS_openat, AT_FDCWD, "debug_config.txt", O_RDONLY);
+  if (config_fd < 0) {
+    print_and_exit("No debug_config.txt in current working directory\n", -1);
+  }
+  ssize_t file_size = __syscall(SYS_lseek, config_fd, 0, 2);
+  if (file_size <= 0) {
+    print_and_exit("Could not get file size\n", -1);
+  }
+  // map file to memory
+  char *file_addr = (char *)__syscall(SYS_mmap, NULL, file_size, PROT_READ,
+                                      MAP_PRIVATE, config_fd, 0);
+  if ((long)file_addr < 0) {
+    print_and_exit("Could not map debug_config.txt\n", -(int)file_addr);
+  }
+  char *file_iter = file_addr;
+  char *file_end = file_addr + file_size;
+  // expect first char to be number of input sets
+  file_iter += read_number(file_iter, &input_sets_len, file_end);
+
+  struct io_set_info *input_sets = heap_ptr;
+  heap_ptr += (input_sets_len + 1) * sizeof(struct io_set_info);
+
+  // start reading input set descriptions
+  // expect a name followed by a number
+  size_t total_buffers = 0;
+  for (size_t index = 0; index < input_sets_len; index++) {
+    size_t bytes_read = read_name(file_iter, file_end);
+    input_sets[index].ident = file_iter;
+    file_iter += bytes_read;
+    input_sets[index].ident_len = bytes_read - 1;
+    input_sets[index].offset = total_buffers;
+    size_t buffer_count = 0;
+    bytes_read = read_number(file_iter, &buffer_count, file_end);
+    file_iter += bytes_read;
+    total_buffers += buffer_count;
+  }
+  // set up sentinel set
+  input_sets[input_sets_len].ident = NULL;
+  input_sets[input_sets_len].ident_len = 0;
+  input_sets[input_sets_len].offset = total_buffers;
+
+  // check that there is an end line and advance past it
+  if (file_iter[0] != '\n')
+    print_and_exit("No endl after last input set description\n", -1);
+  file_iter++;
+
+  // read output set number
+  file_iter += read_number(file_iter, &output_sets_len, file_end);
+  // read output set names
+  heap_ptr = round_up_to(heap_ptr, _Alignof(struct io_set_info));
+  struct io_set_info *output_sets = heap_ptr;
+  heap_ptr += (output_sets_len + 1) * sizeof(struct io_set_info);
+  for (size_t index = 0; index < output_sets_len; index++) {
+    size_t read_bytes = read_name(file_iter, file_end);
+    output_sets[index].ident = file_iter;
+    output_sets[index].ident_len = read_bytes - 1;
+    output_sets[index].offset = 0;
+    file_iter += read_bytes;
+  }
+  // set up sentnel set
+  output_sets[output_sets_len].ident = NULL;
+  output_sets[output_sets_len].ident_len = 0;
+  output_sets[output_sets_len].offset = 0;
+
+  // read the newline at the end
+  if (file_iter[0] != '\n')
+    print_and_exit("No endl after last output set description\n", -1);
+  file_iter++;
+
+  // read input items already know the total number and can allocate the buffer
+  // space
+  heap_ptr = round_up_to(heap_ptr, _Alignof(IoBuffer));
+  sysdata.input_bufs = heap_ptr;
+  heap_ptr += total_buffers * sizeof(IoBuffer);
+  for (size_t current_buffer = 0; current_buffer < total_buffers;
+       current_buffer++) {
+    size_t read_bytes = read_name(file_iter, file_end);
+    sysdata.input_bufs[current_buffer].ident = file_iter;
+    sysdata.input_bufs[current_buffer].ident_len = read_bytes - 1;
+    file_iter += read_bytes;
+    size_t key;
+    file_iter += read_number(file_iter, &key, file_end);
+    sysdata.input_bufs[current_buffer].key = key;
+    read_bytes = read_data(file_iter, file_end);
+    // assume input is in quotes, so skip over initial quote
+    sysdata.input_bufs[current_buffer].data = file_iter + 1;
+    // need to discount leading and trailing quote
+    sysdata.input_bufs[current_buffer].data_len = read_bytes - 2;
+    file_iter += read_bytes;
+    // check there is a newline character
+    if (file_iter[0] != '\n')
+      print_and_exit("Input item line not terminated by newline char\n", -1);
+
+    file_iter++;
+  }
+
+  sysdata.input_sets = input_sets;
+  sysdata.input_sets_len = input_sets_len;
+
+  sysdata.output_bufs = NULL;
+  sysdata.output_sets = output_sets;
+  sysdata.output_sets_len = output_sets_len;
+
   sysdata.heap_begin = (uintptr_t)heap_ptr;
-  sysdata.heap_end = sysdata.heap_begin + alloc_size;
+  sysdata.heap_end = (uintptr_t)heap_end;
 }
 
 void __dandelion_platform_exit(void) {

@@ -17,8 +17,12 @@ static size_t *free_root;
 static size_t last_descriptor;
 // ---------------------------------
 
+static char TLS[256] = {};
 void dandelion_init(void) {
   __dandelion_system_init();
+
+  // allocate space for thread local storage
+  __dandelion_system_set_thread_pointer(TLS);
 
   // initialize all static variables needed in the runtime
   // mainly do this to make it easier to test

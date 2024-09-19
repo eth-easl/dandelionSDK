@@ -4,7 +4,6 @@
 
 #include <dandelion/system/system.h>
 
-#include <sys/fcntl.h>
 #include <unistd.h>
 
 extern D_File *fs_root;
@@ -35,7 +34,7 @@ int dandelion_link(char *old, char *new_name) {
     return -1;
   }
   // check we could add a hard link
-  if (file->hard_links == -1) {
+  if (file->hard_links == (unsigned short)-1) {
     errno = EMLINK;
     return -1;
   }
@@ -142,6 +141,34 @@ int dandelion_open(const char *name, int flags, mode_t mode) {
   }
   current->open_descripotors += 1;
   return file_descriptor;
+}
+
+int dandelion_mkdir(const char *name, mode_t mode) {
+  // find parent folder
+  Path dir_path = path_from_string(name);
+  Path parent_dir = get_directories(dir_path);
+  Path dir_name = get_file(dir_path);
+  D_File *parent_file = find_file_path(parent_dir);
+  if (parent_file == NULL) {
+    errno = ENOENT;
+    return -1;
+  }
+  if (parent_file->type != DIRECTORY) {
+    errno = ENOTDIR;
+    return -1;
+  }
+  D_File *existing = find_file_in_dir(parent_file, dir_name);
+  if (existing != NULL) {
+    errno = EEXIST;
+    return -1;
+  }
+  D_File *new_dir = create_directories(parent_file, dir_name, 0);
+  if (new_dir == NULL) {
+    errno = ENOMEM;
+    return -1;
+  }
+  new_dir->mode = mode;
+  return 0;
 }
 
 int dandelion_close(int file) {
@@ -412,39 +439,23 @@ int dandelion_write(int file, char *ptr, int len) {
   return writen_bytes;
 }
 
-static inline int __dandelion_stat(D_File *file, struct stat *st) {
+static inline int __dandelion_stat(D_File *file, DandelionStat *st) {
   // assume file is non null, caller is supposed to check that
-  struct stat local = {};
-  // local.st_dev = 0;
-  // local.st_ino = 0;
-  local.st_mode = file->mode;
-  local.st_nlink = file->hard_links;
-  // st->st_uid = 0;
-  // st->st_gid = 0;
-  // st->st_rdev = 0;
+  st->st_mode = file->mode;
+  st->hard_links = file->hard_links;
+  size_t total_size = 0;
   if (file->type == FILE) {
-    size_t total_size = 0;
     for (FileChunk *current = file->content; current != 0;
          current = current->next) {
       total_size += current->used;
     }
-    local.st_size = total_size;
-  } else {
-    local.st_size = 0;
   }
-  local.st_blksize = FS_CHUNCK_SIZE;
-  local.st_blocks = (local.st_size + 511) / 512;
-  // struct timespec last_access = {};
-  // struct timespec last_modified = {};
-  // struct timespec last_change = {};
-  // local.st_atime = access_time;
-  // local.st_mtime = {};
-  // local.st_ctime = {};
-  *st = local;
+  st->file_size = total_size;
+  st->blk_size = FS_CHUNCK_SIZE;
   return 0;
 }
 
-int dandelion_fstat(int file, struct stat *st) {
+int dandelion_fstat(int file, DandelionStat *st) {
   D_File *current_file = open_files[file].file;
   if (current_file == NULL) {
     errno = EBADF;
@@ -453,7 +464,7 @@ int dandelion_fstat(int file, struct stat *st) {
   return __dandelion_stat(current_file, st);
 }
 
-int dandelion_stat(char *file, struct stat *st) {
+int dandelion_stat(char *file, DandelionStat *st) {
   D_File *current_file = find_file(file);
   if (current_file == NULL) {
     errno = ENOTDIR;
@@ -461,3 +472,58 @@ int dandelion_stat(char *file, struct stat *st) {
   }
   return __dandelion_stat(current_file, st);
 }
+// ========================================================
+// dirent functions
+// ========================================================
+
+int dandelion_opendir(const char *name, DIR *dir) {
+  D_File *current_dir = find_file(name);
+  if (current_dir == NULL) {
+    errno = ENOENT;
+    return -1;
+  }
+  if (current_dir->type != DIRECTORY) {
+    errno = ENOTDIR;
+    return -1;
+  }
+  // allocate and populate open dir struct
+  dir->dir = current_dir;
+  dir->child = 0;
+
+  // increase to make sure it does not get dealloced
+  current_dir->open_descripotors += 1;
+  return 0;
+}
+
+int dandelion_closedir(DIR *dir) {
+  dir->dir -= 1;
+  int err = free_data(dir->dir);
+  return err;
+}
+
+int dandelion_readdir(DIR *directory, struct dirent *dirent) {
+  D_File *current_child = directory->dir->child;
+  size_t index = 0;
+  while (current_child != NULL && index < directory->child) {
+    current_child = current_child->next;
+    index++;
+  }
+  // either have reached index == direcotry->child or current_child is NULL
+  if (current_child == NULL) {
+    if (index != directory->child) {
+      errno = ENOENT;
+    }
+    return -1;
+  }
+  size_t max_name_length = MIN(256, FS_NAME_LENGHT);
+  memcpy(dirent->d_name, current_child->name, max_name_length);
+  dirent->d_name[max_name_length + 1] = 0;
+  dirent->d_ino = 0;
+  dirent->d_off = index;
+  dirent->d_type = current_child->type == FILE ? DT_REG : DT_DIR;
+
+  return 0;
+}
+
+long int dandelion_telldir(DIR *dir) { return dir->child; }
+void dandelion_seekdir(DIR *dir, long int index) { dir->child = index; }

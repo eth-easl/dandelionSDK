@@ -23,6 +23,22 @@ If no value is set, `DEBUG` will be used for the platform value.
 To enable debug build set the cmake variable `CMAKE_BUILD_TYPE` to `Debug`.
 This can be done by adding `-DCMAKE_BUILD_TYPE=Debug` to the cmake command or setting it as an env variable. 
 
+## Debugging
+When the code is built for the debug backend it expects a debug_config.txt in the folder it is run.
+In that file it expects the following:
+- a line with the input sets formatted as:
+    - a positive integer followed by a space, numbering how many input set names there are
+    - a list of input set names consisting only of characters and underscores followed a space, the number of input buffers belonging to this set and another space
+    - a newline character
+- a line with the output sets formatted as:
+    - a positive integer followed by a space to indicate how many output sets there are
+    - a list output set names consisting of only character and underscores followed by a space
+    - a newline character
+- a line per input buffers formatted as
+    - name consising of only characters and underscores followed by a space
+    - positive interger that is used as key followed by a space
+    - a string in quotes "<data here>", followed by the newline
+
 ## Examples
 The examples are automatically built when compiling the library. 
 
