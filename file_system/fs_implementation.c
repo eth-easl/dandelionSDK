@@ -429,7 +429,7 @@ int dandelion_write(int file, char *ptr, int len) {
       writeable = FS_CHUNCK_SIZE;
     }
     size_t to_write = MIN(len, writeable);
-    memcpy(open_file->current_chunk->data, ptr, to_write);
+    memcpy(open_file->current_chunk->data + open_file->current_chunk->used, ptr, to_write);
     len -= to_write;
     ptr += to_write;
     open_file->current_chunk->used += to_write;

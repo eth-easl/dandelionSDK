@@ -6,22 +6,27 @@
 #undef errno
 extern int errno;
 
+// defined by newlib, but not always avaliable in headers
+extern char** environ;
+extern int fcloseall(void);
+
 extern void dandelion_init(void);
 extern void dandelion_exit(int errcode);
 
 extern int fs_initialize(int *argc, char ***argv, char ***environ);
 extern int fs_terminate();
-extern int main(int argc, char const *argv[]);
+extern int main(int argc, char *argv[]);
+
 int __initialization() {
   int errcode = 0;
   int argc;
-  char const **argv;
-  char const **environ;
+  char **argv;
   errcode = fs_initialize(&argc, &argv, &environ);
   if (errcode != 0) {
     return errcode;
   }
   errcode = main(argc, argv);
+  fcloseall();
   fs_terminate();
   return errcode;
 }

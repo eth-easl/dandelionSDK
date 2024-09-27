@@ -315,44 +315,82 @@ void setup_charpparray(char *data, size_t length, int *entries,
   }
   // find the number of arguments
   size_t arguments = 0;
-  size_t had_char = 0;
-  for (size_t data_index = 0; data_index < length; data_index++) {
-    if (data[data_index] == ' ' && had_char != 0) {
-      arguments++;
+  size_t data_index = 0;
+  while(data_index < length) {
+    // skip over leading spaces
+    while(data_index < length && data[data_index] == ' ')
+      data_index++;
+    if(data_index >= length)
+      break;
+    arguments++;
+    // are not at the end of the input and have a non space character so are at the start of an argument
+    // skip over current argument
+    while(data_index < length && data[data_index] != ' '){
+      // if is escape character, skip to end of escape
+      if(data[data_index] == '\'' || data[data_index] == '\"'){
+        char escape_char = data[data_index];
+        data_index++;
+        while(data_index < length && data[data_index] != escape_char)
+          data_index++;
+      }
+      // either move past the character or over the ending escape character
+      data_index++;
     }
-    had_char = data[data_index] != ' ' ? 1 : 0;
   }
-  // account for possible arg at the end of the string
-  arguments += had_char;
+
   // allocate space for the string pointers
   char **pp_local =
       dandelion_alloc(sizeof(char *) * arguments + 1, _Alignof(char *));
   pp_local[arguments] = NULL;
-  size_t last_start = 0;
+
+  // reset index
+  data_index = 0;
   size_t current_arg = 0;
-  size_t data_index = 0;
-  for (; data_index < length; data_index++) {
-    if (data[data_index] == ' ' && had_char != 0) {
-      // find size of the string we need to allocate
-      size_t chars_in_arg = data_index - last_start;
-      pp_local[current_arg] = dandelion_alloc(chars_in_arg + 1, _Alignof(char));
-      pp_local[current_arg][chars_in_arg] = '\0';
-      memcpy(pp_local[current_arg], &data[last_start], chars_in_arg);
-      current_arg++;
+  while(data_index < length) {
+    // skip over spaces
+    while(data_index < length && data[data_index] == ' ')
+      data_index++;
+    if(data_index >= length)
+      break;
+    // count the number of character the final string will have
+    size_t num_characters = 0;
+    size_t arg_index = data_index;
+    while(data_index < length && data[data_index] != ' '){
+      // if is escape character, skip to end of escape
+      if(data[data_index] == '\'' || data[data_index] == '\"'){
+        char escape_char = data[data_index];
+        data_index++;
+        while(data_index < length && data[data_index] != escape_char){
+          num_characters++;
+          data_index++;
+        }
+      } else {
+        num_characters++;
+      }
+      // either move past the character or over the ending escape character
+      data_index++;
     }
-    if (data[data_index] != ' ' && had_char != 1) {
-      last_start = data_index;
+    // allocate string
+    char* target_string = dandelion_alloc(num_characters + 1, _Alignof(char));
+    target_string[num_characters] = '\0';
+    size_t chars_copied = 0;
+    for(; arg_index < data_index; arg_index++){
+      if(data[arg_index] == '\'' || data[arg_index] == '\"'){
+        char escape_char = data[arg_index];
+        arg_index++;
+        for(; arg_index < data_index && data[arg_index] != escape_char; arg_index++){
+          target_string[chars_copied] = data[arg_index];
+          chars_copied++;
+        }
+      } else {
+        target_string[chars_copied] = data[arg_index];
+        chars_copied++;
+      }
     }
-    had_char = data[data_index] != ' ' ? 1 : 0;
-  }
-  // process last item if there is one
-  if (had_char != 0) {
-    // find size of the string we need to allocate
-    size_t chars_in_arg = data_index - last_start;
-    pp_local[current_arg] = dandelion_alloc(chars_in_arg + 1, _Alignof(char));
-    pp_local[current_arg][chars_in_arg] = '\0';
-    memcpy(pp_local[current_arg], data + last_start, chars_in_arg);
-  }
+    pp_local[current_arg] = target_string;
+    current_arg++;
+  } 
+
   *entries = arguments;
   *pp_array = pp_local;
   return;
@@ -615,6 +653,13 @@ int fs_terminate() {
     Path empty_path = {.path = NULL, .length = 0};
     for (D_File *out_file = set_directory->child; out_file != NULL;
          out_file = out_file->next) {
+      // ignore argv, environ and stdin in the stdio folder
+      if(namecmp(set_ident.path, "stdio", MIN(set_ident.length, 5)) == 0){
+        if(namecmp(out_file->name, "environ", 7) == 0 ||
+          namecmp(out_file->name, "argv", 4) == 0 ||
+          namecmp(out_file->name, "stdin", 5) == 0)
+          continue;
+      }
       add_output_from_file(out_file, empty_path, set_index);
     }
   }

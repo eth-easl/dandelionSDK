@@ -66,7 +66,7 @@ if(NEWLIB)
     list(APPEND NEWLIB_CONFIG_ARGS "--enable-newlib-io-long-double")
     list(APPEND NEWLIB_CONFIG_ARGS "--disable-newlib-supplied-syscalls")
     list(APPEND NEWLIB_CONFIG_ARGS "--disable-newlib-multithread")
-    # string(APPEND NEWLIB_CONFIG_ARGS " --enable-newlib-elix-level=2")
+    # list(APPEND NEWLIB_CONFIG_ARGS "--enable-newlib-elix-level=2")
 
     ExternalProject_Add(
         newlib
@@ -111,14 +111,6 @@ if(NEWLIB)
     string(APPEND LLVM_C_FLAGS " -idirafter${COMPILER_RUNTIME_INCLUDE}")
     string(APPEND LLVM_C_FLAGS " -nostdlib")
     string(APPEND LLVM_C_FLAGS " -nostdinc")
-    # string(APPEND LLVM_C_FLAGS " -ibuiltininc")
-    # string(APPEND LLVM_C_FLAGS " -fuse-ld=lld")
-    # string(APPEND LLVM_C_FLAGS " -lc")
-    # string(APPEND LLVM_C_FLAGS " -lg")
-    # string(APPEND LLVM_C_FLAGS " -lm")
-    # string(APPEND LLVM_C_FLAGS " -ldandelion_file_system")
-    # string(APPEND LLVM_C_FLAGS " -ldandelion_runtime")
-    # string(APPEND LLVM_C_FLAGS " -ldandelion_system")
 
     set(LLVM_CXX_FLAGS "-D_GNU_SOURCE=1")
     string(APPEND LLVM_CXX_FLAGS " -D_POSIX_TIMERS")
@@ -130,14 +122,6 @@ if(NEWLIB)
     string(APPEND LLVM_CXX_FLAGS " -nostdinc")
     string(APPEND LLVM_CXX_FLAGS " -nostdinc++")
     string(APPEND LLVM_CXX_FLAGS " -Wno-narrowing")
-    # string(APPEND LLVM_CXX_FLAGS " -ibuiltininc")
-    # string(APPEND LLVM_CXX_FLAGS " -fuse-ld=lld")
-    # string(APPEND LLVM_CXX_FLAGS " -lc")
-    # string(APPEND LLVM_CXX_FLAGS " -lg")
-    # string(APPEND LLVM_CXX_FLAGS " -lm")
-    # string(APPEND LLVM_CXX_FLAGS " -ldandelion_file_system")
-    # string(APPEND LLVM_CXX_FLAGS " -ldandelion_runtime")
-    # string(APPEND LLVM_CXX_FLAGS " -ldandelion_system")
 
     ExternalProject_Add(
         llvmproject
@@ -159,12 +143,6 @@ if(NEWLIB)
             -DLLVM_ENABLE_RUNTIMES=libcxxabi,libcxx
             -DCMAKE_C_FLAGS:STRING=${LLVM_C_FLAGS}
             -DCMAKE_CXX_FLAGS:STRING=${LLVM_CXX_FLAGS}
-            # -DLLVM_TARGETS_TO_BUILD=X86
-            # -DLLVM_DEFAULT_TARGET_TRIPPLE=x86_64-none
-        #     -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON
-        #     -DLLVM_LIBSTDCXX_MIN=7
-            # -DLLVM_BUILD_TESTS=OFF
-            # -DLLVM_INCLUDE_BENCHMARKS=OFF
             -DLLVM_INCLUDE_TESTS=OFF
             -DLIBCXXABI_BAREMETAL=ON
             -DLIBCXXABI_ENABLE_SHARED=OFF
@@ -177,7 +155,6 @@ if(NEWLIB)
             -DLIBCXX_ENABLE_THREADS=OFF
             -DLIBCXX_ENABLE_MONOTONIC_CLOCK=OFF
             -DLIBCXX_ENABLE_RANDOM_DEVICE=OFF
-            # -DLIBUNWIND_ENABLE_THREADS=OFF
     )
     add_dependencies(llvmproject newlib)
 

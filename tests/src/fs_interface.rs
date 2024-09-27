@@ -52,7 +52,7 @@ extern "C" {
     fn fs_terminate() -> c_int;
 }
 
-fn test_write(test_slice: &[u8], file_descriptor: i32, item_name: &str) {
+fn test_write(test_slices: &[&[u8]], file_descriptor: i32, item_name: &str) {
     let heap_size = 16 * 4096;
     let setup = initialize_dandelion(heap_size, Vec::new(), vec!["stdio"]);
     dandelion_exit_check!(setup, "Should have initialized without error");
@@ -64,20 +64,22 @@ fn test_write(test_slice: &[u8], file_descriptor: i32, item_name: &str) {
     let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
     assert_eq!(0, initialize_val, "Failed to initialize file system");
 
-    // write to stdout
-    let written_bytes = unsafe {
-        dandelion_write(
-            file_descriptor,
-            test_slice.as_ptr() as *const i8,
-            test_slice.len() as i32,
-        )
-    };
-    assert_eq!(
-        test_slice.len() as i32,
-        written_bytes,
-        "Should have written the entire string, errno: {}",
-        unsafe { *__errno_location() }
-    );
+    for write_slice in test_slices {
+        // write to stdout
+        let write_bytes = unsafe {
+            dandelion_write(
+                file_descriptor,
+                write_slice.as_ptr() as *const i8,
+                write_slice.len() as i32,
+            )
+        };
+        assert_eq!(
+            write_slice.len() as i32,
+            write_bytes,
+            "Should have written the entire string, errno: {}",
+            unsafe { *__errno_location() }
+        );
+    }
     // should always be able to write to STDOUT and STDERR, which are filedescriptors 1 and 2 respectively
     // these should also be available without explicitly opening them
     let finalize_error = unsafe { fs_terminate() };
@@ -90,21 +92,29 @@ fn test_write(test_slice: &[u8], file_descriptor: i32, item_name: &str) {
     dandelion_exit_check!(setup, "Should have exited at end of test without errors");
     // check that stdout and stderr are items in the set
     let item_slice = setup.get_item_data("stdio", item_name);
-    assert_eq!(Some(test_slice), item_slice);
+    let combined_output: Vec<u8> = test_slices
+        .into_iter()
+        .flat_map(|slice| slice.to_vec())
+        .collect();
+    assert_eq!(Some(combined_output.as_ref()), item_slice);
 }
 
 #[test]
 fn write_test() {
     // test if writing works when write fits in a sinlge file chunk
     // use stdout and stderr, as they do not rely on file open to be able to write
-    test_write("test".as_bytes(), 1, "stdout");
-    test_write("test".as_bytes(), 2, "stderr");
+    test_write(&["test".as_bytes()], 1, "stdout");
+    test_write(&["test".as_bytes()], 2, "stderr");
     // write more that default chunck size so we know it works with mutliple file chunks
     let large_size = 4096 * 2 + 77;
     let mut large_vec = Vec::with_capacity(large_size);
     large_vec.resize(large_size, 7u8);
-    test_write(&large_vec, 1, "stdout");
-    test_write(&large_vec, 2, "stderr");
+    test_write(&[&large_vec], 1, "stdout");
+    test_write(&[&large_vec], 2, "stderr");
+
+    // test that consecutive writes
+    test_write(&["first".as_bytes(), "second".as_bytes()], 1, "stdout");
+    test_write(&["first".as_bytes(), "second".as_bytes()], 2, "stderr");
 }
 
 fn test_read(stdin_content: &[u8], read_buffer_size: usize) {

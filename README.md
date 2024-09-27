@@ -39,6 +39,21 @@ In that file it expects the following:
     - positive interger that is used as key followed by a space
     - a string in quotes "<data here>", followed by the newline
 
+## Interface expectations
+### libc
+When using libc or any system on top of it values can be fed into stdin, argv and environ by specifying a input set called "stdio".
+The system will look for items called "stdin", "argv" and "environ" in that set and automaticall make it available on the expected methods.
+For argv and environ the content of the item is expected to be space separated as it would be on the command line.
+To tell the programm it is called cat and has arguments foo and bar the total content of argv should be "cat foo bar" (without quotation marks).
+Similarly for environ, if foo should be set to 2 and bar should be set to 3 the content of environ should be "foo=2 bar=3"
+Currently there is no variable subsitution so defining foo to be 2 and then using foo in a later definition does not work.
+Both the '' and "" can be used to escape strings that contain spaces.
+Escaping the quote characters with backslashes is currently not supported, but they can be escaped by wrapping in the other type of quotes,
+as everything within the outermost set of quotataion marks will be esacaped.
+Example: `'"test"'` will become `"test"` 
+Multiple quoted strings without a space in between are considered a single argument.
+Example: `'test'"test"` will become `testtest`
+
 ## Examples
 The examples are automatically built when compiling the library. 
 
