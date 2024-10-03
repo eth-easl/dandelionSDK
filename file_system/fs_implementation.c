@@ -25,23 +25,19 @@ int dandelion_link(char *old, char *new_name) {
   // find the old file
   D_File *file = find_file(old);
   if (file == NULL) {
-    errno = ENOTDIR;
-    return -1;
+    return -ENOTDIR;
   }
   // check that the old file is not a directory
   if (file->type == DIRECTORY) {
-    errno = EPERM;
-    return -1;
+    return -EPERM;
   }
   // check we could add a hard link
   if (file->hard_links == (unsigned short)-1) {
-    errno = EMLINK;
-    return -1;
+    return -EMLINK;
   }
   D_File *new_file = find_file(new_name);
   if (new_file != NULL) {
-    errno = EEXIST;
-    return -1;
+    return -EEXIST;
   }
   // create necessary folders on the way
   Path new_path = path_from_string(new_name);
@@ -49,8 +45,7 @@ int dandelion_link(char *old, char *new_name) {
   Path new_file_dir = get_directories(new_path);
   D_File *new_dir = create_directories(fs_root, new_file_dir, 0);
   if (new_dir == NULL) {
-    errno = ENOTDIR;
-    return -1;
+    return -ENOTDIR;
   }
   // know is directory
   link_file_to_folder(new_dir, file);
@@ -62,8 +57,7 @@ int dandelion_unlink(char *name) {
   // find the file
   D_File *file = find_file(name);
   if (file == NULL) {
-    errno = ENOTDIR;
-    return -1;
+    return -ENOTDIR;
   }
   D_File *parent = file->parent;
   // remove file from parent
@@ -89,15 +83,13 @@ int dandelion_open(const char *name, int flags, mode_t mode) {
   D_File *current = find_file(name);
   // report error if O_EXCL is set and file exists
   if (flags & O_EXCL && flags & O_CREAT && current != NULL) {
-    errno = EEXIST;
-    return -1;
+    return -EEXIST;
   }
   // handle if file was not found
   if (current == NULL) {
     // if flag to create was not set return error
     if (!(flags & O_CREAT)) {
-      errno = ENOENT;
-      return -1;
+      return -ENOENT;
     }
     // should create a file
     // need to create another copy as the original was modified in the loop
@@ -105,23 +97,19 @@ int dandelion_open(const char *name, int flags, mode_t mode) {
     Path dir_path = get_directories(total_path);
     Path file_name = get_file(total_path);
     if (file_name.length >= FS_NAME_LENGHT) {
-      errno = EINVAL;
-      return -1;
+      return -EINVAL;
     }
     D_File *parent = create_directories(fs_root, dir_path, 0);
     if (parent == NULL) {
-      errno = ENOTDIR;
-      return -1;
+      return -ENOTDIR;
     }
     current = create_file(&file_name, NULL, 0, 0);
     if (current == NULL) {
-      errno = ENOMEM;
-      return -1;
+      return -ENOMEM;
     }
     current->mode = mode;
     if (link_file_to_folder(parent, current)) {
-      errno = ENOTDIR;
-      return -1;
+      return -ENOTDIR;
     }
   }
   // at this point know that current is pointing to a valid file
@@ -133,8 +121,7 @@ int dandelion_open(const char *name, int flags, mode_t mode) {
     }
   }
   if (file_descriptor == FS_MAX_FILES) {
-    errno = EMFILE;
-    return -1;
+    return -EMFILE;
   }
   if (open_existing_file(file_descriptor, current, flags, mode, 1) != 0) {
     return -1;
@@ -150,22 +137,18 @@ int dandelion_mkdir(const char *name, mode_t mode) {
   Path dir_name = get_file(dir_path);
   D_File *parent_file = find_file_path(parent_dir);
   if (parent_file == NULL) {
-    errno = ENOENT;
-    return -1;
+    return -ENOENT;
   }
   if (parent_file->type != DIRECTORY) {
-    errno = ENOTDIR;
-    return -1;
+    return -ENOTDIR;
   }
   D_File *existing = find_file_in_dir(parent_file, dir_name);
   if (existing != NULL) {
-    errno = EEXIST;
-    return -1;
+    return -EEXIST;
   }
   D_File *new_dir = create_directories(parent_file, dir_name, 0);
   if (new_dir == NULL) {
-    errno = ENOMEM;
-    return -1;
+    return -ENOMEM;
   }
   new_dir->mode = mode;
   return 0;
@@ -175,8 +158,7 @@ int dandelion_close(int file) {
   // check the file is open
   D_File *to_close = open_files[file].file;
   if (to_close == NULL) {
-    errno = EBADF;
-    return -1;
+    return -EBADF;
   }
   to_close->open_descripotors -= 1;
   free_data(to_close);
@@ -190,8 +172,7 @@ int dandelion_lseek(int file, int offset, int whence) {
   OpenFile *open_file = &open_files[file];
   D_File *backing_file = open_file->file;
   if (backing_file == NULL || backing_file->type != FILE) {
-    errno = EBADF;
-    return -1;
+    return -EBADF;
   }
   // perform seek in phases
   // advance current reader to where the seek is supposed to start from
@@ -237,8 +218,7 @@ int dandelion_lseek(int file, int offset, int whence) {
     open_file->offset = chunk->used;
     break;
   default:
-    errno = EINVAL;
-    return -1;
+    return -EINVAL;
   }
   // current chunk is now set to the chunk we are supposed to append to
   // if we can advance inside file do that
@@ -269,16 +249,14 @@ int dandelion_lseek(int file, int offset, int whence) {
   FileChunk *new_chunk =
       dandelion_alloc(sizeof(FileChunk), _Alignof(FileChunk));
   if (new_chunk == NULL) {
-    errno = ENOMEM;
-    return -1;
+    return -ENOMEM;
   }
   // round allocation size to next multiple of usual block size
   size_t allocation_size =
       ((offset + FS_CHUNCK_SIZE - 1) / FS_CHUNCK_SIZE) * FS_CHUNCK_SIZE;
   new_chunk->data = dandelion_alloc(allocation_size, _Alignof(max_align_t));
   if (new_chunk->data == NULL) {
-    errno = ENOMEM;
-    return -1;
+    return -ENOMEM;
   }
   new_chunk->capacity = allocation_size;
   new_chunk->used = offset;
@@ -301,12 +279,10 @@ int dandelion_read(int file, char *ptr, int len) {
   OpenFile *open_file = &open_files[file];
   // check there is a valid file descriptor there and that it is writable
   if (open_file->file == NULL || open_file->open_flags & O_WRONLY) {
-    errno = EBADF;
-    return -1;
+    return -EBADF;
   }
   if (open_file->file->type != FILE) {
-    errno = EINVAL;
-    return -1;
+    return -EINVAL;
   }
   // if len is 0, it is supposed to only check for these errors and return
   if (len == 0) {
@@ -357,12 +333,10 @@ int dandelion_write(int file, char *ptr, int len) {
   OpenFile *open_file = &open_files[file];
   // check there is a valid file descriptor there and that it is writable
   if (open_file->file == NULL || open_file->open_flags & O_RDONLY) {
-    errno = EBADF;
-    return -1;
+    return -EBADF;
   }
   if (open_file->file->type != FILE) {
-    errno = EINVAL;
-    return -1;
+    return -EINVAL;
   }
 
   D_File *d_file = open_file->file;
@@ -372,14 +346,12 @@ int dandelion_write(int file, char *ptr, int len) {
     if (d_file->content == NULL) {
       char *new_buffer = dandelion_alloc(FS_CHUNCK_SIZE, _Alignof(max_align_t));
       if (new_buffer == NULL) {
-        errno = ENOMEM;
-        return -1;
+        return -ENOMEM;
       }
       FileChunk *new_chunck =
           dandelion_alloc(sizeof(FileChunk), _Alignof(FileChunk));
       if (new_chunck == NULL) {
-        errno = ENOMEM;
-        return -1;
+        return -ENOMEM;
       }
       new_chunck->capacity = FS_CHUNCK_SIZE;
       new_chunck->data = new_buffer;
@@ -412,13 +384,11 @@ int dandelion_write(int file, char *ptr, int len) {
       FileChunk *new_chunck =
           dandelion_alloc(sizeof(FileChunk), _Alignof(FileChunk));
       if (new_chunck == NULL) {
-        errno = ENOMEM;
-        return -1;
+        return -ENOMEM;
       }
       char *allocation = dandelion_alloc(FS_CHUNCK_SIZE, _Alignof(max_align_t));
       if (allocation == NULL) {
-        errno = ENOMEM;
-        return -1;
+        return -ENOMEM;
       }
       new_chunck->data = allocation;
       new_chunck->capacity = FS_CHUNCK_SIZE;
@@ -458,8 +428,7 @@ static inline int __dandelion_stat(D_File *file, DandelionStat *st) {
 int dandelion_fstat(int file, DandelionStat *st) {
   D_File *current_file = open_files[file].file;
   if (current_file == NULL) {
-    errno = EBADF;
-    return -1;
+    return -EBADF;
   }
   return __dandelion_stat(current_file, st);
 }
@@ -479,12 +448,10 @@ int dandelion_stat(char *file, DandelionStat *st) {
 int dandelion_opendir(const char *name, DIR *dir) {
   D_File *current_dir = find_file(name);
   if (current_dir == NULL) {
-    errno = ENOENT;
-    return -1;
+    return -ENOENT;
   }
   if (current_dir->type != DIRECTORY) {
-    errno = ENOTDIR;
-    return -1;
+    return -ENOTDIR;
   }
   // allocate and populate open dir struct
   dir->dir = current_dir;
@@ -511,13 +478,14 @@ int dandelion_readdir(DIR *directory, struct dirent *dirent) {
   // either have reached index == direcotry->child or current_child is NULL
   if (current_child == NULL) {
     if (index != directory->child) {
-      errno = ENOENT;
+      return -ENOENT;
     }
     return -1;
   }
+  directory->child++;
   size_t max_name_length = MIN(256, FS_NAME_LENGHT);
-  memcpy(dirent->d_name, current_child->name, max_name_length);
-  dirent->d_name[max_name_length + 1] = 0;
+  memcpy(dirent->d_name, current_child->name, max_name_length-1);
+  dirent->d_name[max_name_length] = 0;
   dirent->d_ino = 0;
   dirent->d_off = index;
   dirent->d_type = current_child->type == FILE ? DT_REG : DT_DIR;

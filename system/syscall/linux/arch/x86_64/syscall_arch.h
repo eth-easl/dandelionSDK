@@ -8,6 +8,7 @@
 #define SYS_arch_prctl 158
 #define SYS_exit_group 231
 #define SYS_openat 257
+#define SYS_getdents64 217
 
 #define ARCH_SET_FS 0x1002
 

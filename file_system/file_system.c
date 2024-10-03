@@ -465,12 +465,14 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
   *argv = NULL;
   *environ = NULL;
 
-  // add all names items from all names sets
+  // add all named items from all names sets
   size_t input_sets = dandelion_input_set_count();
   for (size_t set_index = 0; set_index < input_sets; set_index++) {
     // get set information
     Path set_path = {.path = dandelion_input_set_ident(set_index),
                      .length = dandelion_input_set_ident_len(set_index)};
+    if(set_path.length == 0)
+      continue;
     // create directories for set
     D_File *set_directory = create_directories(fs_root, set_path, 1);
     if (set_directory == NULL) {
@@ -479,13 +481,14 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
     }
     int is_stdio_folder =
         namecmp(set_path.path, "stdio", MIN(set_path.length, 5));
-    // TODO check for stdin file to open at file 0
     size_t input_items = dandelion_input_buffer_count(set_index);
     for (size_t item_index = 0; item_index < input_items; item_index++) {
       IoBuffer *item_buffer = dandelion_get_input(set_index, item_index);
 
       Path total_path = {.path = item_buffer->ident,
                          .length = item_buffer->ident_len};
+      if(total_path.length == 0)
+        continue;
       Path dir_path = get_directories(total_path);
       Path file_path = get_file(total_path);
       D_File *item_dir = create_directories(set_directory, dir_path, 1);
@@ -524,6 +527,22 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
         }
       }
     }
+  }
+
+  // also add folders from stdout sets
+  size_t output_sets = dandelion_output_set_count();
+  for (size_t set_index = 0; set_index < output_sets; set_index++) {
+    // get set information
+    Path set_path = {.path = dandelion_output_set_ident(set_index),
+                     .length = dandelion_output_set_ident_len(set_index)};
+    if(set_path.length == 0)
+      continue;
+    // create directories for set
+    D_File *set_directory = create_directories(fs_root, set_path, 1);
+    if (set_directory == NULL) {
+      // TODO write to stderr on what happened
+      return -1;
+    } 
   }
 
   // if stdin has not been given as an input set create an empty file and

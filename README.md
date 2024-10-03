@@ -24,20 +24,13 @@ To enable debug build set the cmake variable `CMAKE_BUILD_TYPE` to `Debug`.
 This can be done by adding `-DCMAKE_BUILD_TYPE=Debug` to the cmake command or setting it as an env variable. 
 
 ## Debugging
-When the code is built for the debug backend it expects a debug_config.txt in the folder it is run.
-In that file it expects the following:
-- a line with the input sets formatted as:
-    - a positive integer followed by a space, numbering how many input set names there are
-    - a list of input set names consisting only of characters and underscores followed a space, the number of input buffers belonging to this set and another space
-    - a newline character
-- a line with the output sets formatted as:
-    - a positive integer followed by a space to indicate how many output sets there are
-    - a list output set names consisting of only character and underscores followed by a space
-    - a newline character
-- a line per input buffers formatted as
-    - name consising of only characters and underscores followed by a space
-    - positive interger that is used as key followed by a space
-    - a string in quotes "<data here>", followed by the newline
+The debug backend will look for a folder called `input_sets` in the directory the executable is run in as well as a folder called `output_sets`.
+In those folders if will look for a folder for each set and take each file in a folder in the `input_sets` folder as input to the function.
+Folders in the `output_sets` folder will be registered as output sets.
+The number of files per folder is limited by length of their names.
+We have reserved 4096 bytes for the dirent structures, which include the names, meaning longer names limit how many structures we can read.
+In order to avoid recursing folders we express nested files with '+' between folders and files.
+For example the input file "test_folder+test_file" will be presented to the file system as "/<set folder name>/test_folder/test_file".
 
 ## Interface expectations
 ### libc

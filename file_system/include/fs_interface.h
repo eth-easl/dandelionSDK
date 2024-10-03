@@ -23,19 +23,21 @@ struct dirent {
 #define S_IXUSR 00100
 #define S_IWUSR 00200
 #define S_IRUSR 00400
-#define S_IRWXU 00700
+#define S_IRWXU (S_IXUSR|S_IWUSR|S_IRUSR)
 
 #define S_IFDIR 0040000
 #define S_IFREG 0100000
 
-#define O_ACCMODE 00000003
-#define O_RDONLY 00000000
-#define O_WRONLY 00000001
-#define O_RDWR 00000002
-#define O_CREAT 00000100
-#define O_EXCL 00000200
-#define O_TRUNC 00001000
-#define O_APPEND 00002000
+// Are matched to newlib, need to ensure that if they change them we keep it up to date
+// if this changes more often might want to define our own sys/fctl.h
+#define O_RDONLY  0x000
+#define O_WRONLY  0x001
+#define O_RDWR    0x002
+#define O_APPEND  0x008
+#define O_CREAT   0x200
+#define O_TRUNC   0x400
+#define O_EXCL    0x800
+#define O_ACCMODE (O_RDONLY|O_WRONLY|O_RDWR) 
 
 // Fake that stdin, stdout and stderr are TTY
 int dandelion_isatty(int file);

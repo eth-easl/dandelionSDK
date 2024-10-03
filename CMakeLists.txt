@@ -31,6 +31,7 @@ if(NEWLIB)
     set(DANDELION_FS ON)
 endif()
 
+# find compiler runtime
 execute_process(
     COMMAND ${CMAKE_C_COMPILER} -print-file-name=include
     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -51,6 +52,12 @@ if(DANDELION_FS)
     add_subdirectory(file_system)
 endif()
 
+# set default level of parallelism
+if(NOT CMAKE_BUILD_PARALLEL_LEVEL)
+    cmake_host_system_information(RESULT CMAKE_BUILD_PARALLEL_LEVEL QUERY NUMBER_OF_LOGICAL_CORES)
+else()
+    message(WARNING "build parallel was already set")
+endif()
 
 if(NEWLIB)
     if(NOT ARCHITECTURE)
@@ -80,7 +87,7 @@ if(NEWLIB)
         CONFIGURE_COMMAND cd <BINARY_DIR> 
         # official recoomendation is to build out of source dir with newlib and the option --with-newlib, but that build fails
         COMMAND <SOURCE_DIR>/newlib/configure --prefix=<INSTALL_DIR> ${NEWLIB_CONFIG_ARGS}
-        BUILD_COMMAND make
+        BUILD_COMMAND make -j ${CMAKE_BUILD_PARALLEL_LEVEL}
         INSTALL_COMMAND make install
         COMMAND ${CMAKE_COMMAND} -E copy_directory
                 <INSTALL_DIR>/${CMAKE_SYSTEM_PROCESSOR}-dandelion/include
@@ -89,17 +96,16 @@ if(NEWLIB)
                 <INSTALL_DIR>/${CMAKE_SYSTEM_PROCESSOR}-dandelion/lib
                 ${CMAKE_INSTALL_PREFIX}/lib
     )
-    ExternalProject_Get_Property(newlib INSTALL_DIR)
-    set(NEWLIB_INSTALL_DIR "${INSTALL_DIR}/${CMAKE_SYSTEM_PROCESSOR}-dandelion")
+
     add_library(dlibc INTERFACE IMPORTED GLOBAL)
     add_dependencies(dlibc newlib)
-    target_include_directories(dlibc INTERFACE "${NEWLIB_INSTALL_DIR}/include") 
+    target_include_directories(dlibc INTERFACE "${CMAKE_INSTALL_PREFIX}/include") 
     target_link_libraries(dlibc INTERFACE 
         ${RUNTIME_LIB}
         ${FILE_SYSTEM_LIB}
-        ${NEWLIB_INSTALL_DIR}/lib/libm.a
-        ${NEWLIB_INSTALL_DIR}/lib/libg.a
-        ${NEWLIB_INSTALL_DIR}/lib/libc.a
+        ${CMAKE_INSTALL_PREFIX}/lib/libm.a
+        ${CMAKE_INSTALL_PREFIX}/lib/libg.a
+        ${CMAKE_INSTALL_PREFIX}/lib/libc.a
     )
     target_link_options(dlibc INTERFACE -nostdlib)
 

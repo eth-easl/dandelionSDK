@@ -7,6 +7,7 @@
 #define SYS_write 64
 #define SYS_exit_group 94
 #define SYS_mmap 222
+#define SYS_getdents64 61
 
 #define __asm_syscall(...)                                                     \
   do {                                                                         \

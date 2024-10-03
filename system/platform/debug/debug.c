@@ -8,6 +8,10 @@
 
 #define sysdata __dandelion_system_data
 
+#define DIRENT_BUF_SIZE 4096
+#define DT_DIR 4
+#define DT_REG 8
+
 static size_t my_strlen(const char *string) {
   size_t len = 0;
   while (string[len]) {
@@ -155,6 +159,22 @@ static inline char *round_up_to(char *original, size_t alignment) {
   return original + additional;
 }
 
+// allocation without freeing, only for smaller structures
+static void* debug_alloc(size_t size){
+  static size_t* buffer_space = NULL;
+  static size_t used = 0;
+  static const size_t page_size = 4096;
+  size_t new_allocation = ((size + sizeof(size_t) -1)/ sizeof(size_t));
+  if(buffer_space == NULL || page_size < (used + new_allocation)*sizeof(size_t)){
+    buffer_space = vm_alloc(page_size);
+    used = 0;
+  }
+  void* ret_ptr = buffer_space + used;
+  used += new_allocation;
+  return  ret_ptr;
+}
+
+
 void __dandelion_platform_init(void) {
 
   size_t alloc_size = 1ull << 31;
@@ -164,112 +184,176 @@ void __dandelion_platform_init(void) {
     __syscall(SYS_exit_group, 1);
   }
 
-  size_t input_sets_len = 0;
-  size_t output_sets_len = 0;
+  // attempt to open folder input_sets
+  int in_sets_fd = __syscall(SYS_openat, AT_FDCWD, "input_sets", O_RDONLY);
+  if(in_sets_fd < 0){
+    print_and_exit("No input_sets directory in current working directory\n", -1);
+  }
+  // start going through files
+  typedef struct linux_dirent {
+    __uint64_t d_ino;
+    __uint64_t d_off;
+    unsigned short d_reclen;
+    unsigned char d_type;
+    char d_name[];
+  } linux_dirent;
+  char dirent_buffer[DIRENT_BUF_SIZE];
+  char set_dirent_buffer[DIRENT_BUF_SIZE];
 
-  // attempt to open file with input and output definitions
-  int config_fd = __syscall(SYS_openat, AT_FDCWD, "debug_config.txt", O_RDONLY);
-  if (config_fd < 0) {
-    print_and_exit("No debug_config.txt in current working directory\n", -1);
+  long dirent_read = __syscall(SYS_getdents64, in_sets_fd, &dirent_buffer, DIRENT_BUF_SIZE);
+  if(dirent_read < 0)
+    print_and_exit("getdents failed\n", -dirent_read);
+  if(dirent_read == DIRENT_BUF_SIZE)
+    print_and_exit("could not read all child directory entries of in set", -1);
+
+  size_t input_set_num = 0;
+  for(long dirent_offset = 0; dirent_offset < dirent_read; dirent_offset += ((linux_dirent*) &dirent_buffer[dirent_offset])->d_reclen){
+    linux_dirent* dirent = (linux_dirent*) &dirent_buffer[dirent_offset];
+    size_t ident_len = my_strlen(dirent->d_name);
+    if((ident_len == 1 && dirent->d_name[0] == '.') 
+        ||(ident_len == 2 && dirent->d_name[0] == '.' && dirent->d_name[1] == '.'))
+      continue;
+    input_set_num++;
   }
-  ssize_t file_size = __syscall(SYS_lseek, config_fd, 0, 2);
-  if (file_size <= 0) {
-    print_and_exit("Could not get file size\n", -1);
-  }
-  // map file to memory
-  char *file_addr = (char *)__syscall(SYS_mmap, NULL, file_size, PROT_READ,
-                                      MAP_PRIVATE, config_fd, 0);
-  if ((long)file_addr < 0) {
-    print_and_exit("Could not map debug_config.txt\n", -(int)file_addr);
-  }
-  char *file_iter = file_addr;
-  char *file_end = file_addr + file_size;
-  // expect first char to be number of input sets
-  file_iter += read_number(file_iter, &input_sets_len, file_end);
 
   struct io_set_info *input_sets = heap_ptr;
-  heap_ptr += (input_sets_len + 1) * sizeof(struct io_set_info);
-
-  // start reading input set descriptions
-  // expect a name followed by a number
-  size_t total_buffers = 0;
-  for (size_t index = 0; index < input_sets_len; index++) {
-    size_t bytes_read = read_name(file_iter, file_end);
-    input_sets[index].ident = file_iter;
-    file_iter += bytes_read;
-    input_sets[index].ident_len = bytes_read - 1;
-    input_sets[index].offset = total_buffers;
-    size_t buffer_count = 0;
-    bytes_read = read_number(file_iter, &buffer_count, file_end);
-    file_iter += bytes_read;
-    total_buffers += buffer_count;
-  }
-  // set up sentinel set
-  input_sets[input_sets_len].ident = NULL;
-  input_sets[input_sets_len].ident_len = 0;
-  input_sets[input_sets_len].offset = total_buffers;
-
-  // check that there is an end line and advance past it
-  if (file_iter[0] != '\n')
-    print_and_exit("No endl after last input set description\n", -1);
-  file_iter++;
-
-  // read output set number
-  file_iter += read_number(file_iter, &output_sets_len, file_end);
-  // read output set names
-  heap_ptr = round_up_to(heap_ptr, _Alignof(struct io_set_info));
-  struct io_set_info *output_sets = heap_ptr;
-  heap_ptr += (output_sets_len + 1) * sizeof(struct io_set_info);
-  for (size_t index = 0; index < output_sets_len; index++) {
-    size_t read_bytes = read_name(file_iter, file_end);
-    output_sets[index].ident = file_iter;
-    output_sets[index].ident_len = read_bytes - 1;
-    output_sets[index].offset = 0;
-    file_iter += read_bytes;
-  }
-  // set up sentnel set
-  output_sets[output_sets_len].ident = NULL;
-  output_sets[output_sets_len].ident_len = 0;
-  output_sets[output_sets_len].offset = 0;
-
-  // read the newline at the end
-  if (file_iter[0] != '\n')
-    print_and_exit("No endl after last output set description\n", -1);
-  file_iter++;
-
-  // read input items already know the total number and can allocate the buffer
-  // space
+  heap_ptr += (input_set_num + 1) * sizeof(struct io_set_info);
+  // prepare for IoBuffer array for input sets
   heap_ptr = round_up_to(heap_ptr, _Alignof(IoBuffer));
   sysdata.input_bufs = heap_ptr;
-  heap_ptr += total_buffers * sizeof(IoBuffer);
-  for (size_t current_buffer = 0; current_buffer < total_buffers;
-       current_buffer++) {
-    size_t read_bytes = read_name(file_iter, file_end);
-    sysdata.input_bufs[current_buffer].ident = file_iter;
-    sysdata.input_bufs[current_buffer].ident_len = read_bytes - 1;
-    file_iter += read_bytes;
-    size_t key;
-    file_iter += read_number(file_iter, &key, file_end);
-    sysdata.input_bufs[current_buffer].key = key;
-    read_bytes = read_data(file_iter, file_end);
-    // assume input is in quotes, so skip over initial quote
-    sysdata.input_bufs[current_buffer].data = file_iter + 1;
-    // need to discount leading and trailing quote
-    sysdata.input_bufs[current_buffer].data_len = read_bytes - 2;
-    file_iter += read_bytes;
-    // check there is a newline character
-    if (file_iter[0] != '\n')
-      print_and_exit("Input item line not terminated by newline char\n", -1);
 
-    file_iter++;
+  size_t total_buffers = 0;
+  size_t input_set_index = 0;
+  for(long dirent_offset = 0; dirent_offset < dirent_read; dirent_offset += ((linux_dirent*) &dirent_buffer[dirent_offset])->d_reclen){
+    linux_dirent* dirent = (linux_dirent*) &dirent_buffer[dirent_offset];
+    size_t ident_len = my_strlen(dirent->d_name);
+    write_all(1, dirent->d_name, ident_len); 
+    write_all(1, "\n", 1);
+
+    // check it is a directory
+    if((ident_len == 1 && dirent->d_name[0] == '.') 
+      ||(ident_len == 2 && dirent->d_name[0] == '.' && dirent->d_name[1] == '.'))
+      continue;
+    if(dirent->d_type != DT_DIR)
+      print_and_exit("file in input_sets not direcotory", -1);
+
+    // open the input set folder
+    int set_folder_fd = __syscall(SYS_openat, in_sets_fd, dirent->d_name, O_RDONLY);
+    if(set_folder_fd < 0)
+      print_and_exit("could not open set folder\n", -1);
+
+    // read the directory
+    long set_dirent_read = __syscall(SYS_getdents64, set_folder_fd, &set_dirent_buffer, DIRENT_BUF_SIZE); 
+    if(set_dirent_read < 0)
+      print_and_exit("getdents failed\n", -dirent_read);
+    if(set_dirent_read == DIRENT_BUF_SIZE)
+      print_and_exit("could not read all items in input set, ran out of dirent buffer space", -1);
+    char* ident_buffer = (char*) debug_alloc(ident_len);
+    my_memcpy(ident_buffer, dirent->d_name, ident_len);  
+    input_sets[input_set_index].ident = ident_buffer;
+    input_sets[input_set_index].ident_len = ident_len;
+    input_sets[input_set_index].offset = total_buffers;
+    input_set_index++;
+    // add items 
+    for(long set_dirent_offset = 0; set_dirent_offset < set_dirent_read;
+        set_dirent_offset += ((linux_dirent*) &set_dirent_buffer[set_dirent_offset])->d_reclen){
+      linux_dirent* set_dirent = (linux_dirent*) &set_dirent_buffer[set_dirent_offset];
+      size_t item_ident_len = my_strlen(set_dirent->d_name);
+      if((item_ident_len == 1 && set_dirent->d_name[0] == '.')
+        || (item_ident_len == 2 && set_dirent->d_name[0] == '.' && set_dirent->d_name[1] == '.'))
+        continue;
+      write_all(1, "\t", 1);
+      write_all(1, set_dirent->d_name, item_ident_len);
+      write_all(1, "\n", 1);
+      // add one buffer to heap
+      IoBuffer* current_buffer = heap_ptr;
+      heap_ptr += sizeof(IoBuffer); 
+      char* item_ident_buffer = (char*) debug_alloc(item_ident_len);
+      my_memcpy(item_ident_buffer, set_dirent->d_name, item_ident_len);
+      // pretend the files were in folders
+      for(size_t index = 0; index < item_ident_len; index++){
+        if(item_ident_buffer[index] == '+'){
+          item_ident_buffer[index] = '/';
+        }
+      }
+      current_buffer->ident = item_ident_buffer; 
+      current_buffer->ident_len = item_ident_len;
+      current_buffer->key = 0;
+      int item_fd = __syscall(SYS_openat, set_folder_fd, set_dirent->d_name, O_RDONLY);
+      if(item_fd < 0)
+        print_and_exit("could not open item file", -1);
+      ssize_t file_size = __syscall(SYS_lseek, item_fd, 0, 2);
+      if (file_size < 0) 
+        print_and_exit("Could not get file size\n", -1);
+      char *file_addr = NULL;
+      if(file_size > 0){
+        file_addr = (char *)__syscall(SYS_mmap, NULL, file_size, PROT_READ, MAP_PRIVATE, item_fd, 0);
+        if ((long)file_addr < 0) 
+          print_and_exit("Could not map item file\n", -(int)file_addr);
+      }
+      current_buffer->data = file_addr;
+      current_buffer->data_len = file_size;
+      total_buffers++;
+    }
   }
+  // set up sentinel set
+  input_sets[input_set_num].ident = NULL;
+  input_sets[input_set_num].ident_len = 0;
+  input_sets[input_set_num].offset = total_buffers;
 
   sysdata.input_sets = input_sets;
-  sysdata.input_sets_len = input_sets_len;
+  sysdata.input_sets_len = input_set_num;
+
+  // start processing output sets
+  int out_sets_fd = __syscall(SYS_openat, AT_FDCWD, "output_sets", O_RDONLY);
+  if(out_sets_fd < 0){
+    print_and_exit("No output set directory in current working directory\n", -1);
+  }
+  dirent_read = __syscall(SYS_getdents64, out_sets_fd, &dirent_buffer, DIRENT_BUF_SIZE);
+  if(dirent_read < 0){
+    print_and_exit("getdents failed\n", -dirent_read);
+  }
+
+  size_t output_set_num = 0;
+  for(long dirent_offset = 0; dirent_offset < dirent_read; dirent_offset += ((linux_dirent*) &dirent_buffer[dirent_offset])->d_reclen){
+    linux_dirent* dirent = (linux_dirent*) &dirent_buffer[dirent_offset];
+    size_t ident_len = my_strlen(dirent->d_name);
+    if((ident_len == 1 && dirent->d_name[0] == '.') 
+        ||(ident_len == 2 && dirent->d_name[0] == '.' && dirent->d_name[1] == '.'))
+      continue;
+    output_set_num++;
+  }
+
+  heap_ptr = round_up_to(heap_ptr, _Alignof(struct io_set_info));
+  struct io_set_info *output_sets = heap_ptr;
+  heap_ptr += (output_set_num + 1) * sizeof(struct io_set_info);
+  size_t output_set_index = 0;
+  for(long dirent_offset = 0; dirent_offset < dirent_read; dirent_offset += ((linux_dirent*) &dirent_buffer[dirent_offset])->d_reclen){
+    linux_dirent* dirent = (linux_dirent*) &dirent_buffer[dirent_offset];
+    size_t ident_len = my_strlen(dirent->d_name);
+    write_all(1, dirent->d_name, ident_len); 
+    write_all(1, "\n", 1);
+    // check it is a directory
+    if((ident_len == 1 && dirent->d_name[0] == '.') 
+      ||(ident_len == 2 && dirent->d_name[0] == '.' && dirent->d_name[1] == '.'))
+      continue;
+    if(dirent->d_type != DT_DIR)
+      print_and_exit("file in output_sets not direcotory", -1);
+    char* ident_buffer = (char*) debug_alloc(ident_len);
+    my_memcpy(ident_buffer, dirent->d_name, ident_len);
+    output_sets[output_set_index].ident = ident_buffer;
+    output_sets[output_set_index].ident_len = ident_len;
+    output_sets[output_set_index].offset = 0;
+    output_set_index++;
+  }
+  // set up sentinel set
+  output_sets[output_set_num].ident = NULL;
+  output_sets[output_set_num].ident_len = 0;
+  output_sets[output_set_num].offset = 0;
 
   sysdata.output_bufs = NULL;
   sysdata.output_sets = output_sets;
-  sysdata.output_sets_len = output_sets_len;
+  sysdata.output_sets_len = output_set_num;
 
   sysdata.heap_begin = (uintptr_t)heap_ptr;
   sysdata.heap_end = (uintptr_t)heap_end;

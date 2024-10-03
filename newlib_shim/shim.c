@@ -17,6 +17,15 @@ extern int fs_initialize(int *argc, char ***argv, char ***environ);
 extern int fs_terminate();
 extern int main(int argc, char *argv[]);
 
+static inline int process_error(int error){
+  if(error < 0){
+    errno = -error;
+    return -1;
+  } else {
+    return error;
+  }
+}
+
 int __initialization() {
   int errcode = 0;
   int argc;
@@ -40,41 +49,41 @@ void _exit(void) {
 };
 
 extern int dandelion_isatty(int file);
-int isatty(int file) { return dandelion_isatty(file); }
+int isatty(int file) { return  dandelion_isatty(file); }
 
 extern void *dandelion_sbrk(int incr);
 void *sbrk(int incr) { return dandelion_sbrk(incr); }
 
 extern int dandelion_open(const char *name, int flags, mode_t mode);
 int open(const char *name, int flags, mode_t mode) {
-  return dandelion_open(name, flags, mode);
+  process_error(dandelion_open(name, flags, mode));
 }
 
 extern int dandelion_mkdir(const char *name, mode_t mode);
-int mkdir(const char *name, mode_t mode) { return dandelion_mkdir(name, mode); }
+int mkdir(const char *name, mode_t mode) { return process_error(dandelion_mkdir(name, mode)); }
 
 extern int dandelion_close(int file);
-int close(int file) { return dandelion_close(file); }
+int close(int file) { return process_error(dandelion_close(file)); }
 
 extern int dandelion_link(char *old, char *new);
-int link(char *old, char *new) { return dandelion_link(old, new); }
+int link(char *old, char *new) { return process_error(dandelion_link(old, new)); }
 
 extern int dandelion_unlink(char *name);
-int unlink(char *name) { return dandelion_unlink(name); }
+int unlink(char *name) { return process_error(dandelion_unlink(name)); }
 
 extern int dandelion_lseek(int file, int ptr, int dir);
 int lseek(int file, int ptr, int dir) {
-  return dandelion_lseek(file, ptr, dir);
+  return process_error(dandelion_lseek(file, ptr, dir));
 }
 
 extern int dandelion_read(int file, char *ptr, int len);
 int read(int file, char *ptr, int len) {
-  return dandelion_read(file, ptr, len);
+  return process_error(dandelion_read(file, ptr, len));
 }
 
 extern int dandelion_write(int file, char *ptr, int len);
 int write(int file, char *ptr, int len) {
-  return dandelion_write(file, ptr, len);
+  return process_error(dandelion_write(file, ptr, len));
 }
 
 typedef struct DandelionStat {
@@ -88,8 +97,10 @@ extern int dandelion_fstat(int file, DandelionStat *dst);
 int fstat(int file, struct stat *st) {
   DandelionStat local = {};
   int error = dandelion_fstat(file, &local);
-  if (error != 0)
-    return error;
+  if (error < 0){
+    errno = -error;
+    return -1;
+  }
   st->st_mode = local.st_mode;
   st->st_nlink = local.hard_links;
   st->st_size = local.file_size;
@@ -102,8 +113,10 @@ extern int dandelion_stat(const char *file, DandelionStat *dst);
 int stat(const char *file, struct stat *st) {
   DandelionStat local = {};
   int error = dandelion_stat(file, &local);
-  if (error != 0)
-    return error;
+  if (error < 0){
+    errno = -error;
+    return -1;
+  }
   st->st_mode = local.st_mode;
   st->st_nlink = local.hard_links;
   st->st_size = local.file_size;
@@ -133,7 +146,7 @@ int fstatvfs(int fd, struct statvfs *buf){
 // char **environ = {0};
 
 int execve(char *name, char **argv, char **env) {
-  int errno = ENOMEM;
+  errno = ENOMEM;
   return -1;
 }
 
