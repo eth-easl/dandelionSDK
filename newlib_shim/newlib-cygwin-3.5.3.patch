@@ -69,6 +69,7 @@ index 386183466..9a1f02ac2 100644
 +  *-*-dandelion*)
 +	sys_dir=dandelion
 +	have_crt0="no"
++	have_init_fini="no"
 +	;;
    *-*-netware*)
  	signal_dir=

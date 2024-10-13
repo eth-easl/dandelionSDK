@@ -34,7 +34,9 @@ int __initialization() {
   if (errcode != 0) {
     return errcode;
   }
+  __libc_init_array();
   errcode = main(argc, argv);
+  __libc_fini_array();
   fcloseall();
   fs_terminate();
   return errcode;
