@@ -23,6 +23,9 @@ If no value is set, `DEBUG` will be used for the platform value.
 To enable debug build set the cmake variable `CMAKE_BUILD_TYPE` to `Debug`.
 This can be done by adding `-DCMAKE_BUILD_TYPE=Debug` to the cmake command or setting it as an env variable. 
 
+To also build libc and libc++ set the variable `-DNEWLIB=ON`.
+For newlib to be built correctly the autoconf version 2.69.
+
 ## Debugging
 The debug backend will look for a folder called `input_sets` in the directory the executable is run in as well as a folder called `output_sets`.
 In those folders if will look for a folder for each set and take each file in a folder in the `input_sets` folder as input to the function.

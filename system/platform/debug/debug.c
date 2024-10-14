@@ -4,7 +4,6 @@
 #include "syscall.h"
 #include <stddef.h>
 #include <stdint.h>
-#include <sys/types.h>
 
 #define sysdata __dandelion_system_data
 
@@ -35,21 +34,20 @@ static void print_and_exit(char *message, int exit_code) {
   __builtin_unreachable();
 }
 
-static ssize_t write_all(int fd, const void *buffer, size_t size) {
+static void write_all(int fd, const void *buffer, size_t size) {
   size_t written = 0;
   while (written < size) {
-    ssize_t e = __syscall(SYS_write, fd, (const char *)buffer + written,
+    // is supposed to be ssize_t, but that is not always available
+    // ptrdiff_t should be able to hold the value
+    ptrdiff_t e = __syscall(SYS_write, fd, (const char *)buffer + written,
                           size - written);
     if (e < 0) {
-      return e;
+      __syscall(SYS_exit_group);
+      __builtin_unreachable();
     }
     written += e;
   }
-  return 0;
-}
-
-static ssize_t read(int fd, const char *buffer, size_t size) {
-  return __syscall(SYS_read, fd, buffer, size);
+  return;
 }
 
 static void dump_io_buf(const char *setid, size_t setidlen, IoBuffer *buf) {
@@ -90,69 +88,6 @@ static void *vm_alloc(size_t size) {
   return (void *)ret;
 }
 
-static size_t read_number(char const *const stream, size_t *const number,
-                          char const *const stream_end) {
-  size_t local_number = 0;
-  size_t read_bytes = 0;
-  for (; stream + read_bytes < stream_end - 1 && stream[read_bytes] < 58 &&
-         stream[read_bytes] > 47;
-       read_bytes++) {
-    local_number = 10 * local_number + (stream[read_bytes] - 48);
-  }
-  if (read_bytes == 0)
-    print_and_exit("No number found when trying to read number\n", -1);
-  if (stream[read_bytes] != ' ')
-    print_and_exit("Character after number not a space\n", -1);
-  // have read the ' '
-  read_bytes++;
-  *number = local_number;
-  return read_bytes;
-}
-
-size_t read_name(char const *const stream, char const *const stream_end) {
-  size_t read_bytes = 0;
-  // check we are reading characters, A = 65, Z = 90, a = 97, z = 122, _ = 95
-  while (stream + read_bytes < stream_end - 1 &&
-         ((64 < stream[read_bytes] && stream[read_bytes] < 91) ||
-          (96 < stream[read_bytes] && stream[read_bytes] < 123) ||
-          stream[read_bytes] == 95)) {
-    read_bytes++;
-  }
-  // check that it is terminated by a space
-  if (stream[read_bytes] != ' ')
-    print_and_exit("Name string not terminated by space\n", -1);
-
-  read_bytes++;
-  return read_bytes;
-}
-
-size_t read_data(char const *const stream, char const *const stream_end) {
-  size_t read_bytes = 0;
-  // check first character is a '"'
-  if (stream[read_bytes] != '"')
-    print_and_exit("Data string not started by quote\n", -1);
-  read_bytes++;
-
-  // must have at least 1 characters left, one for the ending quote
-  // new line after that
-  unsigned int has_escape = 0;
-  while (stream + read_bytes < stream_end - 1 &&
-         (stream[read_bytes] != '"' || has_escape != 0)) {
-    if (stream[read_bytes] == '\\' && has_escape != 0) {
-      has_escape = 1;
-    } else {
-      has_escape = 0;
-    }
-    read_bytes++;
-  }
-  // check that it is terminated by a quote that is not escaped
-  if (stream[read_bytes] != '"' || has_escape)
-    print_and_exit("Data string not terminated by quote\n", -1);
-
-  read_bytes++;
-  return read_bytes;
-}
-
 static inline char *round_up_to(char *original, size_t alignment) {
   size_t mod = ((uintptr_t)original) % alignment;
   size_t additional = alignment - (mod == 0 ? alignment : mod);
@@ -191,8 +126,8 @@ void __dandelion_platform_init(void) {
   }
   // start going through files
   typedef struct linux_dirent {
-    __uint64_t d_ino;
-    __uint64_t d_off;
+    uint64_t d_ino;
+    uint64_t d_off;
     unsigned short d_reclen;
     unsigned char d_type;
     char d_name[];
@@ -282,7 +217,7 @@ void __dandelion_platform_init(void) {
       int item_fd = __syscall(SYS_openat, set_folder_fd, set_dirent->d_name, O_RDONLY);
       if(item_fd < 0)
         print_and_exit("could not open item file", -1);
-      ssize_t file_size = __syscall(SYS_lseek, item_fd, 0, 2);
+      ptrdiff_t file_size = __syscall(SYS_lseek, item_fd, 0, 2);
       if (file_size < 0) 
         print_and_exit("Could not get file size\n", -1);
       char *file_addr = NULL;

@@ -62,7 +62,7 @@ diff --git a/newlib/configure.host b/newlib/configure.host
 index 386183466..9a1f02ac2 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
-@@ -430,6 +430,10 @@ case "${host}" in
+@@ -430,6 +430,11 @@ case "${host}" in
  	posix_dir=posix
  	xdr_dir=xdr
  	;;

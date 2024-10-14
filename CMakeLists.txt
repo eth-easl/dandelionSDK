@@ -22,6 +22,22 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "${CMAKE_BINARY_DIR}/dandelion_sdk")
 endif()
 
+# set architecture
+if(NOT ARCHITECTURE)
+        message( WARNING "No architecture set for libc, using system architecture ${CMAKE_SYSTEM_PROCESSOR}")
+        set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
+endif()
+
+# find compiler runtime
+execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -print-file-name=include
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE COMPILER_RUNTIME_INCLUDE
+)
+
+# set global compile options
+add_compile_options(--target=${ARCHITECTURE}-none-elf -idirafter${COMPILER_RUNTIME_INCLUDE})
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
     message(WARNING "CMAKE_BUILD_TYPE not explicitly set, setting to Release")
@@ -35,12 +51,7 @@ if(NEWLIB)
     set(DANDELION_FS ON)
 endif()
 
-# find compiler runtime
-execute_process(
-    COMMAND ${CMAKE_C_COMPILER} -print-file-name=include
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    OUTPUT_VARIABLE COMPILER_RUNTIME_INCLUDE
-)
+
 
 # if freestanding is on add the FREESTANDING definition to all compilation
 if(FREESTANDING)
@@ -49,7 +60,7 @@ endif()
 
 add_subdirectory(system)
 add_subdirectory(runtime)
-add_subdirectory(examples)
+add_subdirectory(test_programs)
 
 if(DANDELION_FS)
     set(FILE_SYSTEM_LIB "dandelion_file_system")
@@ -63,17 +74,19 @@ else()
     message(WARNING "build parallel was already set")
 endif()
 
-if(NEWLIB)
-    if(NOT ARCHITECTURE)
-        message( WARNING "No architecture set for libc, using system architecture ${CMAKE_SYSTEM_PROCESSOR}")
-        set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
+if(NEWLIB) 
+    set(NEWLIB_C_FLAGS "-nostdinc")
+    string(APPEND NEWLIB_C_FLAGS " -nostdlib")
+    string(APPEND NEWLIB_C_FLAGS " -idirafter${COMPILER_RUNTIME_INCLUDE}")
+    if(CMAKE_BUILD_TYPE MATCHES "Debug")
+      string(APPEND NEWLIB_C_FLAGS " -gdwarf-4")
     endif()
 
     set(NEWLIB_COMPILER ${CMAKE_BINARY_DIR}/compiler_wrapped.sh)
     configure_file(newlib_shim/compiler_wrapper_template.sh ${NEWLIB_COMPILER} 
         FILE_PERMISSIONS OWNER_READ OWNER_EXECUTE)
 
-    set(NEWLIB_CONFIG_ARGS "--host=${CMAKE_SYSTEM_PROCESSOR}-dandelion")
+    set(NEWLIB_CONFIG_ARGS "--host=${ARCHITECTURE}-dandelion")
     list(APPEND NEWLIB_CONFIG_ARGS "--disable-newlib-reent-thread-local")
     list(APPEND NEWLIB_CONFIG_ARGS "--enable-newlib-io-pos-args")
     list(APPEND NEWLIB_CONFIG_ARGS "--enable-newlib-io-c99-formats")
@@ -98,10 +111,10 @@ if(NEWLIB)
         BUILD_COMMAND CC=${NEWLIB_COMPILER} make -j ${CMAKE_BUILD_PARALLEL_LEVEL}
         INSTALL_COMMAND make install
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-                <INSTALL_DIR>/${CMAKE_SYSTEM_PROCESSOR}-dandelion/include
+                <INSTALL_DIR>/${ARCHITECTURE}-dandelion/include
                 ${CMAKE_INSTALL_PREFIX}/include
          COMMAND ${CMAKE_COMMAND} -E copy_directory
-                <INSTALL_DIR>/${CMAKE_SYSTEM_PROCESSOR}-dandelion/lib
+                <INSTALL_DIR>/${ARCHITECTURE}-dandelion/lib
                 ${CMAKE_INSTALL_PREFIX}/lib
     )
 
@@ -141,7 +154,6 @@ if(NEWLIB)
     string(APPEND LLVM_CXX_FLAGS " -idirafter${COMPILER_RUNTIME_INCLUDE}")
     string(APPEND LLVM_CXX_FLAGS " -nostdlib")
     string(APPEND LLVM_CXX_FLAGS " -nostdinc")
-    string(APPEND LLVM_CXX_FLAGS " -nostdinc++")
     string(APPEND LLVM_CXX_FLAGS " -Wno-narrowing")
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
         string(APPEND LLVM_CXX_FLAGS " -gdwarf-4")
@@ -162,8 +174,8 @@ if(NEWLIB)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY
             -DCMAKE_SYSTEM_NAME=Generic
-            -DCMAKE_C_COMPILER_TARGET=x86_64-none-elf
-            -DCMAKE_CXX_COMPILER_TARGET=x86_64-none-elf
+            -DCMAKE_C_COMPILER_TARGET=${ARCHITECTURE}-none-elf
+            -DCMAKE_CXX_COMPILER_TARGET=${ARCHITECTURE}-none-elf
             -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
             -DLLVM_ENABLE_RUNTIMES=libunwind,libcxxabi,libcxx
             -DCMAKE_C_FLAGS:STRING=${LLVM_C_FLAGS}
