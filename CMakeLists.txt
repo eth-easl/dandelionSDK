@@ -7,10 +7,15 @@ project(dandelion-sdk)
 
 include(ExternalProject)
 
-# Options
+# binary options
 option(FREESTANDING "toggles the include of memcpy, memset, memmove and memcmp" ON)
 option(DANDELION_FS "toggles include of lowes level file system provided by dandelion" OFF)
 option(NEWLIB "toggles builing of newlib on top of dandelion interface" OFF)
+
+# string options
+set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "the architecture to build for")
+set(DANDELION_PLATFORM "debug" CACHE STRING "backend to build for")
+message(STATUS "Building for ${DANDELION_PLATFORM} on ${ARCHITECTURE}")
 
 # Constants
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -22,12 +27,6 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "${CMAKE_BINARY_DIR}/dandelion_sdk")
 endif()
 
-# set architecture
-if(NOT ARCHITECTURE)
-        message( WARNING "No architecture set for libc, using system architecture ${CMAKE_SYSTEM_PROCESSOR}")
-        set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
-endif()
-
 # find compiler runtime
 execute_process(
     COMMAND ${CMAKE_C_COMPILER} -print-file-name=include
@@ -36,7 +35,7 @@ execute_process(
 )
 
 # set global compile options
-add_compile_options(--target=${ARCHITECTURE}-none-elf -idirafter${COMPILER_RUNTIME_INCLUDE})
+add_compile_options(--target=${ARCHITECTURE}-none-elf -nostdinc -idirafter${COMPILER_RUNTIME_INCLUDE})
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)

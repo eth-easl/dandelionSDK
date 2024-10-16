@@ -1,9 +1,6 @@
 use std::ptr::null;
 
-use libc::{
-    __errno_location, c_char, c_int, mode_t, size_t, O_CREAT, O_RDONLY, O_RDWR, O_WRONLY, SEEK_CUR,
-    SEEK_END, SEEK_SET, S_IWUSR,
-};
+use libc::{__errno_location, c_char, c_int, size_t};
 
 use crate::{
     dandelion_structures::{
@@ -20,6 +17,8 @@ struct DandelionStat {
     blk_size: size_t,
 }
 
+type ModeT = u32;
+
 extern "C" {
     /// check if the file corresponding to the descriptor is connected to a terminal
     /// not testing isatty for now, as it is hard coded to be true on stdin, stdout and stderr and false otherwise
@@ -29,7 +28,7 @@ extern "C" {
     /// remove path from pointing to file, if last path leading to file and if it is not open, remove file
     fn dandelion_unlink(name: *const c_char) -> c_int;
     /// open file at path with flags and read/write mode
-    fn dandelion_open(name: *const c_char, flags: c_int, mode: mode_t) -> c_int;
+    fn dandelion_open(name: *const c_char, flags: c_int, mode: ModeT) -> c_int;
     /// reposition file reading/writing offset
     fn dandelion_lseek(file: c_int, offset: c_int, whenece: c_int) -> c_int;
     /// read bytes from file corresponding to descriptor
@@ -51,6 +50,28 @@ extern "C" {
     /// write files into contiguous buffers when necessary and add files as output buffers
     fn fs_terminate() -> c_int;
 }
+
+// need to use the dandelion definitions of the option variables
+const O_RDONLY: i32 = 0x000;
+const O_WRONLY: i32 = 0x001;
+const O_RDWR: i32 = 0x002;
+const O_APPEND: i32 = 0x008;
+const O_CREAT: i32 = 0x200;
+const O_TRUNC: i32 = 0x400;
+const O_EXCL: i32 = 0x800;
+const O_ACCMODE: i32 = O_RDONLY | O_WRONLY | O_RDWR;
+
+const SEEK_SET: i32 = 0; /* set file offset to offset */
+const SEEK_CUR: i32 = 1; /* set file offset to current plus offset */
+const SEEK_END: i32 = 2; /* set file offset to EOF plus offset */
+
+const S_IXUSR: u32 = 00100;
+const S_IWUSR: u32 = 00200;
+const S_IRUSR: u32 = 00400;
+const S_IRWXU: u32 = S_IXUSR | S_IWUSR | S_IRUSR;
+
+const S_IFDIR: i32 = 0040000;
+const S_IFREG: i32 = 0100000;
 
 fn test_write(test_slices: &[&[u8]], file_descriptor: i32, item_name: &str) {
     let heap_size = 16 * 4096;
@@ -367,7 +388,7 @@ fn close_test() {
     assert_eq!(0, stdin_close);
     // check that we can't close it again
     let stdin_reclose = unsafe { dandelion_close(0) };
-    assert_eq!(-1, stdin_reclose);
+    assert_eq!(-libc::EBADF, stdin_reclose);
     // check that we can't read from it
     let mut test_slice = [0u8; 1];
     let read_bytes = unsafe {
@@ -377,17 +398,17 @@ fn close_test() {
             test_slice.len() as i32,
         )
     };
-    assert_eq!(-1, read_bytes);
+    assert_eq!(-libc::EBADF, read_bytes);
 
     // close stdout and check we can't write to it
     let stdout_close = unsafe { dandelion_close(1) };
     assert_eq!(0, stdout_close);
     // check that we can't close it again
     let stdout_reclose = unsafe { dandelion_close(1) };
-    assert_eq!(-1, stdout_reclose);
+    assert_eq!(-libc::EBADF, stdout_reclose);
     let written_bytes =
         unsafe { dandelion_write(1, test_slice.as_ptr() as *const i8, test_slice.len() as i32) };
-    assert_eq!(-1, written_bytes);
+    assert_eq!(-libc::EBADF, written_bytes);
 }
 
 #[test]
@@ -545,7 +566,7 @@ fn link_test() {
             "\0".as_ptr() as *const i8,
         )
     };
-    assert_eq!(-1, link_result);
+    assert_eq!(-libc::ENOTDIR, link_result);
     // already exsiting new_path
     let link_result = unsafe {
         dandelion_link(
@@ -553,7 +574,7 @@ fn link_test() {
             file_new_path.as_ptr() as *const i8,
         )
     };
-    assert_eq!(-1, link_result);
+    assert_eq!(-libc::EEXIST, link_result);
     // should fail if the old file is a directory
     let link_result = unsafe {
         dandelion_link(
@@ -561,7 +582,7 @@ fn link_test() {
             "/test_file".as_ptr() as *const i8,
         )
     };
-    assert_eq!(-1, link_result);
+    assert_eq!(-libc::ENOTDIR, link_result);
 
     // check the files we expect in the output with the expected content
     let finalize_error = unsafe { fs_terminate() };
@@ -640,7 +661,7 @@ fn unlink_test() {
     let unlink_error = unsafe {
         dandelion_unlink("/nested/nested_file/another_folder/another_file\0".as_ptr() as *const i8)
     };
-    assert_eq!(-1, unlink_error);
+    assert_eq!(-libc::ENOTDIR, unlink_error);
 
     // check the files we expect in the output with the expected content
     let finalize_error = unsafe { fs_terminate() };

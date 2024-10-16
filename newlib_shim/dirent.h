@@ -16,8 +16,8 @@ typedef struct DIR {
 #define DT_DIR 2
 
 struct dirent {
-  ino_t d_ino;
-  off_t d_off;
+  size_t d_off;
+  uint16_t d_ino;
   unsigned char d_type;
   char d_name[64];
 };

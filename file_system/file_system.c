@@ -11,7 +11,7 @@
 D_File *fs_root;
 OpenFile *open_files;
 
-D_File *create_file(Path *name, char *content, size_t length, mode_t mode) {
+D_File *create_file(Path *name, char *content, size_t length, uint32_t mode) {
   D_File *new_file = dandelion_alloc(sizeof(D_File), _Alignof(D_File));
   if (new_file == NULL) {
     return NULL;
@@ -41,7 +41,7 @@ D_File *create_file(Path *name, char *content, size_t length, mode_t mode) {
   return new_file;
 }
 
-D_File *create_directory(Path *name, mode_t mode) {
+D_File *create_directory(Path *name, uint32_t mode) {
   D_File *new_file = dandelion_alloc(sizeof(D_File), _Alignof(D_File));
   if (name->length > FS_NAME_LENGHT) {
     return NULL;
@@ -238,7 +238,7 @@ int remove_file(D_File *file) {
 // assumes file is non null
 // Flags that need to be supported / checked on layers above:
 // O_CREAT, O_EXCL, O_TMPFILE
-int open_existing_file(unsigned int index, D_File *file, int flags, mode_t mode,
+int open_existing_file(unsigned int index, D_File *file, int flags, uint32_t mode,
                        char skip_checks) {
   // Currently ignoring the following flags, noting here so we know they
   // were not forgotten and nulling them so we don't read them on accident
@@ -260,13 +260,11 @@ int open_existing_file(unsigned int index, D_File *file, int flags, mode_t mode,
     // well as user checking check if opened for reading against read
     // permissions
     if ((!(file->mode & S_IRUSR)) && (access_mode & O_RDONLY)) {
-      errno = EACCES;
-      return -1;
+      return -EACCES;
     }
     // check if opened for writing against write permissions
     if ((!(file->mode & S_IWUSR)) && (access_mode & O_WRONLY)) {
-      errno = EACCES;
-      return -1;
+      return -EACCES;
     }
   }
 
@@ -445,20 +443,20 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
   D_File *stderr_file = create_file(&stderr_path, NULL, 0, S_IWUSR);
   if (stderr_file == NULL)
     return -1;
-  if (open_existing_file(STDERR_FILENO, stderr_file, O_WRONLY, 0, 0) != 0)
-    return -1;
-  if (link_file_to_folder(stdio_folder, stderr_file) != 0)
-    return -1;
+  error = open_existing_file(STDERR_FILENO, stderr_file, O_WRONLY, 0, 0);
+  if (error != 0) return error;
+  error = link_file_to_folder(stdio_folder, stderr_file);
+  if (error != 0) return error;
 
   // create and open stdout
   Path stdout_path = path_from_string("stdout");
   D_File *stdout_file = create_file(&stdout_path, NULL, 0, S_IWUSR);
   if (stdout_file == NULL)
     return -1;
-  if (open_existing_file(STDOUT_FILENO, stdout_file, O_WRONLY, 0, 0) != 0)
-    return -1;
-  if (link_file_to_folder(stdio_folder, stdout_file) != 0)
-    return -1;
+  error = open_existing_file(STDOUT_FILENO, stdout_file, O_WRONLY, 0, 0);
+  if (error != 0) return error;
+  error = link_file_to_folder(stdio_folder, stdout_file);
+  if (error != 0) return error;
 
   // set to NULL to be able to check if it was set by inputs
   *argc = 0;
@@ -509,9 +507,8 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
         int is_stdin =
             namecmp(file_path.path, "stdin", MIN(file_path.length, 5));
         if (is_stdin == 0) {
-          if ((error = open_existing_file(STDIN_FILENO, item_file, O_RDONLY, 0,
-                                          0)) != 0)
-            return error;
+          error = open_existing_file(STDIN_FILENO, item_file, O_RDONLY, 0, 0);
+          if (error != 0) return error;
         }
         int is_argv = namecmp(file_path.path, "argv", MIN(file_path.length, 4));
         if (is_argv == 0) {
@@ -555,8 +552,9 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
     }
     // do not need to link it to directory, as it will not be part of input
     // or output set only open it to handle attempts to read from stdin
-    if (open_existing_file(STDIN_FILENO, stdin_file, O_RDONLY, 0, 0) != 0) {
-      return -1;
+    error = open_existing_file(STDIN_FILENO, stdin_file, O_RDONLY, 0, 0);
+    if (error != 0) {
+      return error;
     }
     if (link_file_to_folder(stdio_folder, stdin_file) != 0) {
       return -1;

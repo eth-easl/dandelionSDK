@@ -5,13 +5,7 @@
 #define FS_PATH_LENGTH 4096
 #endif
 
-#include "dandelion/runtime.h"
-
-#include <errno.h>
-#ifndef TEST
-#undef errno
-extern int errno;
-#endif
+#include <stddef.h>
 
 typedef struct Path {
   const char *path;

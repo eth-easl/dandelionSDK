@@ -3,8 +3,9 @@
 #include "paths.h"
 
 #include <dandelion/system/system.h>
+#include <dandelion/runtime.h>
 
-#include <unistd.h>
+#include <stddef.h>
 
 extern D_File *fs_root;
 extern OpenFile *open_files;
@@ -77,7 +78,7 @@ int dandelion_unlink(char *name) {
 }
 
 // currently do not handle O_TMPFILE
-int dandelion_open(const char *name, int flags, mode_t mode) {
+int dandelion_open(const char *name, int flags, uint32_t mode) {
   // check if file is already open, if so fail O_TRUNC with EACCESS
   // get path from name
   D_File *current = find_file(name);
@@ -123,14 +124,15 @@ int dandelion_open(const char *name, int flags, mode_t mode) {
   if (file_descriptor == FS_MAX_FILES) {
     return -EMFILE;
   }
-  if (open_existing_file(file_descriptor, current, flags, mode, 1) != 0) {
-    return -1;
-  }
+
+  int open_error = open_existing_file(file_descriptor, current, flags, mode, 1);
+  if (open_error < 0) return open_error;
+
   current->open_descripotors += 1;
   return file_descriptor;
 }
 
-int dandelion_mkdir(const char *name, mode_t mode) {
+int dandelion_mkdir(const char *name, uint32_t mode) {
   // find parent folder
   Path dir_path = path_from_string(name);
   Path parent_dir = get_directories(dir_path);
@@ -436,8 +438,7 @@ int dandelion_fstat(int file, DandelionStat *st) {
 int dandelion_stat(char *file, DandelionStat *st) {
   D_File *current_file = find_file(file);
   if (current_file == NULL) {
-    errno = ENOTDIR;
-    return -1;
+    return -ENOTDIR;
   }
   return __dandelion_stat(current_file, st);
 }

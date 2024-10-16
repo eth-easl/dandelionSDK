@@ -1,7 +1,3 @@
-if(NOT DANDELION_PLATFORM)
-set(DANDELION_PLATFORM "debug")
-endif()
-
 add_library(${SYSTEM_LIB} STATIC system.c)
 if(FREESTANDING)
     target_sources(${SYSTEM_LIB} PRIVATE freestanding.c)

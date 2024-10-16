@@ -56,12 +56,12 @@ int isatty(int file) { return  dandelion_isatty(file); }
 extern void *dandelion_sbrk(int incr);
 void *sbrk(int incr) { return dandelion_sbrk(incr); }
 
-extern int dandelion_open(const char *name, int flags, mode_t mode);
+extern int dandelion_open(const char *name, int flags, uint32_t mode);
 int open(const char *name, int flags, mode_t mode) {
   process_error(dandelion_open(name, flags, mode));
 }
 
-extern int dandelion_mkdir(const char *name, mode_t mode);
+extern int dandelion_mkdir(const char *name, uint32_t mode);
 int mkdir(const char *name, mode_t mode) { return process_error(dandelion_mkdir(name, mode)); }
 
 extern int dandelion_close(int file);

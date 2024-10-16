@@ -3,13 +3,7 @@
 
 #include "paths.h"
 
-#include <sys/types.h>
-
-#include <errno.h>
-#ifndef TEST
-#undef errno
-extern int errno;
-#endif
+#include <stdint.h>
 
 #ifndef FS_NAME_LENGTH
 #define FS_NAME_LENGHT 64
@@ -56,7 +50,7 @@ typedef struct D_File {
   // contains mode as described in stat.h
   // https://pubs.opengroup.org/onlinepubs/007904975/basedefs/sys/stat.h.html
   // the mode contains the file type, access bits and set-id bits
-  mode_t mode;
+  uint32_t mode;
 } D_File;
 
 typedef struct OpenFile {
@@ -85,7 +79,7 @@ D_File *find_file_path(Path file_path);
 // items getting written into different input sets by going up the file tree
 D_File *create_directories(D_File *directory, Path path, char prevent_up);
 
-D_File *create_file(Path *name, char *content, size_t length, mode_t mode);
+D_File *create_file(Path *name, char *content, size_t length, uint32_t mode);
 
 // deallocate file and all data it holds on to
 // for directory also deallocate files in folder
@@ -94,7 +88,7 @@ int free_data(D_File *file);
 // add file to be pointed to by folder
 int link_file_to_folder(D_File *folder, D_File *file);
 
-int open_existing_file(unsigned int index, D_File *file, int flags, mode_t mode,
+int open_existing_file(unsigned int index, D_File *file, int flags, uint32_t mode,
                        char skip_checks);
 
 #endif // __DANDELION_FILE_SYSTEM__

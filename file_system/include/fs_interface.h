@@ -1,8 +1,22 @@
 #ifndef _DANDELION_FS_INTERFACE_H
 #define _DANDELION_FS_INTERFACE_H
 
-#include "../../include/dandelion/runtime.h"
 #include "../file_system.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#define EPERM          1
+#define ENOENT         2
+#define EBADF          9
+#define ENOMEM        12
+#define EACCES        13
+#define EEXIST        17
+#define ENOTDIR       20
+#define EINVAL        22
+#define EMFILE        24
+#define EMLINK        31
+#define ENAMETOOLONG  36
 
 typedef struct DIR {
   D_File *dir;
@@ -13,9 +27,13 @@ typedef struct DIR {
 #define DT_REG 1
 #define DT_DIR 2
 
+#define	SEEK_SET	0	/* set file offset to offset */
+#define	SEEK_CUR	1	/* set file offset to current plus offset */
+#define	SEEK_END	2	/* set file offset to EOF plus offset */
+
 struct dirent {
-  ino_t d_ino;
-  off_t d_off;
+  size_t d_off;
+  uint16_t d_ino;
   unsigned char d_type;
   char d_name[64];
 };
@@ -46,7 +64,7 @@ int dandelion_link(char *old, char *new_name);
 
 int dandelion_unlink(char *name);
 
-int dandelion_open(const char *name, int flags, mode_t mode);
+int dandelion_open(const char *name, int flags, uint32_t mode);
 
 int dandelion_close(int file);
 
