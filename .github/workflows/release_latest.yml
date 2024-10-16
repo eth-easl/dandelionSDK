@@ -14,6 +14,8 @@ jobs:
       - name: release_latest
         shell: bash 
         run: gh release create latest --latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build:
     needs: release
@@ -69,3 +71,5 @@ jobs:
     - name: Add to release
       shell: bash
       run: gh release upload "~/dandelion_sdk_${{matrix.platform}}_${{matrix.cpu}}.tar.gz" --clobber
+      env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
