@@ -48,6 +48,6 @@ jobs:
     
     - name: Add to release
       shell: bash
-      run: gh release upload "${{ steps.build.outputs.dir }}/dandelion_sdk_${{matrix.platform}}_${{matrix.cpu}}.tar.gz" --clobber
+      run: gh release upload latest "${{ steps.build.outputs.dir }}/dandelion_sdk_${{matrix.platform}}_${{matrix.cpu}}.tar.gz" --clobber
       env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
