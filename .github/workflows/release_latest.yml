@@ -21,6 +21,19 @@ jobs:
     steps: 
     - uses: actions/checkout@v4
 
+    - name: install automake
+      run: sudo apt-get install automake
+    
+    - name: install autoconf
+      run: |
+        curl -O https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+        tar xvf autoconf-2.69.tar.gz
+        mkdir bin
+        mkdir build
+        cd build
+        ../autoconf-2.69/configure
+        make && sudo make install
+
     - name: Generate build directory name
       id: build
       run: echo "dir=build_${{ matrix.platform }}_${{ matrix.cpu }}" >> $GITHUB_OUTPUT
@@ -34,6 +47,7 @@ jobs:
         -DCMAKE_C_COMPILER=clang
         -DDANDELION_PLATFORM=${{ matrix.platform }}
         -DARCHITECTURE=${{ matrix.cpu }}
+        -DNEWLIB=ON
 
     - name: Build
       run: cmake --build ${{ steps.build.outputs.dir }}
