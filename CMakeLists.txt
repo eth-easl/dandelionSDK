@@ -112,9 +112,12 @@ if(NEWLIB)
         COMMAND ${CMAKE_COMMAND} -E copy_directory
                 <INSTALL_DIR>/${ARCHITECTURE}-dandelion/include
                 ${CMAKE_INSTALL_PREFIX}/include
-         COMMAND ${CMAKE_COMMAND} -E copy_directory
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
                 <INSTALL_DIR>/${ARCHITECTURE}-dandelion/lib
                 ${CMAKE_INSTALL_PREFIX}/lib
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld
+                ${CMAKE_INSTALL_PREFIX}
     )
 
     add_library(dlibc INTERFACE IMPORTED GLOBAL)
