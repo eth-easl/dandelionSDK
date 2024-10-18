@@ -1,5 +1,4 @@
 #include "../../system.h"
-#include "syscall.h"
 
 void __dandelion_platform_init(void) {}
 
