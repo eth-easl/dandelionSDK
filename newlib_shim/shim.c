@@ -16,6 +16,8 @@ extern void dandelion_exit(int errcode);
 extern int fs_initialize(int *argc, char ***argv, char ***environ);
 extern int fs_terminate();
 extern int main(int argc, char *argv[]);
+extern void __libc_init_array();
+extern void __libc_fini_array();
 
 static inline int process_error(int error){
   if(error < 0){
