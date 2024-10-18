@@ -16,7 +16,7 @@ jobs:
 
       matrix:
         cpu: ["x86_64"]
-        platform: ["debug", "mmu_linux"]
+        platform: ["debug", "mmu_linux", "kvm"]
         build: ["Debug", "Release"]
 
     steps: 
