@@ -93,7 +93,7 @@ if(NEWLIB)
     list(APPEND NEWLIB_CONFIG_ARGS "--enable-newlib-io-long-long")
     list(APPEND NEWLIB_CONFIG_ARGS "--enable-newlib-io-long-double")
     list(APPEND NEWLIB_CONFIG_ARGS "--disable-newlib-supplied-syscalls")
-    list(APPEND NEWLIB_CONFIG_ARGS "--disable-newlib-multithread")
+    # list(APPEND NEWLIB_CONFIG_ARGS "--disable-newlib-multithread")
     # list(APPEND NEWLIB_CONFIG_ARGS "--enable-newlib-elix-level=2")
 
     ExternalProject_Add(
@@ -135,6 +135,7 @@ if(NEWLIB)
 
     set(LLVM_C_FLAGS "-D_GNU_SOURCE=1")
     string(APPEND LLVM_C_FLAGS " -D_POSIX_TIMERS")
+    string(APPEND LLVM_C_FLAGS " -D_POSIX_THREADS")
     string(APPEND LLVM_C_FLAGS " -D__ELF__")
     string(APPEND LLVM_C_FLAGS " -D__DANDELION__")
     string(APPEND LLVM_C_FLAGS " --sysroot=${CMAKE_INSTALL_PREFIX}")
@@ -147,7 +148,11 @@ if(NEWLIB)
     endif()
 
     set(LLVM_CXX_FLAGS "-D_GNU_SOURCE=1")
+    string(APPEND LLVM_CXX_FLAGS " -D__GNU__")
     string(APPEND LLVM_CXX_FLAGS " -D_POSIX_TIMERS")
+    string(APPEND LLVM_CXX_FLAGS " -D__rtems__")
+    string(APPEND LLVM_CXX_FLAGS " -D_POSIX_READER_WRITER_LOCKS")
+    string(APPEND LLVM_CXX_FLAGS " -D_UNIX98_THREAD_MUTEX_ATTRIBUTES")
     string(APPEND LLVM_CXX_FLAGS " -D__ELF__")
     # need __STRICT_ANSI__ to be undefined, for alloca to be defined, which is not strict ansi but expected by libcxx
     string(APPEND LLVM_CXX_FLAGS " -U__STRICT_ANSI__")
@@ -186,19 +191,19 @@ if(NEWLIB)
             -DLLVM_INCLUDE_TESTS=OFF
             -DLIBUNWIND_ENABLE_SHARED=OFF
             -DLIBUNWIND_ENABLE_STATIC=ON
-            -DLIBUNWIND_ENABLE_THREADS=OFF
+            #-DLIBUNWIND_ENABLE_THREADS=OFF
             -DLIBUNWIND_IS_BAREMETAL=ON
             -DLIBCXXABI_BAREMETAL=ON
             -DLIBCXXABI_ENABLE_SHARED=OFF
-            -DLIBCXXABI_ENABLE_THREADS=OFF
+            #-DLIBCXXABI_ENABLE_THREADS=OFF
             -DLIBCXXABI_USE_LLVM_UNWINDER=ON
             -DLIBCXX_ENABLE_SHARED=OFF
             -DLIBCXX_ENABLE_STATIC=ON
             -DLIBCXX_INCLUDE_BENCHMARKS=OFF
             -DLIBCXX_CXX_ABI=libcxxabi
             -DLIBCXX_ENABLE_FILESYSTEM=ON
-            -DLIBCXX_ENABLE_THREADS=OFF
-            -DLIBCXX_ENABLE_MONOTONIC_CLOCK=OFF
+            #-DLIBCXX_ENABLE_THREADS=OFF
+            #-DLIBCXX_ENABLE_MONOTONIC_CLOCK=OFF
             -DLIBCXX_ENABLE_RANDOM_DEVICE=OFF
     )
     add_dependencies(llvmproject newlib)
