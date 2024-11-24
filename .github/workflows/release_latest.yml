@@ -2,7 +2,7 @@ name: release latest with all library versions
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev/os_extention" ]
   pull_request:
     branches: [ "main" ]
 
