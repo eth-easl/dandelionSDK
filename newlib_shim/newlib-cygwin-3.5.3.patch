@@ -87,40 +87,6 @@ index 24148b13f..063723483 100644
    epiphany
    h8300hms h8500hms
    m88kbug mmixware
-diff --git a/newlib/libc/include/pthread.h b/newlib/libc/include/pthread.h
-index c99ad395d..109112630 100644
---- a/newlib/libc/include/pthread.h
-+++ b/newlib/libc/include/pthread.h
-@@ -235,18 +235,18 @@ int       pthread_attr_setguardsize (pthread_attr_t *__attr, size_t __guardsize);
-  */
- #if __GNU_VISIBLE
- #if defined(__rtems__)
--int    pthread_attr_setaffinity_np (pthread_attr_t *__attr,
--                                    size_t __cpusetsize,
--                                    const cpu_set_t *__cpuset);
--int    pthread_attr_getaffinity_np (const pthread_attr_t *__attr,
--                                    size_t __cpusetsize, cpu_set_t *__cpuset);
--
--int    pthread_setaffinity_np (pthread_t __id, size_t __cpusetsize,
--                               const cpu_set_t *__cpuset);
--int    pthread_getaffinity_np (const pthread_t __id, size_t __cpusetsize,
--                               cpu_set_t *__cpuset);
--
--int    pthread_getattr_np (pthread_t __id, pthread_attr_t *__attr);
-+// int pthread_attr_setaffinity_np (pthread_attr_t *__attr,
-+//                                  size_t __cpusetsize,
-+//                                  const cpu_set_t *__cpuset);
-+// int         pthread_attr_getaffinity_np (const pthread_attr_t *__attr,
-+//                                  size_t __cpusetsize, cpu_set_t *__cpuset);
-+
-+// int pthread_setaffinity_np (pthread_t __id, size_t __cpusetsize,
-+//                             const cpu_set_t *__cpuset);
-+// int pthread_getaffinity_np (const pthread_t __id, size_t __cpusetsize,
-+//                             cpu_set_t *__cpuset);
-+
-+// int pthread_getattr_np (pthread_t __id, pthread_attr_t *__attr);
- #endif /* defined(__rtems__) */
- #endif /* __GNU_VISIBLE */
 diff --git a/newlib/libc/include/sys/stat.h b/newlib/libc/include/sys/stat.h
 index 98f5addb4..046cb91bd 100644
 --- a/newlib/libc/include/sys/stat.h
@@ -148,3 +114,38 @@ index 24d8407d5..c22987333 100644
  if HAVE_LIBC_SYS_A29KHIF_DIR
  include %D%/a29khif/Makefile.inc
  endif
+diff --git a/newlib/libc/include/pthread.h b/newlib/libc/include/pthread.h
+index c99ad395d..109112630 100644
+--- a/newlib/libc/include/pthread.h
++++ b/newlib/libc/include/pthread.h
+@@ -235,18 +235,18 @@ int	pthread_attr_setguardsize (pthread_attr_t *__attr, size_t __guardsize);
+  */
+ #if __GNU_VISIBLE
+ #if defined(__rtems__) 
+-int	pthread_attr_setaffinity_np (pthread_attr_t *__attr,
+-				     size_t __cpusetsize,
+-				     const cpu_set_t *__cpuset);
+-int 	pthread_attr_getaffinity_np (const pthread_attr_t *__attr,
+-				     size_t __cpusetsize, cpu_set_t *__cpuset);
+-
+-int	pthread_setaffinity_np (pthread_t __id, size_t __cpusetsize,
+-				const cpu_set_t *__cpuset);
+-int	pthread_getaffinity_np (const pthread_t __id, size_t __cpusetsize,
+-				cpu_set_t *__cpuset);
+-
+-int	pthread_getattr_np (pthread_t __id, pthread_attr_t *__attr);
++// int	pthread_attr_setaffinity_np (pthread_attr_t *__attr,
++// 				     size_t __cpusetsize,
++// 				     const cpu_set_t *__cpuset);
++// int 	pthread_attr_getaffinity_np (const pthread_attr_t *__attr,
++// 				     size_t __cpusetsize, cpu_set_t *__cpuset);
++
++// int	pthread_setaffinity_np (pthread_t __id, size_t __cpusetsize,
++// 				const cpu_set_t *__cpuset);
++// int	pthread_getaffinity_np (const pthread_t __id, size_t __cpusetsize,
++// 				cpu_set_t *__cpuset);
++
++// int	pthread_getattr_np (pthread_t __id, pthread_attr_t *__attr);
+ #endif /* defined(__rtems__) */
+ #endif /* __GNU_VISIBLE */
+ 
