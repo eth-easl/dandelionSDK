@@ -145,9 +145,9 @@ int fstatvfs(int fd, struct statvfs *buf){
 
 // not yet available in dandelion or default implementation
 
-/* pointer to array of char * strings that define the current environment
- * variables */
-// char **environ = {0};
+long sysconf(int name){
+  return -1;
+}
 
 int execve(char *name, char **argv, char **env) {
   errno = ENOMEM;
