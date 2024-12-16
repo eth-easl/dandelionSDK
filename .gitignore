@@ -3,5 +3,5 @@ build*
 compile_commands.json
 
 # rust test build folders
-tests/target/
+*/target/
 Cargo.lock

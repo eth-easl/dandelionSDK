@@ -38,8 +38,14 @@ pub(crate) mod dandelion_structures {
         }
         fn out_buffer_slice(&self) -> &[IoBuffer] {
             let out_buff_number = self.output_sets[self.output_sets.len() - 1].offset;
+            if out_buff_number == 0 {
+                return &[];
+            }
+            assert_ne!(core::ptr::null(), self.guard.system_data);
+            let system_data = unsafe { &*self.guard.system_data };
+            assert_ne!(core::ptr::null(), system_data.output_bufs);
             return unsafe {
-                core::slice::from_raw_parts((*self.guard.system_data).output_bufs, out_buff_number)
+                core::slice::from_raw_parts(system_data.output_bufs, out_buff_number)
             };
         }
         pub fn get_item_data(&self, set_name: &str, item_name: &str) -> Option<&[u8]> {

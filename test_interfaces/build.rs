@@ -1,9 +1,9 @@
 fn main() {
     use cmake::Config;
     let all = Config::new("../")
-        .configure_arg("-DDANDELION_PLATFORM=test")
-        .configure_arg("-DFREESTANDING=ON")
-        .configure_arg("-DDANDELION_FS=ON")
+        .define("DANDELION_PLATFORM", "test")
+        .define("FREESTANDING", "ON")
+        .define("DANDELION_FS", "ON")
         .build_target("all")
         .build();
     // add the system library
