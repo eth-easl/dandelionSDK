@@ -50,8 +50,6 @@ if(NEWLIB)
     set(DANDELION_FS ON)
 endif()
 
-
-
 # if freestanding is on add the FREESTANDING definition to all compilation
 if(FREESTANDING)
 add_compile_definitions(FREESTANDING)
@@ -59,6 +57,7 @@ endif()
 
 add_subdirectory(system)
 add_subdirectory(runtime)
+add_subdirectory(sdk_install)
 add_subdirectory(test_programs)
 
 if(DANDELION_FS)
@@ -93,8 +92,6 @@ if(NEWLIB)
     list(APPEND NEWLIB_CONFIG_ARGS "--enable-newlib-io-long-long")
     list(APPEND NEWLIB_CONFIG_ARGS "--enable-newlib-io-long-double")
     list(APPEND NEWLIB_CONFIG_ARGS "--disable-newlib-supplied-syscalls")
-    # list(APPEND NEWLIB_CONFIG_ARGS "--disable-newlib-multithread")
-    # list(APPEND NEWLIB_CONFIG_ARGS "--enable-newlib-elix-level=2")
 
     ExternalProject_Add(
         newlib
@@ -115,10 +112,7 @@ if(NEWLIB)
                 ${CMAKE_INSTALL_PREFIX}/include
         COMMAND ${CMAKE_COMMAND} -E copy_directory
                 <INSTALL_DIR>/${ARCHITECTURE}-dandelion/lib
-                ${CMAKE_INSTALL_PREFIX}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld
-                ${CMAKE_INSTALL_PREFIX}
+                ${CMAKE_INSTALL_PREFIX}/lib 
     )
 
     add_library(dlibc INTERFACE IMPORTED GLOBAL)
@@ -143,6 +137,7 @@ if(NEWLIB)
     string(APPEND LLVM_C_FLAGS " -idirafter${COMPILER_RUNTIME_INCLUDE}")
     string(APPEND LLVM_C_FLAGS " -nostdlib")
     string(APPEND LLVM_C_FLAGS " -nostdinc")
+    string(APPEND LLVM_C_FLAGS " -flto")
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
         string(APPEND LLVM_C_FLAGS " -gdwarf-4")
     endif()
@@ -162,6 +157,7 @@ if(NEWLIB)
     string(APPEND LLVM_CXX_FLAGS " -idirafter${COMPILER_RUNTIME_INCLUDE}")
     string(APPEND LLVM_CXX_FLAGS " -nostdlib")
     string(APPEND LLVM_CXX_FLAGS " -nostdinc")
+    string(APPEND LLVM_CXX_FLAGS " -flto")
     string(APPEND LLVM_CXX_FLAGS " -Wno-narrowing")
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
         string(APPEND LLVM_CXX_FLAGS " -gdwarf-4")
@@ -191,19 +187,15 @@ if(NEWLIB)
             -DLLVM_INCLUDE_TESTS=OFF
             -DLIBUNWIND_ENABLE_SHARED=OFF
             -DLIBUNWIND_ENABLE_STATIC=ON
-            #-DLIBUNWIND_ENABLE_THREADS=OFF
             -DLIBUNWIND_IS_BAREMETAL=ON
             -DLIBCXXABI_BAREMETAL=ON
             -DLIBCXXABI_ENABLE_SHARED=OFF
-            #-DLIBCXXABI_ENABLE_THREADS=OFF
             -DLIBCXXABI_USE_LLVM_UNWINDER=ON
             -DLIBCXX_ENABLE_SHARED=OFF
             -DLIBCXX_ENABLE_STATIC=ON
             -DLIBCXX_INCLUDE_BENCHMARKS=OFF
             -DLIBCXX_CXX_ABI=libcxxabi
             -DLIBCXX_ENABLE_FILESYSTEM=ON
-            #-DLIBCXX_ENABLE_THREADS=OFF
-            #-DLIBCXX_ENABLE_MONOTONIC_CLOCK=OFF
             -DLIBCXX_ENABLE_RANDOM_DEVICE=OFF
     )
     add_dependencies(llvmproject newlib)

@@ -10,6 +10,26 @@
 extern D_File *fs_root;
 extern OpenFile *open_files;
 
+// Allocate new filesystem chunk, return NULL if ENOMEM;
+// round up allocation to next multiple of FS_CHUNK_SIZE
+FileChunk* allocate_file_chunk(size_t size){
+  size_t chunk_size = ((size + FS_CHUNK_SIZE -1)/FS_CHUNK_SIZE)*FS_CHUNK_SIZE;
+  char *new_buffer = dandelion_alloc(chunk_size, _Alignof(max_align_t));
+  if (new_buffer == NULL) {
+    return NULL;
+  }
+  FileChunk *new_chunck = dandelion_alloc(sizeof(FileChunk), _Alignof(FileChunk));
+  if (new_chunck == NULL) {
+    dandelion_free(new_buffer);
+    return NULL;
+  }
+  new_chunck->capacity = chunk_size;
+  new_chunck->data = new_buffer;
+  new_chunck->used = 0;
+  new_chunck->next = NULL;
+  return new_chunck;
+}
+
 // Fake that stdin, stdout and stderr are TTY
 int dandelion_isatty(int file) {
   switch (file) {
@@ -54,7 +74,7 @@ int dandelion_link(char *old, char *new_name) {
   return 0;
 }
 
-int dandelion_unlink(char *name) {
+int dandelion_unlink(const char *name) {
   // find the file
   D_File *file = find_file(name);
   if (file == NULL) {
@@ -156,6 +176,18 @@ int dandelion_mkdir(const char *name, uint32_t mode) {
   return 0;
 }
 
+int dandelion_rmdir(const char* name) {
+  // find parent folder
+  D_File* current_file = find_file(name);
+  if (current_file == NULL)
+    return -ENOENT;
+  if (current_file->type != DIRECTORY)
+    return -ENOTDIR;
+  if (current_file->child != NULL)
+    return -ENOTEMPTY;
+  return dandelion_unlink(name);
+}
+
 int dandelion_close(int file) {
   // check the file is open
   D_File *to_close = open_files[file].file;
@@ -180,65 +212,92 @@ int dandelion_lseek(int file, int offset, int whence) {
   // advance current reader to where the seek is supposed to start from
   // advancing in the existing file
   // appending 0ed gap at the end
-
+  FileChunk* current;
+  size_t chunk_offset = 0;
   // advance current reader to where seek wants to start
   switch (whence) {
   // set file offset to offset, if offset goes beyond fill gap with 0s
   // could optimize by having flag in chunk that marks as gap chunk
   case SEEK_SET:
-    open_file->offset = 0;
-    open_file->current_chunk = backing_file->content;
+    chunk_offset = 0;
+    current = backing_file->content;
     total_offset = 0;
     break;
   case SEEK_CUR:
     // find current offset
     if (open_file->current_chunk == NULL) {
-      open_file->current_chunk = backing_file->content;
-      open_file->offset = 0;
+      current = backing_file->content;
+    } else {
+      current = open_file->current_chunk;
     }
     for (FileChunk *chunk = backing_file->content; chunk != NULL;
          chunk = chunk->next) {
-      if (chunk != open_file->current_chunk) {
+      if (chunk != current) {
         total_offset += chunk->used;
       } else {
-        total_offset += open_file->offset;
+        chunk_offset = open_file->offset;
+        total_offset += chunk_offset;
         break;
       }
     }
     break;
-  case SEEK_END:; // need a statement after label
-    FileChunk *chunk = backing_file->content;
-    while (chunk != NULL) {
-      total_offset += chunk->used;
-      if (chunk->next == NULL) {
+  case SEEK_END:
+    current = backing_file->content;
+    while (current != NULL) {
+      total_offset += current->used;
+      if (current->next == NULL) {
         break;
       } else {
-        chunk = chunk->next;
+        current = current->next;
       }
     }
-    open_file->current_chunk = chunk;
-    open_file->offset = chunk->used;
+    chunk_offset = current->used;
     break;
   default:
     return -EINVAL;
   }
-  // current chunk is now set to the chunk we are supposed to append to
+  // current chunk is now set to the chunk we are supposed to offset from
   // if we can advance inside file do that
-  if (open_file->current_chunk != NULL) {
+  // first handle negative offsets, as we never need to allocate for them
+  if(offset < 0) {
+    if(current == NULL || total_offset + offset < 0)
+      return -EINVAL;  
+    // new offset that we need to go to
+    total_offset += offset;
+    // start at beginning and fint the total offset
+    int needed_bytes = total_offset; 
+    current = backing_file->content;
+    chunk_offset = 0;
+    // know that all chunck need to exist to find the one we are looking for
+    while(1){
+      if(current->used < needed_bytes){
+        needed_bytes -= current->used;
+        current = current->next; 
+      } else {
+        chunk_offset = needed_bytes;
+        break;
+      }
+    }
+    open_file->current_chunk = current;
+    open_file->offset = chunk_offset;
+    return total_offset;
+  }
+
+  if (current != NULL) {
     // check if we can advance in the current chunk, otherwise go to next
-    size_t to_advance = open_file->current_chunk->used - open_file->offset;
-    while (to_advance < offset && open_file->current_chunk->next != NULL) {
+    size_t to_advance = current->used - chunk_offset;
+    while (to_advance < offset && current->next != NULL) {
       offset -= to_advance;
       total_offset += to_advance;
-      open_file->current_chunk = open_file->current_chunk->next;
-      open_file->offset = 0;
-      to_advance = open_file->current_chunk->used;
+      current = current->next;
+      chunk_offset = 0;
+      to_advance = current->used;
     }
     // either advancing inside chunk is enough or there is no next chunk to
     // advance to. That means we can take the smaller and advance by that much
     // in any case.
     to_advance = to_advance >= offset ? offset : to_advance;
-    open_file->offset += to_advance;
+    chunk_offset += to_advance;
     total_offset += to_advance;
     offset -= to_advance;
   }
@@ -246,29 +305,21 @@ int dandelion_lseek(int file, int offset, int whence) {
   // if offset is zero we can return otherwise need to append that much to
   // current chunk
   if (offset == 0) {
+    open_file->current_chunk = current;
+    open_file->offset = chunk_offset;
     return total_offset;
   }
-  FileChunk *new_chunk =
-      dandelion_alloc(sizeof(FileChunk), _Alignof(FileChunk));
+  FileChunk *new_chunk = allocate_file_chunk(offset); 
   if (new_chunk == NULL) {
     return -ENOMEM;
   }
-  // round allocation size to next multiple of usual block size
-  size_t allocation_size =
-      ((offset + FS_CHUNCK_SIZE - 1) / FS_CHUNCK_SIZE) * FS_CHUNCK_SIZE;
-  new_chunk->data = dandelion_alloc(allocation_size, _Alignof(max_align_t));
-  if (new_chunk->data == NULL) {
-    return -ENOMEM;
-  }
-  new_chunk->capacity = allocation_size;
   new_chunk->used = offset;
-  new_chunk->next = NULL;
   // have set current chunk in first phase to be up to date with backing file
   // if still NULL, that means backing file also was NULL
-  if (open_file->current_chunk == NULL) {
+  if (current == NULL) {
     backing_file->content = new_chunk;
   } else {
-    open_file->current_chunk->next = new_chunk;
+    current->next = new_chunk;
   }
   open_file->current_chunk = new_chunk;
   open_file->offset = offset;
@@ -276,7 +327,7 @@ int dandelion_lseek(int file, int offset, int whence) {
   return total_offset + offset;
 }
 
-int dandelion_read(int file, char *ptr, int len) {
+int dandelion_read(int file, char *ptr, int len, int offset, char options) {
   // get the file descriptor
   OpenFile *open_file = &open_files[file];
   // check there is a valid file descriptor there and that it is writable
@@ -292,45 +343,68 @@ int dandelion_read(int file, char *ptr, int len) {
   }
 
   D_File *d_file = open_file->file;
-  // check if current chunk is set, and if not if the file has data to be read
-  if (open_file->current_chunk == NULL) {
-    // set to file chunk if there is one
-    open_file->offset = 0;
-    if (d_file->content != NULL)
-      open_file->current_chunk = d_file->content;
-    else
-      return 0;
+  FileChunk *current;
+  size_t chunk_offset = 0;
+  if (options & USE_OFFSET){
+    // find the chunk at the offset 
+    if(offset < 0) return -EINVAL; 
+    current = open_file->file->content;
+    while(offset > 0){
+      if(current == NULL) return 0;
+      if(current->used < offset){
+        offset -= current->used;
+        current = current->next;
+      } else {
+        chunk_offset = offset;
+        break;
+      }
+    }
+  } else {
+    // check if current chunk is set, and if not if the file has data to be read
+    if (open_file->current_chunk == NULL) {
+      // set to file chunk if there is one
+      open_file->offset = 0;
+      if (d_file->content != NULL)
+        open_file->current_chunk = d_file->content;
+      else
+        return 0;
+    }
+    current = open_file->current_chunk;
+    chunk_offset = open_file->offset;
   }
 
   int read_bytes = 0;
   int need_to_read = len;
   while (1) {
-    FileChunk *current = open_file->current_chunk;
-    size_t readable = current->used - open_file->offset;
+    size_t readable = current->used - chunk_offset;
     if (readable > need_to_read) {
-      memcpy(ptr + read_bytes, current->data + open_file->offset, need_to_read);
-      open_file->offset += need_to_read;
+      memcpy(ptr + read_bytes, current->data + chunk_offset, need_to_read);
       read_bytes += need_to_read;
-      return read_bytes;
+      chunk_offset += need_to_read;
+      break;
     } else {
-      // read everythin in file and go to next
-      memcpy(ptr + read_bytes, current->data + open_file->offset, readable);
+      // read everythin in chunk and go to next
+      memcpy(ptr + read_bytes, current->data + chunk_offset, readable);
       read_bytes += readable;
       // advance to next chunk if there is one, otherwise stay at this, so we
       // can see new appended chunks in the future
       if (current->next != NULL) {
-        open_file->current_chunk = current->next;
-        open_file->offset = 0;
+        current = current->next;
+        chunk_offset = 0;
       } else {
-        open_file->offset += readable;
-        return read_bytes;
+        chunk_offset += readable;
+        break;
       }
     }
+  }
+  if(options & MOVE_OFFSET){
+    open_file->current_chunk = current;
+    open_file->offset = chunk_offset;
   }
   return read_bytes;
 }
 
-int dandelion_write(int file, char *ptr, int len) {
+int dandelion_write(int file, char *ptr, int len, int offset, char options) {
   // get the file descriptor
   OpenFile *open_file = &open_files[file];
   // check there is a valid file descriptor there and that it is writable
@@ -342,34 +416,62 @@ int dandelion_write(int file, char *ptr, int len) {
   }
 
   D_File *d_file = open_file->file;
-  // if have no chunck already check if file has a chunck and write to that
-  // otherwise allocate one
-  if (open_file->current_chunk == NULL) {
-    if (d_file->content == NULL) {
-      char *new_buffer = dandelion_alloc(FS_CHUNCK_SIZE, _Alignof(max_align_t));
-      if (new_buffer == NULL) {
-        return -ENOMEM;
-      }
-      FileChunk *new_chunck =
-          dandelion_alloc(sizeof(FileChunk), _Alignof(FileChunk));
-      if (new_chunck == NULL) {
-        return -ENOMEM;
-      }
-      new_chunck->capacity = FS_CHUNCK_SIZE;
-      new_chunck->data = new_buffer;
-      new_chunck->used = 0;
-      new_chunck->next = NULL;
-      d_file->content = new_chunck;
-      open_file->current_chunk = new_chunck;
-      open_file->offset = 0;
+  FileChunk* current;
+  size_t chunk_offset = 0;
+  // check if file has content, if not allocate and skip to writing
+  if(d_file->content == NULL){
+    size_t allocation_size = options & USE_OFFSET ? offset + len : len;
+    FileChunk* new_chunk = allocate_file_chunk(allocation_size);
+    d_file->content = new_chunk;
+    current = new_chunk;
+  } else {
+    if(options & USE_OFFSET){
+      current = d_file->content;
+      // know that the file content is not NULL
+      while(offset > 0){
+        // if offset is within the current capacity make sure it is marked used
+        // to at least the point in offset and set the writer there
+        if(offset < current->capacity){
+          chunk_offset = offset;
+          current->used = offset > current->used ? offset : current->used;
+          break;
+        } 
+        offset -= current->capacity;
+        if (current->next == NULL){
+          FileChunk* new_chunk = allocate_file_chunk(offset+len);
+          if(new_chunk == NULL)
+            return -ENOMEM;
+          current->next = new_chunk;
+          current = new_chunk;
+          new_chunk->used = offset;
+          chunk_offset = offset;
+          break;
+        }
+        current = current->next;
+      } 
     } else {
-      open_file->current_chunk = d_file->content;
-      open_file->offset = 0;
-    }
+      // if have no chunck already check if file has a chunck and write to that
+      // otherwise allocate one
+      current = open_file->current_chunk;
+      if (current == NULL) {
+        if (d_file->content == NULL) {
+          FileChunk* new_chunk = allocate_file_chunk(len); 
+          if(new_chunk == NULL)
+            return -ENOMEM;
+          d_file->content = new_chunk;
+          current = new_chunk;
+          chunk_offset = 0;
+        } else {
+          current = d_file->content;
+          chunk_offset = 0;
+        }
+      }
+    } 
   }
+  
   // check file mode, if writing a O_APPEND file, need to jump to end of file
   // before writing
-  if (open_file->open_flags & O_APPEND) {
+  if (open_file->open_flags & O_APPEND && !(options & USE_OFFSET)) {
     // check that the current is at the end of what could be
     while (open_file->current_chunk->next != NULL) {
       open_file->current_chunk = open_file->current_chunk->next;
@@ -380,32 +482,24 @@ int dandelion_write(int file, char *ptr, int len) {
 
   size_t writen_bytes = 0;
   while (len > 0) {
-    int writeable =
-        open_file->current_chunk->capacity - open_file->current_chunk->used;
+    int writeable = current->capacity - current->used;
     if (writeable == 0) {
-      FileChunk *new_chunck =
-          dandelion_alloc(sizeof(FileChunk), _Alignof(FileChunk));
-      if (new_chunck == NULL) {
-        return -ENOMEM;
-      }
-      char *allocation = dandelion_alloc(FS_CHUNCK_SIZE, _Alignof(max_align_t));
-      if (allocation == NULL) {
-        return -ENOMEM;
-      }
-      new_chunck->data = allocation;
-      new_chunck->capacity = FS_CHUNCK_SIZE;
-      new_chunck->used = 0;
-      new_chunck->next = NULL;
-      open_file->current_chunk->next = new_chunck;
-      open_file->current_chunk = new_chunck;
-      writeable = FS_CHUNCK_SIZE;
+      FileChunk *new_chunk = allocate_file_chunk(len); 
+      current->next = new_chunk;
+      current = new_chunk;
+      writeable = new_chunk->capacity;
     }
     size_t to_write = MIN(len, writeable);
-    memcpy(open_file->current_chunk->data + open_file->current_chunk->used, ptr, to_write);
+    memcpy(current->data + current->used, ptr, to_write);
     len -= to_write;
     ptr += to_write;
-    open_file->current_chunk->used += to_write;
+    current->used += to_write;
     writen_bytes += to_write;
+  }
+
+  if(options & MOVE_OFFSET){
+    open_file->current_chunk = current;
+    open_file->offset = chunk_offset;
   }
 
   return writen_bytes;
@@ -423,7 +517,7 @@ static inline int __dandelion_stat(D_File *file, DandelionStat *st) {
     }
   }
   st->file_size = total_size;
-  st->blk_size = FS_CHUNCK_SIZE;
+  st->blk_size = FS_CHUNK_SIZE;
   return 0;
 }
 

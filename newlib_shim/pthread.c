@@ -61,9 +61,20 @@ int pthread_once(pthread_once_t *once_control, void (*init_routine)(void)){
 }
 
 pthread_t pthread_self(void) { return 0;}
+int pthread_create(
+        pthread_t *restrict thread,
+        const pthread_attr_t *restrict attr,
+        void *(*start_routine)(void*),
+        void *restrict arg){
+    return EPERM;
+}
 int pthread_join(pthread_t thread, void **retval){ return EINVAL; }
 int pthread_detach(pthread_t thread) { return EINVAL; }
 
 int pthread_key_create(pthread_key_t *key, void (*destructor)(void*)) { return EAGAIN; }
 void* pthread_getspecific(pthread_key_t key) { return NULL; }
 int pthread_setspecific(pthread_key_t key, const void* value) { return EINVAL; }
+
+int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void)){
+    return ENOMEM;
+}

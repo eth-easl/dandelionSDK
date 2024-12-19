@@ -66,6 +66,9 @@ int open(const char *name, int flags, mode_t mode) {
 extern int dandelion_mkdir(const char *name, uint32_t mode);
 int mkdir(const char *name, mode_t mode) { return process_error(dandelion_mkdir(name, mode)); }
 
+extern int dandelion_rmdir(const char* pathname);
+int rmdir(const char* pathname) { return process_error(dandelion_rmdir(pathname)); }
+
 extern int dandelion_close(int file);
 int close(int file) { return process_error(dandelion_close(file)); }
 
@@ -80,14 +83,22 @@ int lseek(int file, int ptr, int dir) {
   return process_error(dandelion_lseek(file, ptr, dir));
 }
 
-extern int dandelion_read(int file, char *ptr, int len);
+extern int dandelion_read(int file, char *ptr, int len, int offset, char options);
+#define USE_OFFSET 1
+#define MOVE_OFFSET 2
 int read(int file, char *ptr, int len) {
-  return process_error(dandelion_read(file, ptr, len));
+  return process_error(dandelion_read(file, ptr, len, 0, MOVE_OFFSET));
+}
+int pread(int file, char *ptr, int len, int offset){
+  return process_error(dandelion_read(file, ptr, len, offset, USE_OFFSET));
 }
 
-extern int dandelion_write(int file, char *ptr, int len);
+extern int dandelion_write(int file, char *ptr, int len, int offset, char options);
 int write(int file, char *ptr, int len) {
-  return process_error(dandelion_write(file, ptr, len));
+  return process_error(dandelion_write(file, ptr, len, 0, MOVE_OFFSET));
+}
+int pwrite(int file, char *ptr, int len, int offset){
+  return process_error(dandelion_write(file, ptr, len, offset, USE_OFFSET));
 }
 
 typedef struct DandelionStat {

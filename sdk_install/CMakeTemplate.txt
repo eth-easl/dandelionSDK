@@ -1,0 +1,53 @@
+# CMakeTargets for DandelionSDK
+
+# find complier runtime (needed because -ibuiltin does not seem to work)
+execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -print-file-name=include
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE COMPILER_RUNTIME_INCLUDE
+    COMMAND_ERROR_IS_FATAL ANY
+)
+
+# Dandelion runtime, without libc
+add_library(dandelion_runtime INTERFACE IMPORTED GLOBAL)
+target_include_directories(dandelion_runtime INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+target_compile_options(dandelion_runtime INTERFACE
+    -nostdinc
+    -idirafter${COMPILER_RUNTIME_INCLUDE}
+)
+target_link_libraries(dandelion_runtime INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/lib/libdandelion_runtime.a"
+    "${CMAKE_CURRENT_SOURCE_DIR}/lib/libdandelion_system.a"
+)
+target_link_options(dandelion_runtime INTERFACE
+    -static
+    -nostdlib
+)
+
+# Dandelion libc and libc++
+add_library(dlibc INTERFACE IMPORTED GLOBAL)
+target_include_directories(dlibc INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/sys"
+)
+target_link_libraries(dlibc INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/libc.a"
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/libg.a"
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/libm.a"
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/libdandelion_file_system.a"
+)
+target_link_options(dlibc INTERFACE
+    -T${CMAKE_CURRENT_SOURCE_DIR}/linker.ld 
+)
+
+add_library(dlibcxx INTERFACE IMPORTED GLOBAL)
+target_include_directories(dlibcxx INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/c++/v1"
+)
+target_link_libraries(dlibcxx INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/libc++.a"
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/libc++abi.a"
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/libunwind.a"
+)

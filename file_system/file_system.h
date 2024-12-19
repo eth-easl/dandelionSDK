@@ -9,8 +9,8 @@
 #define FS_NAME_LENGHT 64
 #endif
 
-#ifndef FS_CHUNCK_SIZE
-#define FS_CHUNCK_SIZE 4096
+#ifndef FS_CHUNK_SIZE
+#define FS_CHUNK_SIZE 4096
 #endif
 
 #ifndef FS_MAX_FILES
@@ -20,6 +20,9 @@
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
+
+#define USE_OFFSET 1
+#define MOVE_OFFSET 2
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 

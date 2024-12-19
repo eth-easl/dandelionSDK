@@ -32,9 +32,21 @@ extern "C" {
     /// reposition file reading/writing offset
     fn dandelion_lseek(file: c_int, offset: c_int, whenece: c_int) -> c_int;
     /// read bytes from file corresponding to descriptor
-    fn dandelion_read(file: c_int, buffer: *mut c_char, length: c_int) -> c_int;
+    fn dandelion_read(
+        file: c_int,
+        buffer: *mut c_char,
+        length: c_int,
+        offset: c_int,
+        options: c_char,
+    ) -> c_int;
     /// write data to file corresponding to file descriptor
-    fn dandelion_write(file: c_int, buffer: *const c_char, length: c_int) -> c_int;
+    fn dandelion_write(
+        file: c_int,
+        buffer: *const c_char,
+        length: c_int,
+        offset: c_int,
+        options: c_char,
+    ) -> c_int;
     /// close file corresponding to descriptor
     fn dandelion_close(file: c_int) -> c_int;
     /// get the stat for the file corresponding to the descriptor
@@ -73,7 +85,10 @@ const S_IRWXU: u32 = S_IXUSR | S_IWUSR | S_IRUSR;
 const S_IFDIR: i32 = 0040000;
 const S_IFREG: i32 = 0100000;
 
-fn test_write(test_slices: &[&[u8]], file_descriptor: i32, item_name: &str) {
+const USE_OFFSET: c_char = 0x01;
+const MOVE_OFFSET: c_char = 0x02;
+
+fn test_write(test_slices: &[&[u8]], file_descriptor: i32, item_name: &str, options: c_char) {
     let heap_size = 16 * 4096;
     let setup = initialize_dandelion(heap_size, Vec::new(), vec!["stdio"]);
     dandelion_exit_check!(setup, "Should have initialized without error");
@@ -85,6 +100,7 @@ fn test_write(test_slices: &[&[u8]], file_descriptor: i32, item_name: &str) {
     let initialize_val = unsafe { fs_initialize(&mut argc, &mut argv, &mut environ) };
     assert_eq!(0, initialize_val, "Failed to initialize file system");
 
+    let mut total_written = 0;
     for write_slice in test_slices {
         // write to stdout
         let write_bytes = unsafe {
@@ -92,6 +108,8 @@ fn test_write(test_slices: &[&[u8]], file_descriptor: i32, item_name: &str) {
                 file_descriptor,
                 write_slice.as_ptr() as *const i8,
                 write_slice.len() as i32,
+                total_written,
+                options,
             )
         };
         assert_eq!(
@@ -100,6 +118,7 @@ fn test_write(test_slices: &[&[u8]], file_descriptor: i32, item_name: &str) {
             "Should have written the entire string, errno: {}",
             unsafe { *__errno_location() }
         );
+        total_written += write_bytes;
     }
     // should always be able to write to STDOUT and STDERR, which are filedescriptors 1 and 2 respectively
     // these should also be available without explicitly opening them
@@ -124,18 +143,25 @@ fn test_write(test_slices: &[&[u8]], file_descriptor: i32, item_name: &str) {
 fn write_test() {
     // test if writing works when write fits in a sinlge file chunk
     // use stdout and stderr, as they do not rely on file open to be able to write
-    test_write(&["test".as_bytes()], 1, "stdout");
-    test_write(&["test".as_bytes()], 2, "stderr");
+    test_write(&["test".as_bytes()], 1, "stdout", MOVE_OFFSET);
+    test_write(&["test".as_bytes()], 1, "stdout", USE_OFFSET);
+    test_write(&["test".as_bytes()], 2, "stderr", MOVE_OFFSET);
+    test_write(&["test".as_bytes()], 2, "stderr", USE_OFFSET);
     // write more that default chunck size so we know it works with mutliple file chunks
     let large_size = 4096 * 2 + 77;
     let mut large_vec = Vec::with_capacity(large_size);
     large_vec.resize(large_size, 7u8);
-    test_write(&[&large_vec], 1, "stdout");
-    test_write(&[&large_vec], 2, "stderr");
+    test_write(&[&large_vec], 1, "stdout", MOVE_OFFSET);
+    test_write(&[&large_vec], 1, "stdout", USE_OFFSET);
+    test_write(&[&large_vec], 2, "stderr", MOVE_OFFSET);
+    test_write(&[&large_vec], 2, "stderr", USE_OFFSET);
 
     // test that consecutive writes
-    test_write(&["first".as_bytes(), "second".as_bytes()], 1, "stdout");
-    test_write(&["first".as_bytes(), "second".as_bytes()], 2, "stderr");
+    let consequtive_slices = ["first".as_bytes(), "second".as_bytes()];
+    test_write(&consequtive_slices, 1, "stdout", MOVE_OFFSET);
+    test_write(&consequtive_slices, 1, "stdout", USE_OFFSET);
+    test_write(&consequtive_slices, 2, "stderr", MOVE_OFFSET);
+    test_write(&consequtive_slices, 2, "stderr", USE_OFFSET);
 }
 
 fn test_read(stdin_content: &[u8], read_buffer_size: usize) {
@@ -164,12 +190,16 @@ fn test_read(stdin_content: &[u8], read_buffer_size: usize) {
     // // read to stdin
     let mut read_buffer = Vec::with_capacity(read_buffer_size);
     read_buffer.resize(read_buffer_size, 0u8);
+    let mut total_read = 0;
     for chunk in stdin_content.chunks(read_buffer_size) {
+        // read with advancing the offset
         let read_bytes = unsafe {
             dandelion_read(
                 0,
                 read_buffer.as_mut_ptr() as *mut i8,
                 read_buffer.len() as i32,
+                0,
+                MOVE_OFFSET,
             )
         };
         assert_eq!(
@@ -182,7 +212,29 @@ fn test_read(stdin_content: &[u8], read_buffer_size: usize) {
             chunk,
             &read_buffer[0..read_bytes as usize],
             "Read content no what was expected",
-        )
+        );
+        // read without advancing directly using offsets
+        let read_bytes = unsafe {
+            dandelion_read(
+                0,
+                read_buffer.as_mut_ptr() as *mut i8,
+                read_buffer.len() as i32,
+                total_read,
+                USE_OFFSET,
+            )
+        };
+        assert_eq!(
+            chunk.len() as i32,
+            read_bytes,
+            "Reading using offset not the expected amounts of bytes for chunk size {}",
+            read_buffer_size
+        );
+        assert_eq!(
+            chunk,
+            &read_buffer[0..read_bytes as usize],
+            "Content reading from offset not what expected"
+        );
+        total_read += read_bytes;
     }
 }
 
@@ -211,6 +263,8 @@ fn read_test() {
                 0,
                 read_buffer.as_mut_ptr() as *mut i8,
                 read_buffer.len() as i32,
+                0,
+                MOVE_OFFSET,
             )
         };
         assert_eq!(
@@ -257,6 +311,8 @@ fn open_and_read(path: &str, expected_filedescriptor: c_int, expected_content: &
             input_file_desc,
             read_buffer.as_mut_ptr() as *mut i8,
             read_buffer.len() as i32,
+            0,
+            MOVE_OFFSET,
         )
     };
     assert_eq!(
@@ -276,8 +332,15 @@ fn create_and_write(path: &str, expected_filedescriptor: c_int, content: &[u8]) 
         path
     );
     // read to stdin
-    let written_bytes =
-        unsafe { dandelion_write(file_desc, content.as_ptr() as *mut i8, content.len() as i32) };
+    let written_bytes = unsafe {
+        dandelion_write(
+            file_desc,
+            content.as_ptr() as *mut i8,
+            content.len() as i32,
+            0,
+            MOVE_OFFSET,
+        )
+    };
     assert_eq!(
         content.len(),
         written_bytes as usize,
@@ -396,6 +459,8 @@ fn close_test() {
             0,
             test_slice.as_mut_ptr() as *mut i8,
             test_slice.len() as i32,
+            0,
+            MOVE_OFFSET,
         )
     };
     assert_eq!(-libc::EBADF, read_bytes);
@@ -406,8 +471,15 @@ fn close_test() {
     // check that we can't close it again
     let stdout_reclose = unsafe { dandelion_close(1) };
     assert_eq!(-libc::EBADF, stdout_reclose);
-    let written_bytes =
-        unsafe { dandelion_write(1, test_slice.as_ptr() as *const i8, test_slice.len() as i32) };
+    let written_bytes = unsafe {
+        dandelion_write(
+            1,
+            test_slice.as_ptr() as *const i8,
+            test_slice.len() as i32,
+            0,
+            MOVE_OFFSET,
+        )
+    };
     assert_eq!(-libc::EBADF, written_bytes);
 }
 
@@ -415,6 +487,7 @@ fn close_test() {
 fn lseek_test() {
     let heap_size = 16 * 4096;
     let mut input_slice = [1u8; 128];
+    let mut file_size = input_slice.len();
     for index in 0..128 {
         input_slice[index] = (index + 1) as u8;
     }
@@ -448,7 +521,8 @@ fn lseek_test() {
     let mut current_offset = unsafe { dandelion_lseek(file_descriptor, expected_offset, SEEK_SET) };
     assert_eq!(expected_offset, current_offset);
     // try reading to check it is actually at the expected place
-    let mut read_bytes = unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1) };
+    let mut read_bytes =
+        unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1, 0, MOVE_OFFSET) };
     assert_eq!(1, read_bytes);
     expected_offset += 1;
     assert_eq!([expected_offset as i8], read_buffer);
@@ -456,13 +530,15 @@ fn lseek_test() {
     current_offset = unsafe { dandelion_lseek(file_descriptor, 4, SEEK_CUR) };
     expected_offset += 4;
     assert_eq!(expected_offset, current_offset);
-    read_bytes = unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1) };
+    read_bytes =
+        unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1, 0, MOVE_OFFSET) };
     assert_eq!(1, read_bytes);
     expected_offset += 1;
     assert_eq!([expected_offset as i8], read_buffer);
     // seek from end
     current_offset = unsafe { dandelion_lseek(file_descriptor, 4, SEEK_END) };
     expected_offset = input_slice.len() as i32 + 4;
+    file_size += 4;
     assert_eq!(
         expected_offset,
         current_offset,
@@ -470,19 +546,39 @@ fn lseek_test() {
         unsafe { *__errno_location() }
     );
     // try read, should get nothing
-    read_bytes = unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1) };
+    read_bytes =
+        unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1, 0, MOVE_OFFSET) };
     assert_eq!(0, read_bytes);
     // set from begginning to previous length and read a zero
     current_offset =
         unsafe { dandelion_lseek(file_descriptor, input_slice.len() as i32, SEEK_SET) };
     assert_eq!(input_slice.len() as i32, current_offset);
-    read_bytes = unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1) };
+    read_bytes =
+        unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1, 0, MOVE_OFFSET) };
     assert_eq!(1, read_bytes);
     assert_eq!([0i8], read_buffer);
     // set from current and read a zero
     current_offset = unsafe { dandelion_lseek(file_descriptor, 1, SEEK_CUR) };
     assert_eq!(input_slice.len() as i32 + 2, current_offset);
+    read_bytes =
+        unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1, 0, MOVE_OFFSET) };
+    assert_eq!(1, read_bytes);
     assert_eq!([0i8], read_buffer);
+    // check negative offsets work, by going back from end
+    expected_offset = 32;
+    current_offset = unsafe {
+        dandelion_lseek(
+            file_descriptor,
+            -(file_size as i32) + expected_offset,
+            SEEK_END,
+        )
+    };
+    assert_eq!(expected_offset, current_offset);
+    read_bytes =
+        unsafe { dandelion_read(file_descriptor, read_buffer.as_mut_ptr(), 1, 0, MOVE_OFFSET) };
+    assert_eq!(1, read_bytes);
+    expected_offset += 1;
+    assert_eq!([expected_offset as i8], read_buffer);
 }
 
 #[test]

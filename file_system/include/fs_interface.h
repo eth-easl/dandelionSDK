@@ -17,6 +17,7 @@
 #define EMFILE        24
 #define EMLINK        31
 #define ENAMETOOLONG  36
+#define ENOTEMPTY     39 
 
 typedef struct DIR {
   D_File *dir;
@@ -62,7 +63,7 @@ int dandelion_isatty(int file);
 
 int dandelion_link(char *old, char *new_name);
 
-int dandelion_unlink(char *name);
+int dandelion_unlink(const char *name);
 
 int dandelion_open(const char *name, int flags, uint32_t mode);
 
@@ -70,9 +71,9 @@ int dandelion_close(int file);
 
 int dandelion_lseek(int file, int ptr, int dir);
 
-int dandelion_read(int file, char *ptr, int len);
+int dandelion_read(int file, char *ptr, int len, int offset, char options);
 
-int dandelion_write(int file, char *ptr, int len);
+int dandelion_write(int file, char *ptr, int len, int offset, char options);
 
 typedef struct DandelionStat {
   size_t st_mode;
