@@ -30,6 +30,12 @@ FileChunk* allocate_file_chunk(size_t size){
   return new_chunck;
 }
 
+inline void free_file_chunk(FileChunk* chunk){
+  dandelion_free(chunk->data);
+  dandelion_free(chunk);
+  return;
+}
+
 // Fake that stdin, stdout and stderr are TTY
 int dandelion_isatty(int file) {
   switch (file) {
@@ -42,7 +48,7 @@ int dandelion_isatty(int file) {
   }
 }
 
-int dandelion_link(char *old, char *new_name) {
+int dandelion_link(const char *old, const char *new_name) {
   // find the old file
   D_File *file = find_file(old);
   if (file == NULL) {
@@ -200,7 +206,7 @@ int dandelion_close(int file) {
   return 0;
 }
 
-int dandelion_lseek(int file, int offset, int whence) {
+int64_t dandelion_lseek(int file, int64_t offset, int whence) {
   int return_val = 0;
   int total_offset = 0;
   OpenFile *open_file = &open_files[file];
@@ -327,7 +333,7 @@ int dandelion_lseek(int file, int offset, int whence) {
   return total_offset + offset;
 }
 
-int dandelion_read(int file, char *ptr, int len, int offset, char options) {
+size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset, char options) {
   // get the file descriptor
   OpenFile *open_file = &open_files[file];
   // check there is a valid file descriptor there and that it is writable
@@ -404,7 +410,7 @@ int dandelion_read(int file, char *ptr, int len, int offset, char options) {
   return read_bytes;
 }
 
-int dandelion_write(int file, char *ptr, int len, int offset, char options) {
+size_t dandelion_write(int file, char *ptr, size_t len, int64_t offset, char options) {
   // get the file descriptor
   OpenFile *open_file = &open_files[file];
   // check there is a valid file descriptor there and that it is writable
@@ -529,13 +535,65 @@ int dandelion_fstat(int file, DandelionStat *st) {
   return __dandelion_stat(current_file, st);
 }
 
-int dandelion_stat(char *file, DandelionStat *st) {
+int dandelion_stat(const char *file, DandelionStat *st) {
   D_File *current_file = find_file(file);
   if (current_file == NULL) {
     return -ENOTDIR;
   }
   return __dandelion_stat(current_file, st);
 }
+
+static inline int __dandelion_truncate(D_File *file, int64_t length){
+  if(length < 0)
+    return -EINVAL; 
+  if(file->type != FILE)
+    return -EISDIR;
+  int64_t remaining_size = length;
+  FileChunk* current = file->content;
+  // go to length, and cut off left over after that if there is any 
+  while(1){
+    // check if we reached the point to start cutting
+    if(current->used >= remaining_size){
+      current->used = remaining_size;
+      remaining_size = 0;
+      // free any possible remaining chunks
+      FileChunk* to_free = current->next;
+      while(to_free != NULL){
+        FileChunk* free_chunk = to_free;
+        to_free = to_free->next;
+        free_file_chunk(free_chunk);
+      }
+      return 0;
+    } 
+    remaining_size -= current->used;
+    if(current->next == NULL)
+      break;
+    current = current->next;
+  }
+  // arriving here means that there is no next buffer
+  // and need to append a 0 buffer 
+  FileChunk* new_chunk = allocate_file_chunk(remaining_size);
+  current->next = new_chunk;
+  new_chunk->used = remaining_size;
+  return 0;
+}
+
+int dandelion_ftruncate(int fd, int64_t length){
+  D_File *current_file = open_files[fd].file;
+  if(current_file == NULL)
+    return -EBADF;
+  if(!(open_files[fd].open_flags & O_WRONLY))
+    return -EBADF;
+  return __dandelion_truncate(current_file, length);
+}
+
+int dandelion_truncate(const char* path, int64_t length){
+  D_File *current_file = find_file(path);
+  if(current_file == NULL)
+    return -ENOENT;
+  return __dandelion_truncate(current_file, length);
+}
+
 // ========================================================
 // dirent functions
 // ========================================================

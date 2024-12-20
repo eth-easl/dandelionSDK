@@ -30,21 +30,21 @@ extern "C" {
     /// open file at path with flags and read/write mode
     fn dandelion_open(name: *const c_char, flags: c_int, mode: ModeT) -> c_int;
     /// reposition file reading/writing offset
-    fn dandelion_lseek(file: c_int, offset: c_int, whenece: c_int) -> c_int;
+    fn dandelion_lseek(file: c_int, offset: i64, whenece: c_int) -> i64;
     /// read bytes from file corresponding to descriptor
     fn dandelion_read(
         file: c_int,
         buffer: *mut c_char,
-        length: c_int,
-        offset: c_int,
+        length: size_t,
+        offset: int64_t,
         options: c_char,
     ) -> c_int;
     /// write data to file corresponding to file descriptor
     fn dandelion_write(
         file: c_int,
         buffer: *const c_char,
-        length: c_int,
-        offset: c_int,
+        length: size_t,
+        offset: int64_t,
         options: c_char,
     ) -> c_int;
     /// close file corresponding to descriptor

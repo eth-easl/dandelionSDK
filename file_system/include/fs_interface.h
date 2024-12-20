@@ -13,6 +13,7 @@
 #define EACCES        13
 #define EEXIST        17
 #define ENOTDIR       20
+#define EISDIR        21
 #define EINVAL        22
 #define EMFILE        24
 #define EMLINK        31
@@ -61,7 +62,7 @@ struct dirent {
 // Fake that stdin, stdout and stderr are TTY
 int dandelion_isatty(int file);
 
-int dandelion_link(char *old, char *new_name);
+int dandelion_link(const char *old, const char *new_name);
 
 int dandelion_unlink(const char *name);
 
@@ -69,11 +70,11 @@ int dandelion_open(const char *name, int flags, uint32_t mode);
 
 int dandelion_close(int file);
 
-int dandelion_lseek(int file, int ptr, int dir);
+int64_t dandelion_lseek(int file, int64_t offset, int whence);
 
-int dandelion_read(int file, char *ptr, int len, int offset, char options);
+size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset, char options);
 
-int dandelion_write(int file, char *ptr, int len, int offset, char options);
+size_t dandelion_write(int file, char *ptr, size_t len, int64_t offset, char options);
 
 typedef struct DandelionStat {
   size_t st_mode;
@@ -84,8 +85,12 @@ typedef struct DandelionStat {
 
 // use dandelion stat and convert externally so the conversion happens with th
 // expected structs of the caller
-int dandelion_stat(char *file, DandelionStat *st);
+int dandelion_stat(const char *file, DandelionStat *st);
 int dandelion_fstat(int file, DandelionStat *st);
+
+// truncate file to length
+int dandelion_truncate(const char* path, int64_t length);
+int dandelion_ftruncate(int fd, int64_t length); 
 
 /// @brief initializes the filesystem from the existing sets and item buffers
 /// @return an erorr code or 0 if there were no error
