@@ -14,6 +14,7 @@ target_include_directories(dandelion_runtime INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 target_compile_options(dandelion_runtime INTERFACE
+    --target=${CMAKE_SYSTEM_PROCESSOR}-unknown-elf
     -nostdinc
     -idirafter${COMPILER_RUNTIME_INCLUDE}
 )
@@ -22,6 +23,8 @@ target_link_libraries(dandelion_runtime INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/lib/libdandelion_system.a"
 )
 target_link_options(dandelion_runtime INTERFACE
+    --target=${CMAKE_SYSTEM_PROCESSOR}-unknown-elf
+    -fuse-ld=lld
     -static
     -nostdlib
 )
@@ -31,6 +34,11 @@ add_library(dlibc INTERFACE IMPORTED GLOBAL)
 target_include_directories(dlibc INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
   "${CMAKE_CURRENT_SOURCE_DIR}/include/sys"
+)
+target_compile_options(dlibc INTERFACE
+    -D_GNU_SOURCE=1
+    -D__GNU__
+    -D__rtems__
 )
 target_link_libraries(dlibc INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/lib/libc.a"

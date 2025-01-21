@@ -58,7 +58,6 @@ endif()
 add_subdirectory(system)
 add_subdirectory(runtime)
 add_subdirectory(sdk_install)
-add_subdirectory(test_programs)
 
 if(DANDELION_FS)
     set(FILE_SYSTEM_LIB "dandelion_file_system")
@@ -114,18 +113,6 @@ if(NEWLIB)
                 <INSTALL_DIR>/${ARCHITECTURE}-dandelion/lib
                 ${CMAKE_INSTALL_PREFIX}/lib 
     )
-
-    add_library(dlibc INTERFACE IMPORTED GLOBAL)
-    add_dependencies(dlibc newlib)
-    target_include_directories(dlibc INTERFACE "${CMAKE_INSTALL_PREFIX}/include") 
-    target_link_libraries(dlibc INTERFACE 
-        ${RUNTIME_LIB}
-        ${FILE_SYSTEM_LIB}
-        ${CMAKE_INSTALL_PREFIX}/lib/libm.a
-        ${CMAKE_INSTALL_PREFIX}/lib/libg.a
-        ${CMAKE_INSTALL_PREFIX}/lib/libc.a
-    )
-    target_link_options(dlibc INTERFACE -nostdlib)
 
     set(LLVM_C_FLAGS "-D_GNU_SOURCE=1")
     string(APPEND LLVM_C_FLAGS " -D_POSIX_TIMERS")
@@ -197,16 +184,5 @@ if(NEWLIB)
             -DLIBCXX_ENABLE_RANDOM_DEVICE=OFF
     )
     add_dependencies(llvmproject newlib)
-
-    add_library(dlibcxx INTERFACE IMPORTED GLOBAL)
-    add_dependencies(dlibcxx llvmproject)
-    target_include_directories(dlibcxx INTERFACE "${CMAKE_INSTALL_PREFIX}/include") 
-    target_link_libraries(dlibcxx INTERFACE 
-        dlibc
-        ${CMAKE_INSTALL_PREFIX}/lib/libm.a
-        ${CMAKE_INSTALL_PREFIX}/lib/libg.a
-        ${CMAKE_INSTALL_PREFIX}/lib/libc.a
-    )
-    target_link_options(dlibcxx INTERFACE -nostdlib -D_POSIX_TIMERS -D_GNU_SOURCE=1 -T${CMAKE_CURRENT_SOURCE_DIR}/cxx_eh_frame.ld)
 
 endif()
