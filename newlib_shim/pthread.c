@@ -103,7 +103,11 @@ int pthread_cond_signal(pthread_cond_t *cond) { return EINVAL; }
 int pthread_cond_broadcast(pthread_cond_t *cond) { return EINVAL; }
 
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void)){
-    return EPERM;
+    if(once_control->init_executed == 0){
+        init_routine();
+        once_control->init_executed = 1;
+    }
+    return 0;
 }
 
 pthread_t pthread_self(void) { return 0;}
