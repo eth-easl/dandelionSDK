@@ -5,6 +5,12 @@
 #undef errno
 extern int errno;
 
+// pthread_mutex_t is defined as a uint32, and the default initializer is 0xfff..
+// because that is defined elsewhere, we use setting flags to 0 to turn them on
+#define LOCKED      0x01
+#define RECURSIVE   0x02
+#define DESTROYED   0x80
+
 int pthread_mutexattr_init(pthread_mutexattr_t *attr){ return EINVAL; }
 int pthread_mutexattr_destroy(pthread_mutexattr_t *attr){ return EINVAL; }
 int pthread_mutexattr_gettype(
@@ -16,13 +22,53 @@ int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type){ return EINVA
 
 int pthread_mutex_init(
         pthread_mutex_t *restrict mutex,
-        const pthread_mutexattr_t *restrict attr){
-    return EPERM;
+        const pthread_mutexattr_t *restrict attr){ 
+    // initialize mutex
+    pthread_mutex_t initial = _PTHREAD_MUTEX_INITIALIZER;
+    if(attr != NULL && attr->recursive != 0){
+        initial &= ~RECURSIVE;
+    }
+    *mutex = initial;
+    return 0;
 }
-int pthread_mutex_destroy(pthread_mutex_t *mutex){ return EPERM; }
-int pthread_mutex_trylock(pthread_mutex_t *mutex){ return EINVAL; }
-int pthread_mutex_lock(pthread_mutex_t *mutex){ return EINVAL; }
-int pthread_mutex_unlock(pthread_mutex_t *mutex){ return EPERM; }
+int pthread_mutex_destroy(pthread_mutex_t *mutex){ 
+    // check is valid mutex index
+    pthread_mutex_t current = *mutex;
+    if((current & DESTROYED) == 0)
+        return EINVAL;
+    // fail destroying locked mutex
+    if((current & LOCKED) == 0)
+        return EBUSY;
+    *mutex &= ~DESTROYED;
+    return 0;
+}
+int pthread_mutex_trylock(pthread_mutex_t *mutex){ 
+    pthread_mutex_t current = *mutex;
+    // check it is a valid mutex
+    if((current & DESTROYED) == 0)
+        return EINVAL;
+    // check it is locked and not recursive, to give deadlock error, since we only have 1 thread
+    if((current & LOCKED) == 0 && (current & RECURSIVE) != 0)
+        return EDEADLK;
+    // is either not locked, so can just lock it, or is recursive so can relock it
+    *mutex &= ~LOCKED;
+    return 0;
+}
+int pthread_mutex_lock(pthread_mutex_t *mutex){
+    // since there is only 1 thread, there is no difference
+    return pthread_mutex_trylock(mutex);
+}
+int pthread_mutex_unlock(pthread_mutex_t *mutex){ 
+    pthread_mutex_t current = *mutex;
+    // check is a valid mutex
+    if((current & DESTROYED) == 0)
+        return EINVAL;
+    // fail if the lock is not locked, meaning the current (and only) thread does not hold the lock
+    if((current & LOCKED) != 0)
+        return EPERM;
+    *mutex |= LOCKED;
+    return 0;
+}
 
 int pthread_rwlock_init(
         pthread_rwlock_t *restrict rwlock,
