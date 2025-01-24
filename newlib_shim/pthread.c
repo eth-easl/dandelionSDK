@@ -175,6 +175,26 @@ int pthread_setspecific(pthread_key_t key, const void* value) {
     }
     return EINVAL;
 }
+int	pthread_key_delete (pthread_key_t key){
+    thread_key_t* current = key_root;
+    if(current == NULL)
+        return EINVAL;
+    if(current->key == key){
+        key_root = key_root->next;
+        return 0;
+    }
+    while(current->next != NULL && current->next->key != key){
+        current = current->next;
+    }
+    // either are at end of list of at node where current next has the key
+    if(current->next == NULL)
+        return EINVAL;
+    // current next has the key
+    thread_key_t* to_destroy = current->next;
+    current->next = to_destroy->next;
+    free(to_destroy);
+    return 0;
+}
 
 int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void)){
     return ENOMEM;

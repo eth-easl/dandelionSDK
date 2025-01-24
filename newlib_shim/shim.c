@@ -3,6 +3,7 @@
 #include <sys/statvfs.h>
 #include <sys/unistd.h>
 #include <sys/signal.h>
+#include <malloc.h>
 #include <time.h>
 #include <wordexp.h>
 
@@ -185,6 +186,17 @@ int fstatvfs(int fd, struct statvfs *buf){
   return -1;
 }
 
+int posix_memalign(void **memptr, size_t alignment, size_t size){
+  void* new_allocation = memalign(alignment, size);
+  if(new_allocation == NULL){
+    errno = ENOMEM;
+    return -1;
+  } else {
+    *memptr = new_allocation;
+    return 0;
+  }
+}
+
 /* ===========================================================================
   Starting section of symbols that have not real implementation
   Some could have implementations, but don't have one for now.
@@ -215,11 +227,6 @@ int kill(int pid, int sig) {
 
 int pipe(int pipefd[2]){
   errno = EFAULT;
-  return -1;
-}
-
-int posix_memalign(void **memptr, size_t alignment, size_t size){
-  errno = ENOMEM;
   return -1;
 }
 
