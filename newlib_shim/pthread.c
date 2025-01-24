@@ -1,6 +1,6 @@
 #define __rtems__
 #include <pthread.h>
-
+#include <malloc.h>
 #include <errno.h>
 #undef errno
 extern int errno;
@@ -121,9 +121,60 @@ int pthread_create(
 int pthread_join(pthread_t thread, void **retval){ return EINVAL; }
 int pthread_detach(pthread_t thread) { return EINVAL; }
 
-int pthread_key_create(pthread_key_t *key, void (*destructor)(void*)) { return EAGAIN; }
-void* pthread_getspecific(pthread_key_t key) { return NULL; }
-int pthread_setspecific(pthread_key_t key, const void* value) { return EINVAL; }
+// TODO replace with heap
+typedef struct thread_key_struct {
+    pthread_key_t key;
+    struct thread_key_struct* next;
+    const void* content;
+} thread_key_t;
+
+static thread_key_t* key_root = NULL;
+
+// currently ignore destructors, since we don't have a clean up step
+// TODO once cleanup step is implemented add proper destructor support
+int pthread_key_create(pthread_key_t *key, void (*destructor)(void*)) {
+    thread_key_t* new_node = malloc(sizeof(thread_key_t));  
+    new_node->next = NULL;
+    new_node->content = NULL;
+
+    if(key_root == NULL){
+        new_node->key = 0;
+        key_root = new_node;
+    } else {
+        thread_key_t* current = key_root;
+        while(current->next != NULL){
+            if(current->next->key != current->key + 1)
+                break;
+            current = current->next;
+        }
+        new_node->key = current->key + 1;
+        new_node->next = current->next;
+        current->next = new_node; 
+    }
+
+    *key = new_node->key;
+    return 0;
+}
+void* pthread_getspecific(pthread_key_t key) { 
+    thread_key_t* current = key_root;
+    while(current != NULL){
+        if(current->key == key)
+            return current->content;
+        current = current->next;
+    }
+    return NULL;
+}
+int pthread_setspecific(pthread_key_t key, const void* value) { 
+    thread_key_t* current = key_root;
+    while(current != NULL){
+        if(current->key == key){
+            current->content = value;
+            return 0;
+        }   
+        current = current->next;
+    }
+    return EINVAL;
+}
 
 int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void)){
     return ENOMEM;

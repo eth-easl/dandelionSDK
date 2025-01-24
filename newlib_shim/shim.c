@@ -54,6 +54,7 @@ DANDELION_ENTRY(__initialization)
 void _exit(int __status) {
   fs_terminate();
   dandelion_exit(errno);
+  __builtin_unreachable();
 };
 
 extern int dandelion_isatty(int file);
