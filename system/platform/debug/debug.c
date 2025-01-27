@@ -51,21 +51,28 @@ static void write_all(int fd, const void *buffer, size_t size) {
 }
 
 static void dump_io_buf(const char *setid, size_t setidlen, IoBuffer *buf) {
-  char tmp[256];
-  if (setid) {
-    my_memcpy(tmp, setid, setidlen);
+  char tmp[256] = "output_sets/";
+  size_t start_len = my_strlen(tmp);
+  if (setid == NULL || buf == NULL || buf->ident == NULL){
+    char* message = "Output set id, buffer pointer or buffer id are NULL";
+    size_t message_length = my_strlen(message); 
+    write_all(2, message, message_length);
+    return;
   }
+
+  my_memcpy(tmp + start_len, setid, setidlen);
   size_t identlen = buf->ident_len;
-  if (buf->ident) {
-    tmp[setidlen] = ' ';
-    my_memcpy(tmp + setidlen + 1, buf->ident, identlen);
-    ++identlen;
-  }
-  tmp[setidlen + identlen] = ':';
-  tmp[setidlen + identlen + 1] = '\n';
-  write_all(1, tmp, setidlen + identlen + 2);
-  write_all(1, buf->data, buf->data_len);
+  tmp[start_len + setidlen] = '/';
+  my_memcpy(tmp + start_len + setidlen + 1, buf->ident, identlen);
+  tmp[start_len + setidlen + 1 + identlen] = '\0';
+  // print the set and buffer identifiers to console
+  write_all(1, tmp, start_len + setidlen + 1 + identlen);
   write_all(1, "\n", 1);
+  // open file file for the data
+  int out_fd = __syscall(SYS_openat, AT_FDCWD, tmp, O_WRONLY | O_CREAT | O_TRUNC, 00666);
+  if(out_fd < 0)
+    print_and_exit("Failed to open output file\n", -out_fd);
+  write_all(out_fd, buf->data, buf->data_len);
 }
 
 static void dump_global_data() {

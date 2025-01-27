@@ -10,8 +10,12 @@
 #define MAP_ANONYMOUS 0x20
 #define MAP_PRIVATE 0x2
 
-#define O_RDONLY 00
-#define AT_FDCWD -100
+#define O_RDONLY  00000
+#define O_WRONLY  00001
+#define O_RDWR    00002
+#define O_CREAT   00100
+#define O_TRUNC		01000
+#define AT_FDCWD  -100
 
 #ifndef __scc
 #define __scc(X) ((long)(X))
