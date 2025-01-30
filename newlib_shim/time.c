@@ -2,7 +2,7 @@
     This file implements the necessary functions from newlib time.h for _POSIX_TIMERS
     We need this compatibitiy as it is required by libcxx in llvmproject
 */
-
+#define _POSIX_MONOTONIC_CLOCK
 #include <time.h>
 #include <errno.h>
 #undef errno
@@ -13,6 +13,12 @@ int clock_settime (clockid_t clock_id, const struct timespec *tp){
     return -1;
 }
 int clock_gettime (clockid_t clock_id, struct timespec *tp){
+    if(clock_id == CLOCK_MONOTONIC){
+        static struct timespec monotonic_time = {.tv_nsec = 0, .tv_sec = 0};
+        monotonic_time.tv_nsec += 1;
+        *tp = monotonic_time;
+        return 0;
+    }
     errno = EINVAL;
     return -1;
 }
