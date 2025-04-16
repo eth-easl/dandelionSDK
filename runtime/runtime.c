@@ -59,6 +59,7 @@ void dandelion_init(void) {
       set->buffers[j].ident_len = sysdata.input_bufs[buf_offset].ident_len;
       set->buffers[j].data = sysdata.input_bufs[buf_offset].data;
       set->buffers[j].data_len = sysdata.input_bufs[buf_offset].data_len;
+      set->buffers[j].key = sysdata.input_bufs[buf_offset].key;
     }
   }
 
@@ -108,6 +109,7 @@ void dandelion_exit(int exit_code) {
       raw_buf->ident_len = tree_buf->ident_len;
       raw_buf->data = tree_buf->data;
       raw_buf->data_len = tree_buf->data_len;
+      raw_buf->key = tree_buf->key;
     }
   }
   // sentinel set output
