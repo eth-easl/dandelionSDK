@@ -7,18 +7,18 @@ extern "C" {
 
 #include <stddef.h>
 
-struct io_buffer {
-  const char* ident;
+typedef struct IoBuffer {
+  const char *ident;
   size_t ident_len;
 
-  void* data;
+  void *data;
   size_t data_len;
 
   size_t key;
-};
+} IoBuffer;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // _DANDELION_IO_H
+#endif // _DANDELION_IO_H

@@ -1,9 +1,9 @@
-#include "dandelion/system/system.h"
+#include "../include/dandelion/system/system.h"
 
 #include "system.h"
 
 struct dandelion_system_data __dandelion_system_data = {
-    .exit_code = 256,  // one above any expected exit code
+    .exit_code = DANDELION_EXIT_UNINITIALIZED,
     .heap_begin = -1,
     .heap_end = 0,
     .input_sets_len = -1,

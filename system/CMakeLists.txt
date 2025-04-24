@@ -1,19 +1,26 @@
-if(NOT DANDELION_PLATFORM)
-set(DANDELION_PLATFORM "debug")
-endif()
-
 add_library(${SYSTEM_LIB} STATIC system.c)
 if(FREESTANDING)
     target_sources(${SYSTEM_LIB} PRIVATE freestanding.c)
-endif(FREESTANDING)
+endif()
+
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+    target_compile_definitions(${SYSTEM_LIB} PRIVATE DEBUG)
+    target_compile_options(${SYSTEM_LIB} PRIVATE -g)
+endif()
 
 target_include_directories(${SYSTEM_LIB} PRIVATE ${DANDELION_ROOT}/include)
 target_compile_options(${SYSTEM_LIB} PRIVATE -fno-stack-protector)
 target_link_options(${SYSTEM_LIB} PUBLIC -nostdlib)
 
+install(TARGETS ${SYSTEM_LIB}
+    ARCHIVE 
+)
+
 if(DANDELION_PLATFORM MATCHES "debug")
     add_subdirectory(platform/debug)
     add_subdirectory(syscall/linux)
+elseif(DANDELION_PLATFORM MATCHES "test")
+    add_subdirectory(platform/test)    
 elseif(DANDELION_PLATFORM MATCHES "cheri")
     add_subdirectory(platform/cheri)
 elseif(DANDELION_PLATFORM MATCHES "mmu_freebsd")
