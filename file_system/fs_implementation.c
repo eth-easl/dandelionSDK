@@ -30,7 +30,7 @@ FileChunk* allocate_file_chunk(size_t size){
   return new_chunck;
 }
 
-inline void free_file_chunk(FileChunk* chunk){
+static inline void free_file_chunk(FileChunk* chunk){
   dandelion_free(chunk->data);
   dandelion_free(chunk);
   return;
