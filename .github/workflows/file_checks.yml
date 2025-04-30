@@ -1,9 +1,4 @@
-find file_sy
-stem/ include/ newlib_shim/ runtime/ sdk_install/ system/ test_interfaces/ test_programs/ -iname '*.h' -o -iname '*.c' |
- clang-format -i --files=/dev/stdin --style=LLVM
-
-
-name: 
+name: Format checks
 
 on:
   push:
