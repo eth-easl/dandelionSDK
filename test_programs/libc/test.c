@@ -4,7 +4,7 @@
 
 #include "unistd.h"
 
-int main(int argc, char const* argv[]) {
+int main(int argc, char const *argv[]) {
   // print to std out and std err with the usual mode
   int err;
   if ((err = printf("Test string to stdout\n")) < 0) {
@@ -22,12 +22,13 @@ int main(int argc, char const* argv[]) {
   }
   printf("read %zi characters from stdin\n", read_chars);
   ssize_t written = fwrite(in_buffer, 1, read_chars, stdout);
-  if (written != read_chars) return -4;
+  if (written != read_chars)
+    return -4;
   // print string arguments
   for (int iter = 0; iter < argc; iter++) {
     printf("argument %d is %s\n", iter, argv[iter]);
   }
-  char* env_home = getenv("HOME");
+  char *env_home = getenv("HOME");
   printf("environmental variable HOME is %s\n", env_home);
   return 0;
 }

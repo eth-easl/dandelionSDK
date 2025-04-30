@@ -40,7 +40,7 @@ static void write_all(int fd, const void *buffer, size_t size) {
     // is supposed to be ssize_t, but that is not always available
     // ptrdiff_t should be able to hold the value
     ptrdiff_t e = __syscall(SYS_write, fd, (const char *)buffer + written,
-                          size - written);
+                            size - written);
     if (e < 0) {
       __syscall(SYS_exit_group);
       __builtin_unreachable();
@@ -53,9 +53,9 @@ static void write_all(int fd, const void *buffer, size_t size) {
 static void dump_io_buf(const char *setid, size_t setidlen, IoBuffer *buf) {
   char tmp[256] = "output_sets/";
   size_t start_len = my_strlen(tmp);
-  if (setid == NULL || buf == NULL || buf->ident == NULL){
-    char* message = "Output set id, buffer pointer or buffer id are NULL";
-    size_t message_length = my_strlen(message); 
+  if (setid == NULL || buf == NULL || buf->ident == NULL) {
+    char *message = "Output set id, buffer pointer or buffer id are NULL";
+    size_t message_length = my_strlen(message);
     write_all(2, message, message_length);
     return;
   }
@@ -69,8 +69,9 @@ static void dump_io_buf(const char *setid, size_t setidlen, IoBuffer *buf) {
   write_all(1, tmp, start_len + setidlen + 1 + identlen);
   write_all(1, "\n", 1);
   // open file file for the data
-  int out_fd = __syscall(SYS_openat, AT_FDCWD, tmp, O_WRONLY | O_CREAT | O_TRUNC, 00666);
-  if(out_fd < 0)
+  int out_fd =
+      __syscall(SYS_openat, AT_FDCWD, tmp, O_WRONLY | O_CREAT | O_TRUNC, 00666);
+  if (out_fd < 0)
     print_and_exit("Failed to open output file\n", -out_fd);
   write_all(out_fd, buf->data, buf->data_len);
 }
@@ -102,20 +103,20 @@ static inline char *round_up_to(char *original, size_t alignment) {
 }
 
 // allocation without freeing, only for smaller structures
-static void* debug_alloc(size_t size){
-  static size_t* buffer_space = NULL;
+static void *debug_alloc(size_t size) {
+  static size_t *buffer_space = NULL;
   static size_t used = 0;
   static const size_t page_size = 4096;
-  size_t new_allocation = ((size + sizeof(size_t) -1)/ sizeof(size_t));
-  if(buffer_space == NULL || page_size < (used + new_allocation)*sizeof(size_t)){
+  size_t new_allocation = ((size + sizeof(size_t) - 1) / sizeof(size_t));
+  if (buffer_space == NULL ||
+      page_size < (used + new_allocation) * sizeof(size_t)) {
     buffer_space = vm_alloc(page_size);
     used = 0;
   }
-  void* ret_ptr = buffer_space + used;
+  void *ret_ptr = buffer_space + used;
   used += new_allocation;
-  return  ret_ptr;
+  return ret_ptr;
 }
-
 
 void __dandelion_platform_init(void) {
 
@@ -128,8 +129,9 @@ void __dandelion_platform_init(void) {
 
   // attempt to open folder input_sets
   int in_sets_fd = __syscall(SYS_openat, AT_FDCWD, "input_sets", O_RDONLY);
-  if(in_sets_fd < 0){
-    print_and_exit("No input_sets directory in current working directory\n", -1);
+  if (in_sets_fd < 0) {
+    print_and_exit("No input_sets directory in current working directory\n",
+                   -1);
   }
   // start going through files
   typedef struct linux_dirent {
@@ -142,18 +144,22 @@ void __dandelion_platform_init(void) {
   char dirent_buffer[DIRENT_BUF_SIZE];
   char set_dirent_buffer[DIRENT_BUF_SIZE];
 
-  long dirent_read = __syscall(SYS_getdents64, in_sets_fd, &dirent_buffer, DIRENT_BUF_SIZE);
-  if(dirent_read < 0)
+  long dirent_read =
+      __syscall(SYS_getdents64, in_sets_fd, &dirent_buffer, DIRENT_BUF_SIZE);
+  if (dirent_read < 0)
     print_and_exit("getdents failed\n", -dirent_read);
-  if(dirent_read == DIRENT_BUF_SIZE)
+  if (dirent_read == DIRENT_BUF_SIZE)
     print_and_exit("could not read all child directory entries of in set", -1);
 
   size_t input_set_num = 0;
-  for(long dirent_offset = 0; dirent_offset < dirent_read; dirent_offset += ((linux_dirent*) &dirent_buffer[dirent_offset])->d_reclen){
-    linux_dirent* dirent = (linux_dirent*) &dirent_buffer[dirent_offset];
+  for (long dirent_offset = 0; dirent_offset < dirent_read;
+       dirent_offset +=
+       ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
+    linux_dirent *dirent = (linux_dirent *)&dirent_buffer[dirent_offset];
     size_t ident_len = my_strlen(dirent->d_name);
-    if((ident_len == 1 && dirent->d_name[0] == '.') 
-        ||(ident_len == 2 && dirent->d_name[0] == '.' && dirent->d_name[1] == '.'))
+    if ((ident_len == 1 && dirent->d_name[0] == '.') ||
+        (ident_len == 2 && dirent->d_name[0] == '.' &&
+         dirent->d_name[1] == '.'))
       continue;
     input_set_num++;
   }
@@ -166,71 +172,83 @@ void __dandelion_platform_init(void) {
 
   size_t total_buffers = 0;
   size_t input_set_index = 0;
-  for(long dirent_offset = 0; dirent_offset < dirent_read; dirent_offset += ((linux_dirent*) &dirent_buffer[dirent_offset])->d_reclen){
-    linux_dirent* dirent = (linux_dirent*) &dirent_buffer[dirent_offset];
+  for (long dirent_offset = 0; dirent_offset < dirent_read;
+       dirent_offset +=
+       ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
+    linux_dirent *dirent = (linux_dirent *)&dirent_buffer[dirent_offset];
     size_t ident_len = my_strlen(dirent->d_name);
-    write_all(1, dirent->d_name, ident_len); 
+    write_all(1, dirent->d_name, ident_len);
     write_all(1, "\n", 1);
 
     // check it is a directory
-    if((ident_len == 1 && dirent->d_name[0] == '.') 
-      ||(ident_len == 2 && dirent->d_name[0] == '.' && dirent->d_name[1] == '.'))
+    if ((ident_len == 1 && dirent->d_name[0] == '.') ||
+        (ident_len == 2 && dirent->d_name[0] == '.' &&
+         dirent->d_name[1] == '.'))
       continue;
-    if(dirent->d_type != DT_DIR)
+    if (dirent->d_type != DT_DIR)
       print_and_exit("file in input_sets not direcotory", -1);
 
     // open the input set folder
-    int set_folder_fd = __syscall(SYS_openat, in_sets_fd, dirent->d_name, O_RDONLY);
-    if(set_folder_fd < 0)
+    int set_folder_fd =
+        __syscall(SYS_openat, in_sets_fd, dirent->d_name, O_RDONLY);
+    if (set_folder_fd < 0)
       print_and_exit("could not open set folder\n", -1);
 
     // read the directory
-    long set_dirent_read = __syscall(SYS_getdents64, set_folder_fd, &set_dirent_buffer, DIRENT_BUF_SIZE); 
-    if(set_dirent_read < 0)
+    long set_dirent_read = __syscall(SYS_getdents64, set_folder_fd,
+                                     &set_dirent_buffer, DIRENT_BUF_SIZE);
+    if (set_dirent_read < 0)
       print_and_exit("getdents failed\n", -dirent_read);
-    if(set_dirent_read == DIRENT_BUF_SIZE)
-      print_and_exit("could not read all items in input set, ran out of dirent buffer space", -1);
-    char* ident_buffer = (char*) debug_alloc(ident_len);
-    my_memcpy(ident_buffer, dirent->d_name, ident_len);  
+    if (set_dirent_read == DIRENT_BUF_SIZE)
+      print_and_exit("could not read all items in input set, ran out of dirent "
+                     "buffer space",
+                     -1);
+    char *ident_buffer = (char *)debug_alloc(ident_len);
+    my_memcpy(ident_buffer, dirent->d_name, ident_len);
     input_sets[input_set_index].ident = ident_buffer;
     input_sets[input_set_index].ident_len = ident_len;
     input_sets[input_set_index].offset = total_buffers;
     input_set_index++;
-    // add items 
-    for(long set_dirent_offset = 0; set_dirent_offset < set_dirent_read;
-        set_dirent_offset += ((linux_dirent*) &set_dirent_buffer[set_dirent_offset])->d_reclen){
-      linux_dirent* set_dirent = (linux_dirent*) &set_dirent_buffer[set_dirent_offset];
+    // add items
+    for (long set_dirent_offset = 0; set_dirent_offset < set_dirent_read;
+         set_dirent_offset +=
+         ((linux_dirent *)&set_dirent_buffer[set_dirent_offset])->d_reclen) {
+      linux_dirent *set_dirent =
+          (linux_dirent *)&set_dirent_buffer[set_dirent_offset];
       size_t item_ident_len = my_strlen(set_dirent->d_name);
-      if((item_ident_len == 1 && set_dirent->d_name[0] == '.')
-        || (item_ident_len == 2 && set_dirent->d_name[0] == '.' && set_dirent->d_name[1] == '.'))
+      if ((item_ident_len == 1 && set_dirent->d_name[0] == '.') ||
+          (item_ident_len == 2 && set_dirent->d_name[0] == '.' &&
+           set_dirent->d_name[1] == '.'))
         continue;
       write_all(1, "\t", 1);
       write_all(1, set_dirent->d_name, item_ident_len);
       write_all(1, "\n", 1);
       // add one buffer to heap
-      IoBuffer* current_buffer = heap_ptr;
-      heap_ptr += sizeof(IoBuffer); 
-      char* item_ident_buffer = (char*) debug_alloc(item_ident_len);
+      IoBuffer *current_buffer = heap_ptr;
+      heap_ptr += sizeof(IoBuffer);
+      char *item_ident_buffer = (char *)debug_alloc(item_ident_len);
       my_memcpy(item_ident_buffer, set_dirent->d_name, item_ident_len);
       // pretend the files were in folders
-      for(size_t index = 0; index < item_ident_len; index++){
-        if(item_ident_buffer[index] == '+'){
+      for (size_t index = 0; index < item_ident_len; index++) {
+        if (item_ident_buffer[index] == '+') {
           item_ident_buffer[index] = '/';
         }
       }
-      current_buffer->ident = item_ident_buffer; 
+      current_buffer->ident = item_ident_buffer;
       current_buffer->ident_len = item_ident_len;
       current_buffer->key = 0;
-      int item_fd = __syscall(SYS_openat, set_folder_fd, set_dirent->d_name, O_RDONLY);
-      if(item_fd < 0)
+      int item_fd =
+          __syscall(SYS_openat, set_folder_fd, set_dirent->d_name, O_RDONLY);
+      if (item_fd < 0)
         print_and_exit("could not open item file", -1);
       ptrdiff_t file_size = __syscall(SYS_lseek, item_fd, 0, 2);
-      if (file_size < 0) 
+      if (file_size < 0)
         print_and_exit("Could not get file size\n", -1);
       char *file_addr = NULL;
-      if(file_size > 0){
-        file_addr = (char *)__syscall(SYS_mmap, NULL, file_size, PROT_READ, MAP_PRIVATE, item_fd, 0);
-        if ((long)file_addr < 0) 
+      if (file_size > 0) {
+        file_addr = (char *)__syscall(SYS_mmap, NULL, file_size, PROT_READ,
+                                      MAP_PRIVATE, item_fd, 0);
+        if ((long)file_addr < 0)
           print_and_exit("Could not map item file\n", -(int)file_addr);
       }
       current_buffer->data = file_addr;
@@ -248,20 +266,25 @@ void __dandelion_platform_init(void) {
 
   // start processing output sets
   int out_sets_fd = __syscall(SYS_openat, AT_FDCWD, "output_sets", O_RDONLY);
-  if(out_sets_fd < 0){
-    print_and_exit("No output set directory in current working directory\n", -1);
+  if (out_sets_fd < 0) {
+    print_and_exit("No output set directory in current working directory\n",
+                   -1);
   }
-  dirent_read = __syscall(SYS_getdents64, out_sets_fd, &dirent_buffer, DIRENT_BUF_SIZE);
-  if(dirent_read < 0){
+  dirent_read =
+      __syscall(SYS_getdents64, out_sets_fd, &dirent_buffer, DIRENT_BUF_SIZE);
+  if (dirent_read < 0) {
     print_and_exit("getdents failed\n", -dirent_read);
   }
 
   size_t output_set_num = 0;
-  for(long dirent_offset = 0; dirent_offset < dirent_read; dirent_offset += ((linux_dirent*) &dirent_buffer[dirent_offset])->d_reclen){
-    linux_dirent* dirent = (linux_dirent*) &dirent_buffer[dirent_offset];
+  for (long dirent_offset = 0; dirent_offset < dirent_read;
+       dirent_offset +=
+       ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
+    linux_dirent *dirent = (linux_dirent *)&dirent_buffer[dirent_offset];
     size_t ident_len = my_strlen(dirent->d_name);
-    if((ident_len == 1 && dirent->d_name[0] == '.') 
-        ||(ident_len == 2 && dirent->d_name[0] == '.' && dirent->d_name[1] == '.'))
+    if ((ident_len == 1 && dirent->d_name[0] == '.') ||
+        (ident_len == 2 && dirent->d_name[0] == '.' &&
+         dirent->d_name[1] == '.'))
       continue;
     output_set_num++;
   }
@@ -270,18 +293,21 @@ void __dandelion_platform_init(void) {
   struct io_set_info *output_sets = heap_ptr;
   heap_ptr += (output_set_num + 1) * sizeof(struct io_set_info);
   size_t output_set_index = 0;
-  for(long dirent_offset = 0; dirent_offset < dirent_read; dirent_offset += ((linux_dirent*) &dirent_buffer[dirent_offset])->d_reclen){
-    linux_dirent* dirent = (linux_dirent*) &dirent_buffer[dirent_offset];
+  for (long dirent_offset = 0; dirent_offset < dirent_read;
+       dirent_offset +=
+       ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
+    linux_dirent *dirent = (linux_dirent *)&dirent_buffer[dirent_offset];
     size_t ident_len = my_strlen(dirent->d_name);
-    write_all(1, dirent->d_name, ident_len); 
+    write_all(1, dirent->d_name, ident_len);
     write_all(1, "\n", 1);
     // check it is a directory
-    if((ident_len == 1 && dirent->d_name[0] == '.') 
-      ||(ident_len == 2 && dirent->d_name[0] == '.' && dirent->d_name[1] == '.'))
+    if ((ident_len == 1 && dirent->d_name[0] == '.') ||
+        (ident_len == 2 && dirent->d_name[0] == '.' &&
+         dirent->d_name[1] == '.'))
       continue;
-    if(dirent->d_type != DT_DIR)
+    if (dirent->d_type != DT_DIR)
       print_and_exit("file in output_sets not direcotory", -1);
-    char* ident_buffer = (char*) debug_alloc(ident_len);
+    char *ident_buffer = (char *)debug_alloc(ident_len);
     my_memcpy(ident_buffer, dirent->d_name, ident_len);
     output_sets[output_set_index].ident = ident_buffer;
     output_sets[output_set_index].ident_len = ident_len;

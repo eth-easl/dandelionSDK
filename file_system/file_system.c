@@ -238,8 +238,8 @@ int remove_file(D_File *file) {
 // assumes file is non null
 // Flags that need to be supported / checked on layers above:
 // O_CREAT, O_EXCL, O_TMPFILE
-int open_existing_file(unsigned int index, D_File *file, int flags, uint32_t mode,
-                       char skip_checks) {
+int open_existing_file(unsigned int index, D_File *file, int flags,
+                       uint32_t mode, char skip_checks) {
   // Currently ignoring the following flags, noting here so we know they
   // were not forgotten and nulling them so we don't read them on accident
   // flags &= ~(O_ASYNC | O_CLOEXEC | O_DIRECT | O_DIRECTORY | O_DSYNC |
@@ -314,21 +314,21 @@ void setup_charpparray(char *data, size_t length, int *entries,
   // find the number of arguments
   size_t arguments = 0;
   size_t data_index = 0;
-  while(data_index < length) {
+  while (data_index < length) {
     // skip over leading spaces
-    while(data_index < length && data[data_index] == ' ')
+    while (data_index < length && data[data_index] == ' ')
       data_index++;
-    if(data_index >= length)
+    if (data_index >= length)
       break;
     arguments++;
-    // are not at the end of the input and have a non space character so are at the start of an argument
-    // skip over current argument
-    while(data_index < length && data[data_index] != ' '){
+    // are not at the end of the input and have a non space character so are at
+    // the start of an argument skip over current argument
+    while (data_index < length && data[data_index] != ' ') {
       // if is escape character, skip to end of escape
-      if(data[data_index] == '\'' || data[data_index] == '\"'){
+      if (data[data_index] == '\'' || data[data_index] == '\"') {
         char escape_char = data[data_index];
         data_index++;
-        while(data_index < length && data[data_index] != escape_char)
+        while (data_index < length && data[data_index] != escape_char)
           data_index++;
       }
       // either move past the character or over the ending escape character
@@ -344,21 +344,21 @@ void setup_charpparray(char *data, size_t length, int *entries,
   // reset index
   data_index = 0;
   size_t current_arg = 0;
-  while(data_index < length) {
+  while (data_index < length) {
     // skip over spaces
-    while(data_index < length && data[data_index] == ' ')
+    while (data_index < length && data[data_index] == ' ')
       data_index++;
-    if(data_index >= length)
+    if (data_index >= length)
       break;
     // count the number of character the final string will have
     size_t num_characters = 0;
     size_t arg_index = data_index;
-    while(data_index < length && data[data_index] != ' '){
+    while (data_index < length && data[data_index] != ' ') {
       // if is escape character, skip to end of escape
-      if(data[data_index] == '\'' || data[data_index] == '\"'){
+      if (data[data_index] == '\'' || data[data_index] == '\"') {
         char escape_char = data[data_index];
         data_index++;
-        while(data_index < length && data[data_index] != escape_char){
+        while (data_index < length && data[data_index] != escape_char) {
           num_characters++;
           data_index++;
         }
@@ -369,14 +369,15 @@ void setup_charpparray(char *data, size_t length, int *entries,
       data_index++;
     }
     // allocate string
-    char* target_string = dandelion_alloc(num_characters + 1, _Alignof(char));
+    char *target_string = dandelion_alloc(num_characters + 1, _Alignof(char));
     target_string[num_characters] = '\0';
     size_t chars_copied = 0;
-    for(; arg_index < data_index; arg_index++){
-      if(data[arg_index] == '\'' || data[arg_index] == '\"'){
+    for (; arg_index < data_index; arg_index++) {
+      if (data[arg_index] == '\'' || data[arg_index] == '\"') {
         char escape_char = data[arg_index];
         arg_index++;
-        for(; arg_index < data_index && data[arg_index] != escape_char; arg_index++){
+        for (; arg_index < data_index && data[arg_index] != escape_char;
+             arg_index++) {
           target_string[chars_copied] = data[arg_index];
           chars_copied++;
         }
@@ -387,7 +388,7 @@ void setup_charpparray(char *data, size_t length, int *entries,
     }
     pp_local[current_arg] = target_string;
     current_arg++;
-  } 
+  }
 
   *entries = arguments;
   *pp_array = pp_local;
@@ -444,9 +445,11 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
   if (stderr_file == NULL)
     return -1;
   error = open_existing_file(STDERR_FILENO, stderr_file, O_WRONLY, 0, 0);
-  if (error != 0) return error;
+  if (error != 0)
+    return error;
   error = link_file_to_folder(stdio_folder, stderr_file);
-  if (error != 0) return error;
+  if (error != 0)
+    return error;
 
   // create and open stdout
   Path stdout_path = path_from_string("stdout");
@@ -454,9 +457,11 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
   if (stdout_file == NULL)
     return -1;
   error = open_existing_file(STDOUT_FILENO, stdout_file, O_WRONLY, 0, 0);
-  if (error != 0) return error;
+  if (error != 0)
+    return error;
   error = link_file_to_folder(stdio_folder, stdout_file);
-  if (error != 0) return error;
+  if (error != 0)
+    return error;
 
   // set to NULL to be able to check if it was set by inputs
   *argc = 0;
@@ -469,7 +474,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
     // get set information
     Path set_path = {.path = dandelion_input_set_ident(set_index),
                      .length = dandelion_input_set_ident_len(set_index)};
-    if(set_path.length == 0)
+    if (set_path.length == 0)
       continue;
     // create directories for set
     D_File *set_directory = create_directories(fs_root, set_path, 1);
@@ -485,7 +490,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
 
       Path total_path = {.path = item_buffer->ident,
                          .length = item_buffer->ident_len};
-      if(total_path.length == 0)
+      if (total_path.length == 0)
         continue;
       Path dir_path = get_directories(total_path);
       Path file_path = get_file(total_path);
@@ -508,7 +513,8 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
             namecmp(file_path.path, "stdin", MIN(file_path.length, 5));
         if (is_stdin == 0) {
           error = open_existing_file(STDIN_FILENO, item_file, O_RDONLY, 0, 0);
-          if (error != 0) return error;
+          if (error != 0)
+            return error;
         }
         int is_argv = namecmp(file_path.path, "argv", MIN(file_path.length, 4));
         if (is_argv == 0) {
@@ -532,14 +538,14 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
     // get set information
     Path set_path = {.path = dandelion_output_set_ident(set_index),
                      .length = dandelion_output_set_ident_len(set_index)};
-    if(set_path.length == 0)
+    if (set_path.length == 0)
       continue;
     // create directories for set
     D_File *set_directory = create_directories(fs_root, set_path, 1);
     if (set_directory == NULL) {
       // TODO write to stderr on what happened
       return -1;
-    } 
+    }
   }
 
   // if stdin has not been given as an input set create an empty file and
@@ -671,10 +677,10 @@ int fs_terminate() {
     for (D_File *out_file = set_directory->child; out_file != NULL;
          out_file = out_file->next) {
       // ignore argv, environ and stdin in the stdio folder
-      if(namecmp(set_ident.path, "stdio", MIN(set_ident.length, 5)) == 0){
-        if(namecmp(out_file->name, "environ", 7) == 0 ||
-          namecmp(out_file->name, "argv", 4) == 0 ||
-          namecmp(out_file->name, "stdin", 5) == 0)
+      if (namecmp(set_ident.path, "stdio", MIN(set_ident.length, 5)) == 0) {
+        if (namecmp(out_file->name, "environ", 7) == 0 ||
+            namecmp(out_file->name, "argv", 4) == 0 ||
+            namecmp(out_file->name, "stdin", 5) == 0)
           continue;
       }
       add_output_from_file(out_file, empty_path, set_index);

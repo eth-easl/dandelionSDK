@@ -91,7 +91,7 @@ int free_data(D_File *file);
 // add file to be pointed to by folder
 int link_file_to_folder(D_File *folder, D_File *file);
 
-int open_existing_file(unsigned int index, D_File *file, int flags, uint32_t mode,
-                       char skip_checks);
+int open_existing_file(unsigned int index, D_File *file, int flags,
+                       uint32_t mode, char skip_checks);
 
 #endif // __DANDELION_FILE_SYSTEM__

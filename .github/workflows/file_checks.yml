@@ -1,0 +1,23 @@
+find file_sy
+stem/ include/ newlib_shim/ runtime/ sdk_install/ system/ test_interfaces/ test_programs/ -iname '*.h' -o -iname '*.c' |
+ clang-format -i --files=/dev/stdin --style=LLVM
+
+
+name: 
+
+on:
+  push:
+    branches: [ "main" ]
+
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest      
+
+    steps: 
+    - uses: actions/checkout@v4
+
+    - name: C format check
+      run: find . -iname '*.h' -o -iname '*.c' | clang-format --dry-run -Werror --files=/dev/stdin --style=LLVM 

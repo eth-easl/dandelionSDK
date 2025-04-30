@@ -2,8 +2,6 @@ name: release latest with all library versions
 
 on:
   push:
-    branches: [ "main", "os_extention" ]
-  pull_request:
     branches: [ "main" ]
 
 jobs:

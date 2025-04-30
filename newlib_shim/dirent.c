@@ -1,7 +1,7 @@
 #include <dirent.h>
 
-#include <stdlib.h>
 #include <errno.h>
+#include <stdlib.h>
 
 extern int dandelion_opendir(const char *name, DIR *dir);
 DIR *opendir(const char *name) {
@@ -21,7 +21,7 @@ int closedir(DIR *dir) { return dandelion_closedir(dir); }
 extern int dandelion_readdir(DIR *dir, struct dirent *dirent_ptr);
 struct dirent *readdir(DIR *dir) {
   struct dirent *local_dir = (struct dirent *)malloc(sizeof(struct dirent));
-  if(local_dir == NULL){
+  if (local_dir == NULL) {
     *__errno() = ENOMEM;
     return NULL;
   }
@@ -30,8 +30,8 @@ struct dirent *readdir(DIR *dir) {
     return local_dir;
   } else {
     free(local_dir);
-    if(error != -1)
-      *__errno()  = -error;
+    if (error != -1)
+      *__errno() = -error;
     return NULL;
   }
 }
@@ -41,9 +41,9 @@ struct dirent *readdir(DIR *dir) {
 extern long int dandelion_telldir(DIR *dir);
 long int telldir(DIR *dir) {
   int error = dandelion_telldir(dir);
-  if(error < 0){
-    *__errno()  = -error;
-    return -1; 
+  if (error < 0) {
+    *__errno() = -error;
+    return -1;
   } else {
     return error;
   }
@@ -51,4 +51,3 @@ long int telldir(DIR *dir) {
 
 extern void dandelion_seekdir(DIR *dir, long int index);
 void seekdir(DIR *dir, long int index) { return dandelion_seekdir(dir, index); }
-
