@@ -74,6 +74,15 @@ index 386183466..9a1f02ac2 100644
    *-*-netware*)
  	signal_dir=
  	sys_dir=netware
+@@ -631,7 +636,7 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
+ 	;;
+   aarch64*-*-*)
+ 	default_newlib_io_long_long="yes"
+-	syscall_dir=syscalls
++	syscall_dir=
+ 	;;
+   arc*-*-*)
+ 	syscall_dir=syscalls
 diff --git a/newlib/libc/acinclude.m4 b/newlib/libc/acinclude.m4
 index 24148b13f..063723483 100644
 --- a/newlib/libc/acinclude.m4
