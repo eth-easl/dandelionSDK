@@ -1,6 +1,9 @@
 # actions to make the SDK build possible for outside sources
 
-if(NOT DANDELION_PLATFORM MATCHES "wasm")
+if(DANDELION_PLATFORM MATCHES "wasm")
+    set(TEMPLATE_TARGET "--target=wasm32-unknown-unknown")
+else()
+    set(TEMPLATE_TARGET "--target=${ARCHITECTURE}-unknown-elf")
     set(BUILTIN_LIB "\"\${CMAKE_CURRENT_SOURCE_DIR}/lib/generic/libclang_rt.builtins-${ARCHITECTURE}.a\"")
 endif()
 
