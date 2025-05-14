@@ -1,7 +1,7 @@
 name: make sure it still builds before merging into main 
 
 on:
-  pull-request:
+  pull_request:
     branches: [ "main" ]
 
 jobs:
