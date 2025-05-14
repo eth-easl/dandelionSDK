@@ -45,6 +45,11 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
     add_compile_options(-gdwarf-4)
 endif()
 
+# wasm does not support newlib
+if(DANDELION_PLATFORM MATCHES "wasm")
+    set(NEWLIB OFF)
+endif()
+
 # set dependent options
 if(NEWLIB)
     set(DANDELION_FS ON)
@@ -97,6 +102,7 @@ if(NEWLIB)
         PREFIX newlib-cygwin
         GIT_REPOSITORY https://sourceware.org/git/newlib-cygwin.git
         GIT_TAG d8b21b8c77275941afcc5952fa3bb542413554ad #cygwin release 3.5.3
+        GIT_SHALLOW ON
         # update disconnected to prevent pulling and rebuilding every time
         UPDATE_DISCONNECTED 1
         PATCH_COMMAND cd <SOURCE_DIR>
@@ -152,24 +158,33 @@ if(NEWLIB)
         llvmproject
         PREFIX llvmproject
         GIT_REPOSITORY https://github.com/llvm/llvm-project
-        GIT_TAG 1422f1bf2b14b3e633a4803cc1796ebd389ccef0
+        GIT_TAG llvmorg-19.1.7
+        GIT_SHALLOW ON
         UPDATE_DISCONNECTED 1
         SOURCE_SUBDIR runtimes
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
         LIST_SEPARATOR ","
         CMAKE_ARGS
-            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            -DCMAKE_C_COMPILER=${NEWLIB_COMPILER}
+            -DCMAKE_C_COMPILER_TARGET=${ARCHITECTURE}-none-elf
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            -DCMAKE_CXX_COMPILER_TARGET=${ARCHITECTURE}-none-elf
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY
             -DCMAKE_SYSTEM_NAME=Generic
-            -DCMAKE_C_COMPILER_TARGET=${ARCHITECTURE}-none-elf
-            -DCMAKE_CXX_COMPILER_TARGET=${ARCHITECTURE}-none-elf
             -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-            -DLLVM_ENABLE_RUNTIMES=libunwind,libcxxabi,libcxx
+            -DLLVM_ENABLE_RUNTIMES=libunwind,libcxxabi,libcxx,compiler-rt
             -DCMAKE_C_FLAGS:STRING=${LLVM_C_FLAGS}
             -DCMAKE_CXX_FLAGS:STRING=${LLVM_CXX_FLAGS}
+            -DLLVM_DEFAULT_TARGET_TRIPLE=${ARCHITECTURE}-none-elf
             -DLLVM_INCLUDE_TESTS=OFF
+            -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=${ARCHITECTURE}-none-elf
+            -DCOMPILER_RT_BUILD_BUILTINS=ON
+            -DCOMPILER_RT_BAREMETAL_BUILD=ON
+            -DCOMPILER_RT_BUILD_XRAY=OFF
+            -DCOMPILER_RT_BUILD_LIBFUZZER=OFF
+            -DCOMPILER_RT_BUILD_MEMPROF=OFF
+            -DCOMPILER_RT_BUILD_PROFILE=OFF
             -DLIBUNWIND_ENABLE_SHARED=OFF
             -DLIBUNWIND_ENABLE_STATIC=ON
             -DLIBUNWIND_IS_BAREMETAL=ON
