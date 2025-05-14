@@ -20,7 +20,7 @@ jobs:
           - host: "ubuntu-24.04-arm"
             cpu: "aarch64"
 
-    runs-on: {{ matrix.host }}
+    runs-on: ${{ matrix.host }}
 
     steps: 
     - uses: actions/checkout@v4
