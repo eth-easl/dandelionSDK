@@ -6,16 +6,21 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest      
-
     strategy:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
       fail-fast: false
 
       matrix:
         cpu: ["x86_64", "aarch64"]
-        platform: ["debug", "mmu_linux", "kvm"]
+        platform: ["debug", "mmu_linux", "kvm", "wasm"]
         build: ["Debug", "Release"]
+        include:
+          - host: "ubuntu-24.04"
+            cpu: "x86_64"
+          - host: "ubuntu-24.04-arm"
+            cpu: "aarch64"
+
+    runs-on: ${{ matrix.host }}
 
     steps: 
     - uses: actions/checkout@v4
@@ -45,7 +50,6 @@ jobs:
         -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER=clang
         -DDANDELION_PLATFORM=${{ matrix.platform }}
-        -DARCHITECTURE=${{ matrix.cpu }}
         -DNEWLIB=ON
         -DCMAKE_BUILD_TYPE=${{ matrix.build }}
 
