@@ -21,7 +21,7 @@ target_compile_options(dandelion_runtime INTERFACE
 target_link_libraries(dandelion_runtime INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/lib/libdandelion_runtime.a"
     "${CMAKE_CURRENT_SOURCE_DIR}/lib/libdandelion_system.a"
-    "${CMAKE_CURRENT_SOURCE_DIR}/lib/generic/libclang_rt.builtins-@ARCHITECTURE@.a"
+    @BUILTIN_LIB@
 )
 target_link_options(dandelion_runtime INTERFACE
     --target=@ARCHITECTURE@-unknown-elf
