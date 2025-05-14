@@ -1,4 +1,4 @@
-name: release latest with all library versions
+name: make sure it still builds before merging into main 
 
 on:
   pull-request:
