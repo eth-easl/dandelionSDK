@@ -56,6 +56,10 @@ To use them simply add them at the end of the `target_link_libraries`.
 Note that they need to be included in reverse order, as they depend on each other.
 (Meaning if all are needed, need to add `dlibcxx dlibc dandelion_runtime`)
 
+*Note:* There are currently issues with compiling the CXX library for aarch64.
+Fixing it is on our agenda, but not of highest priority.
+If you want to use Dandelion and need C++ support for aarch64, please get in touch and we may be able to provide experimental builds or bump the priority to get it fixed.
+
 ## Debugging
 The debug backend will look for a folder called `input_sets` in the directory the executable is run in as well as a folder called `output_sets`.
 In those folders if will look for a folder for each set and take each file in a folder in the `input_sets` folder as input to the function.
