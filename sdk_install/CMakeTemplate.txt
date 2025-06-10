@@ -8,13 +8,18 @@ execute_process(
     COMMAND_ERROR_IS_FATAL ANY
 )
 
+execute_process(
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/create-compiler.sh
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 # Dandelion runtime, without libc
 add_library(dandelion_runtime INTERFACE IMPORTED GLOBAL)
 target_include_directories(dandelion_runtime INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 target_compile_options(dandelion_runtime INTERFACE
-    @TEMPLATE_TARGET@
+    --target=@TEMPLATE_TARGET@
     -nostdinc
     -idirafter${COMPILER_RUNTIME_INCLUDE}
 )
@@ -24,7 +29,7 @@ target_link_libraries(dandelion_runtime INTERFACE
     @BUILTIN_LIB@
 )
 target_link_options(dandelion_runtime INTERFACE
-    @TEMPLATE_TARGET@
+    --target=@TEMPLATE_TARGET@
     -fuse-ld=lld
     -static
     -nostdlib

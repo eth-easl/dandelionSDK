@@ -26,6 +26,10 @@ The platforms are:
 - `DEBUG` (default), for running applications locally on a linux system with mock inputs,
 dumping outputs to the terminal when terminating.
 
+*Note:* There are currently issues with compiling the CXX library for aarch64.
+Fixing it is on our agenda, but not of highest priority.
+If you want to use Dandelion and need C++ support for aarch64, please get in touch and we may be able to provide experimental builds or bump the priority to get it fixed.
+
 ## Interface expectations
 ### libc
 When using libc or any system on top of it values can be fed into stdin, argv and environ by specifying a input set called "stdio".
@@ -46,6 +50,16 @@ Example: `'test'"test"` will become `testtest`
 All libraries have prebuilt versions available for download or can be built locally.
 The build process is descirbed bellow.
 Either option will produce a folder `dandelion_sdk`.
+This folder there are:
+- `include` folder with the necessary header files
+- `lib` folder with all linkable libraries
+- `linker.ld` that is used when linking with the dlibc and dlibcxx
+- `create-compiler.sh` a script that creates a local copy of the clang/clang++ compiler that automatically uses the configruration files provided. (Note if you move the compiler, the .cfg files need also to be moved, as clang looks in the folder the compiler is located at)
+- `*.cfg` clang compiler config files
+- `CMakeLists.txt` and `dandelion-toolchain.cmake` described in the CMake section bellow
+
+### CMake
+
 For CMake projects this can simply be added as a subfolder.
 In this subfolder we define 3 target libraries:
 - `dandelion_runtime`
@@ -56,9 +70,11 @@ To use them simply add them at the end of the `target_link_libraries`.
 Note that they need to be included in reverse order, as they depend on each other.
 (Meaning if all are needed, need to add `dlibcxx dlibc dandelion_runtime`)
 
-*Note:* There are currently issues with compiling the CXX library for aarch64.
-Fixing it is on our agenda, but not of highest priority.
-If you want to use Dandelion and need C++ support for aarch64, please get in touch and we may be able to provide experimental builds or bump the priority to get it fixed.
+You can also use the toolchainfile instead by setting up your project with:
+```
+cmake -DCMAKE_TOOLCHAIN_FILE=<path to toolchainfile> <other args>
+```
+If you want to use this make sure you have executed the compiler creation script in the SDK folder to create the compilers.
 
 ## Debugging
 The debug backend will look for a folder called `input_sets` in the directory the executable is run in as well as a folder called `output_sets`.
