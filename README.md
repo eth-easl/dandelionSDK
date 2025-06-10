@@ -26,6 +26,10 @@ The platforms are:
 - `DEBUG` (default), for running applications locally on a linux system with mock inputs,
 dumping outputs to the terminal when terminating.
 
+*Note:* There are currently issues with compiling the CXX library for aarch64.
+Fixing it is on our agenda, but not of highest priority.
+If you want to use Dandelion and need C++ support for aarch64, please get in touch and we may be able to provide experimental builds or bump the priority to get it fixed.
+
 ## Interface expectations
 ### libc
 When using libc or any system on top of it values can be fed into stdin, argv and environ by specifying a input set called "stdio".
