@@ -44,6 +44,8 @@ target_include_directories(dlibc INTERFACE
 target_compile_options(dlibc INTERFACE
     -D_GNU_SOURCE=1
     -D__GNU__
+    # __GNUC_PREREQ is necessary so limits.h is included by stdint.h, otherwise size_t is not defined
+    -D__GNUC_PREREQ(x,y)=0
     -D__rtems__
 )
 target_link_libraries(dlibc INTERFACE
@@ -63,6 +65,7 @@ target_include_directories(dlibcxx INTERFACE
 target_compile_options(dlibcxx INTERFACE
     -D_GNU_SOURCE=1
     -D__GNU__
+    -D__GNUC_PREREQ(x,y)=0 
     -D__rtems__
 )
 target_link_libraries(dlibcxx INTERFACE
