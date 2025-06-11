@@ -2,7 +2,7 @@ name: release latest with all library versions
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "dev/staging" ]
 
 jobs:
   build:
