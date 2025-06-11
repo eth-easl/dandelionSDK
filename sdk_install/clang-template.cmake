@@ -2,7 +2,6 @@
 --target=@TEMPLATE_TARGET@
 -D_GNU_SOURCE=1
 -D__GNU__
--D__GNUC_PREREQ(x,y)=0 
 -D__rtems__
 
 # compiler flags
@@ -12,6 +11,7 @@
 -nostdinc
 -idirafter<CFGDIR>/include
 -idirafter<CFGDIR>/include/sys
+-idirafterCOMPILER_INCLUDES
 
 # linker flags
 -T<CFGDIR>/linker.ld
