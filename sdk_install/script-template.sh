@@ -40,6 +40,10 @@ fi
 if [ $DEFAULT_CLANG = true ] && ! [[ -f $CLANG_DIR/clang ]]; then
     cp "$CLANG_PATH" "$CLANG_DIR/clang"
     ln -s "$CLANG_DIR/clang" "$CLANG_DIR/clang++"
-    cp @DANDELION_TARGET@-clang.cfg "$CLANG_DIR/clang.cfg" 
-    cp @DANDELION_TARGET@-clang++.cfg "$CLANG_DIR/clang++.cfg" 
+    sed "s|<CFGDIR>|$SCRIPT_DIR|g" @DANDELION_TARGET@-clang.cfg >> "$CLANG_DIR/clang.cfg" 
+    # enable stdinc, as we assume it has been cleared when we install our clang as system clang
+    sed -i "s|-nostdinc||g" "$CLANG_DIR/clang.cfg" 
+    sed "s|<CFGDIR>|$SCRIPT_DIR|g" @DANDELION_TARGET@-clang++.cfg >> "$CLANG_DIR/clang++.cfg" 
+    # need to change the config to use the clang.cfg in the same folder, so remove prefix
+    sed -i "s|@DANDELION_TARGET@-||g" "$CLANG_DIR/clang++.cfg" 
 fi
