@@ -9,9 +9,9 @@
 
 # include flags
 -nostdinc
--idirafter<CFGDIR>/include
--idirafter<CFGDIR>/include/sys
--idirafterCOMPILER_INCLUDES
+-isystem<CFGDIR>/include
+-isystem<CFGDIR>/include/sys
+-isystemCOMPILER_INCLUDES
 
 # linker flags
 -T<CFGDIR>/linker.ld
