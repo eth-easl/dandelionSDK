@@ -19,9 +19,11 @@
 -static
 -nostdlib
 -L<CFGDIR>/lib
+-L<CFGDIR>/lib/generic
 -lm 
 -lc 
 -lg 
 -ldandelion_file_system
 -ldandelion_runtime 
 -ldandelion_system
+-lclang_rt.builtins-@ARCHITECTURE@
