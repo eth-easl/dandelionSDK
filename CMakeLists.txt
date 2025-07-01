@@ -243,6 +243,12 @@ if(NEWLIB)
     )
     add_dependencies(dlibcxx llvmproject)
 
+    add_library(runtime INTERFACE IMPORTED)
+    target_link_libraries(runtime INTERFACE
+        "${CMAKE_INSTALL_PREFIX}/lib/generic/libclang_rt.builtins-${ARCHITECTURE}.a"
+    )
+    add_dependencies(runtime llvmproject)
+
     add_subdirectory(test_programs)
 
 endif()
