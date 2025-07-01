@@ -226,6 +226,7 @@ if(NEWLIB)
     )
     add_dependencies(llvmproject newlib)
 
+    # Create folder at configuration time to avoid issues with includes
     file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/c++/v1)
 
     add_library(dlibcxx INTERFACE IMPORTED)
