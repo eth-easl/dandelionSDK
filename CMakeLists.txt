@@ -119,6 +119,9 @@ if(NEWLIB)
                 <INSTALL_DIR>/${ARCHITECTURE}-dandelion/lib
                 ${CMAKE_INSTALL_PREFIX}/lib 
     )
+    # Create folder at configuration time to avoid issues with includes
+    file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include)
+    file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/sys)
 
     add_library(dlibc INTERFACE IMPORTED)
     target_compile_options(dlibc INTERFACE 
