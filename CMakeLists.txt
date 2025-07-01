@@ -226,6 +226,8 @@ if(NEWLIB)
     )
     add_dependencies(llvmproject newlib)
 
+    file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/c++/v1)
+
     add_library(dlibcxx INTERFACE IMPORTED)
     target_include_directories(dlibcxx INTERFACE
         "${CMAKE_INSTALL_PREFIX}/include/c++/v1"
