@@ -30,6 +30,12 @@ dumping outputs to the terminal when terminating.
 Fixing it is on our agenda, but not of highest priority.
 If you want to use Dandelion and need C++ support for aarch64, please get in touch and we may be able to provide experimental builds or bump the priority to get it fixed.
 
+### Other parameters
+
+Additionally, the following parameters can be used to influence system behaviour.
+
+- `PAGE_SIZE` sets the page size the runtime will assume to optimize allocation etc. and makes available to others to depend on. Should be a multiple of sizeof(size_t) for the platform compiled for.
+
 ## Interface expectations
 ### libc
 When using libc or any system on top of it values can be fed into stdin, argv and environ by specifying a input set called "stdio".

@@ -2,7 +2,7 @@
 FROM ubuntu:24.04
 
 # arguments
-ARG BUILD="Debug"
+ARG BUILD="Release"
 ARG PLATFORM="debug"
 ARG TARGET_ARCH="x86_64"
 ARG VERSION="experimental"

@@ -15,6 +15,7 @@ option(NEWLIB "toggles builing of newlib on top of dandelion interface" OFF)
 # string options
 set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "the architecture to build for")
 set(DANDELION_PLATFORM "debug" CACHE STRING "backend to build for")
+set(PAGE_SIZE "4096" CACHE STRING "Page size for the runtime to assume.")
 message(STATUS "Building for ${DANDELION_PLATFORM} on ${ARCHITECTURE}")
 
 # Constants
