@@ -96,12 +96,14 @@ char *getcwd(char *__buf, size_t __size) { return "/"; }
 // char *	getusershell (void);
 // char *  getwd (char *__buf);
 // int     lchown (const char *__path, uid_t __owner, gid_t __group);
-// #if __ATFILE_VISIBLE
-// int     linkat (int __dirfd1, const char *__path1, int __dirfd2, const char
-// *__path2, int __flags); #endif #if __MISC_VISIBLE || __XSI_VISIBLE int
-// nice (int __nice_value); #endif #if __MISC_VISIBLE || __XSI_VISIBLE >= 4 int
-// lockf (int __fd, int __cmd, off_t __len); #endif long    pathconf (const char
-// *__path, int __name); int     pause (void); #if __POSIX_VISIBLE >= 199506 int
+// #if __ATFILE_VISIBLE int     linkat (int __dirfd1, const char *__path1, int __dirfd2, const char *__path2, int __flags); #endif 
+// #if __MISC_VISIBLE || __XSI_VISIBLE int nice (int __nice_value); #endif 
+// #if __MISC_VISIBLE || __XSI_VISIBLE >= 4 int lockf (int __fd, int __cmd, off_t __len); #endif 
+// long    pathconf (const char *__path, int __name); 
+int pause (void) {
+    return 0;
+}
+//#if __POSIX_VISIBLE >= 199506 int
 // pthread_atfork (void (*)(void), void (*)(void), void (*)(void)); #endif int
 // pipe (int __fildes[2]) {
 //     pipe2(__fileds[2], 0);

@@ -197,3 +197,22 @@ int pthread_atfork(void (*prepare)(void), void (*parent)(void),
                    void (*child)(void)) {
   return ENOMEM;
 }
+
+int pthread_attr_init(pthread_attr_t *attr) {
+  return EINVAL;
+}
+int pthread_attr_destroy(pthread_attr_t *attr) {
+  return EINVAL;
+}
+
+int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize) {
+  return EINVAL;
+}
+int pthread_attr_getstacksize(const pthread_attr_t *restrict attr,
+                               size_t *restrict stacksize) {
+  return EINVAL;
+}
+
+void pthread_exit(void *retval) {
+  return;
+}

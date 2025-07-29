@@ -23,7 +23,6 @@ cp $THIS_DIR/dirent.c $1/newlib/libc/sys/dandelion/dirent.c
 cp $THIS_DIR/pthread.c $1/newlib/libc/sys/dandelion/pthread.c
 cp $THIS_DIR/time.c $1/newlib/libc/sys/dandelion/time.c
 cp $THIS_DIR/unistd.c $1/newlib/libc/sys/dandelion/unistd.c
-cp $THIS_DIR/utime.c $1/newlib/libc/sys/dandelion/utime.c
 cp $THIS_DIR/../include/dandelion/crt.h $1/newlib/libc/sys/dandelion/crt.h
 if ! test -d $1/newlib/libc/sys/dandelion/sys
 then

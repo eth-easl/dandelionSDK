@@ -6,6 +6,7 @@
 #define _POSIX_MONOTONIC_CLOCK
 #include <errno.h>
 #include <time.h>
+#include <utime.h>
 #undef errno
 extern int errno;
 
@@ -70,6 +71,11 @@ int nanosleep(const struct timespec *rqtp, struct timespec *rmtp) {
 }
 
 time_t time(time_t *t) {
+  errno = EINVAL;
+  return -1;
+}
+
+int utime(const char *filename, const struct utimbuf *buf) {
   errno = EINVAL;
   return -1;
 }
