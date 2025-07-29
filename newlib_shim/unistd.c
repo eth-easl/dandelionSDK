@@ -100,7 +100,9 @@ char *  getcwd (char *__buf, size_t __size) {
 // int getlogin_r (char *name, size_t namesize) ;
 // #endif
 // char *  getpass (const char *__prompt);
-// int	getpagesize (void);
+int	getpagesize (void) {
+    return 4096; // assuming a page size of 4096 bytes
+}
 // pid_t   getpgid (pid_t);
 // pid_t   getpgrp (void);
 // pid_t   getpid (void); // already implementedc
