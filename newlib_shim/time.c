@@ -68,3 +68,8 @@ int nanosleep(const struct timespec *rqtp, struct timespec *rmtp) {
   // always pretend to sleep for that amount
   return 0;
 }
+
+time_t time(time_t *t) {
+  errno = EINVAL;
+  return -1;
+}
