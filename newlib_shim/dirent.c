@@ -51,3 +51,6 @@ long int telldir(DIR *dir) {
 
 extern void dandelion_seekdir(DIR *dir, long int index);
 void seekdir(DIR *dir, long int index) { return dandelion_seekdir(dir, index); }
+int dirfd(DIR *dirp) {
+  return -1;
+}
