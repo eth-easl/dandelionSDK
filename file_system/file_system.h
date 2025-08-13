@@ -20,6 +20,7 @@
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
+#define URANDOM_FILENO 3
 
 #define USE_OFFSET 1
 #define MOVE_OFFSET 2
