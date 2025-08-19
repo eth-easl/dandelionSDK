@@ -86,20 +86,51 @@ int pthread_rwlock_unlock(pthread_rwlock_t *rwlock) { return EINVAL; }
 
 int pthread_cond_init(pthread_cond_t *restrict cond,
                       const pthread_condattr_t *restrict attr) {
-  return EAGAIN;
+  (void)attr;
+  *cond = _PTHREAD_COND_INITIALIZER;
+  return 0;
 }
-int pthread_cond_destroy(pthread_cond_t *cond) { return EINVAL; }
+
+int pthread_cond_destroy(pthread_cond_t *cond) {
+  pthread_cond_t current = *cond;
+  if ((current & DESTROYED) == 0)
+    return EINVAL;
+  *cond &= ~DESTROYED;
+  return 0;
+}
+
 int pthread_cond_wait(pthread_cond_t *restrict cond,
                       pthread_mutex_t *restrict mutex) {
-  return ENOTRECOVERABLE;
+  if ((*cond & DESTROYED) == 0 || (*mutex & DESTROYED) == 0)
+    return EINVAL;
+  if ((*mutex & LOCKED) != 0)
+    return EPERM;
+
+  // "Atomically" release and immediately re-acquire since no other threads exist
+  int r = pthread_mutex_unlock(mutex);
+  if (r != 0) return r;
+  return pthread_mutex_lock(mutex);
 }
+
 int pthread_cond_timedwait(pthread_cond_t *restrict cond,
                            pthread_mutex_t *restrict mutex,
                            const struct timespec *restrict abstim) {
-  return ENOTRECOVERABLE;
+  (void)abstim;
+  return pthread_cond_wait(cond, mutex);
 }
-int pthread_cond_signal(pthread_cond_t *cond) { return EINVAL; }
-int pthread_cond_broadcast(pthread_cond_t *cond) { return EINVAL; }
+
+int pthread_cond_signal(pthread_cond_t *cond) {
+  if ((*cond & DESTROYED) == 0)
+    return EINVAL;
+  return 0;
+}
+
+int pthread_cond_broadcast(pthread_cond_t *cond) {
+  if ((*cond & DESTROYED) == 0)
+    return EINVAL;
+  return 0;
+}
+
 
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void)) {
   if (once_control->init_executed == 0) {
