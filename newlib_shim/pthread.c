@@ -106,7 +106,6 @@ int pthread_cond_wait(pthread_cond_t *restrict cond,
   if ((*mutex & LOCKED) != 0)
     return EPERM;
 
-  // "Atomically" release and immediately re-acquire since no other threads exist
   int r = pthread_mutex_unlock(mutex);
   if (r != 0) return r;
   return pthread_mutex_lock(mutex);
@@ -120,8 +119,6 @@ int pthread_cond_timedwait(pthread_cond_t *restrict cond,
 }
 
 int pthread_cond_signal(pthread_cond_t *cond) {
-  if ((*cond & DESTROYED) == 0)
-    return EINVAL;
   return 0;
 }
 
