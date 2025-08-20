@@ -32,6 +32,7 @@ cp $THIS_DIR/dirent.h $1/newlib/libc/sys/dandelion/sys/dirent.h
 cp $THIS_DIR/statvfs.h $1/newlib/libc/sys/dandelion/sys/statvfs.h
 cp $THIS_DIR/sched.h $1/newlib/libc/sys/dandelion/sys/sched.h
 cp $THIS_DIR/cpuset.h $1/newlib/libc/sys/dandelion/sys/cpuset.h
+cp $THIS_DIR/mman.h $1/newlib/libc/sys/dandelion/sys/mman.h
 cd $1
 autoreconf
 cd newlib
