@@ -143,185 +143,180 @@ void __dandelion_platform_init(void) {
   } linux_dirent;
   char dirent_buffer[DIRENT_BUF_SIZE];
   char set_dirent_buffer[DIRENT_BUF_SIZE];
+  char item_dirent_buffer[DIRENT_BUF_SIZE];
 
-  long dirent_read =
-      __syscall(SYS_getdents64, in_sets_fd, &dirent_buffer, DIRENT_BUF_SIZE);
+  long dirent_read = 0;
+  size_t total_buffers = 0;
+  size_t input_set_index = 0;
+  struct io_set_info *input_sets = heap_ptr;
+
+  write_all(1, "input_sets:\n", 13);
+
+  while ((dirent_read = __syscall(SYS_getdents64, in_sets_fd, &dirent_buffer,
+                                  DIRENT_BUF_SIZE)) > 0) {
+    // have read one or more entries, need to process them before reading again
+    for (long dirent_offset = 0; dirent_offset < dirent_read;
+         dirent_offset +=
+         ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
+      // get the dirent for the current input set
+      linux_dirent *dirent = (linux_dirent *)&dirent_buffer[dirent_offset];
+      size_t ident_len = my_strlen(dirent->d_name);
+      if ((ident_len == 1 && dirent->d_name[0] == '.') ||
+          (ident_len == 2 && dirent->d_name[0] == '.' &&
+           dirent->d_name[1] == '.'))
+        continue;
+
+      if (dirent->d_type != DT_DIR)
+        print_and_exit("file in input_sets not direcotory", -1);
+
+      // setupt the input set descriptor
+      char *ident_buffer = (char *)debug_alloc(ident_len);
+      my_memcpy(ident_buffer, dirent->d_name, ident_len);
+      input_sets[input_set_index].ident = ident_buffer;
+      input_sets[input_set_index].ident_len = ident_len;
+      input_set_index++;
+    }
+  }
   if (dirent_read < 0)
     print_and_exit("getdents failed\n", -dirent_read);
-  if (dirent_read == DIRENT_BUF_SIZE)
-    print_and_exit("could not read all child directory entries of in set", -1);
 
-  size_t input_set_num = 0;
-  for (long dirent_offset = 0; dirent_offset < dirent_read;
-       dirent_offset +=
-       ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
-    linux_dirent *dirent = (linux_dirent *)&dirent_buffer[dirent_offset];
-    size_t ident_len = my_strlen(dirent->d_name);
-    if ((ident_len == 1 && dirent->d_name[0] == '.') ||
-        (ident_len == 2 && dirent->d_name[0] == '.' &&
-         dirent->d_name[1] == '.'))
-      continue;
-    input_set_num++;
-  }
-
-  struct io_set_info *input_sets = heap_ptr;
-  heap_ptr += (input_set_num + 1) * sizeof(struct io_set_info);
+  heap_ptr += (input_set_index + 1) * sizeof(struct io_set_info);
   // prepare for IoBuffer array for input sets
   heap_ptr = round_up_to(heap_ptr, _Alignof(IoBuffer));
   sysdata.input_bufs = heap_ptr;
 
-  size_t total_buffers = 0;
-  size_t input_set_index = 0;
-  for (long dirent_offset = 0; dirent_offset < dirent_read;
-       dirent_offset +=
-       ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
-    linux_dirent *dirent = (linux_dirent *)&dirent_buffer[dirent_offset];
-    size_t ident_len = my_strlen(dirent->d_name);
-    write_all(1, dirent->d_name, ident_len);
+  for (size_t input_set = 0; input_set < input_set_index; input_set++) {
+    write_all(1, "\t", 1);
+    write_all(1, input_sets[input_set].ident, input_sets[input_set].ident_len);
     write_all(1, "\n", 1);
-
-    // check it is a directory
-    if ((ident_len == 1 && dirent->d_name[0] == '.') ||
-        (ident_len == 2 && dirent->d_name[0] == '.' &&
-         dirent->d_name[1] == '.'))
-      continue;
-    if (dirent->d_type != DT_DIR)
-      print_and_exit("file in input_sets not direcotory", -1);
-
     // open the input set folder
-    int set_folder_fd =
-        __syscall(SYS_openat, in_sets_fd, dirent->d_name, O_RDONLY);
+    int set_folder_fd = __syscall(SYS_openat, in_sets_fd,
+                                  input_sets[input_set].ident, O_RDONLY);
     if (set_folder_fd < 0)
       print_and_exit("could not open set folder\n", -1);
 
     // read the directory
-    long set_dirent_read = __syscall(SYS_getdents64, set_folder_fd,
-                                     &set_dirent_buffer, DIRENT_BUF_SIZE);
+    long set_dirent_read = 0;
+    while ((set_dirent_read = __syscall(SYS_getdents64, set_folder_fd,
+                                        &set_dirent_buffer, DIRENT_BUF_SIZE)) >
+           0) {
+      // found one or more items
+      for (long set_dirent_offset = 0; set_dirent_offset < set_dirent_read;
+           set_dirent_offset +=
+           ((linux_dirent *)&set_dirent_buffer[set_dirent_offset])->d_reclen) {
+        linux_dirent *set_dirent =
+            (linux_dirent *)&set_dirent_buffer[set_dirent_offset];
+        size_t item_ident_len = my_strlen(set_dirent->d_name);
+        if ((item_ident_len == 1 && set_dirent->d_name[0] == '.') ||
+            (item_ident_len == 2 && set_dirent->d_name[0] == '.' &&
+             set_dirent->d_name[1] == '.'))
+          continue;
+
+        write_all(1, "\t\t", 2);
+        write_all(1, set_dirent->d_name, item_ident_len);
+        write_all(1, "\n", 1);
+        // add one buffer to heap
+        IoBuffer *current_buffer = heap_ptr;
+        heap_ptr += sizeof(IoBuffer);
+        char *item_ident_buffer = (char *)debug_alloc(item_ident_len);
+        my_memcpy(item_ident_buffer, set_dirent->d_name, item_ident_len);
+        // pretend the files were in folders
+        for (size_t index = 0; index < item_ident_len; index++) {
+          if (item_ident_buffer[index] == '+') {
+            item_ident_buffer[index] = '/';
+          }
+        }
+        current_buffer->ident = item_ident_buffer;
+        current_buffer->ident_len = item_ident_len;
+        current_buffer->key = 0;
+        int item_fd =
+            __syscall(SYS_openat, set_folder_fd, set_dirent->d_name, O_RDONLY);
+        if (item_fd < 0)
+          print_and_exit("could not open item file", -1);
+        ptrdiff_t file_size = __syscall(SYS_lseek, item_fd, 0, 2);
+        if (file_size < 0)
+          print_and_exit("Could not get file size\n", -1);
+        char *file_addr = NULL;
+        if (file_size > 0) {
+          file_addr = (char *)__syscall(SYS_mmap, NULL, file_size, PROT_READ,
+                                        MAP_PRIVATE, item_fd, 0);
+          if ((long)file_addr < 0)
+            print_and_exit("Could not map item file\n", -(int)file_addr);
+        }
+        current_buffer->data = file_addr;
+        current_buffer->data_len = file_size;
+        total_buffers++;
+      }
+    }
     if (set_dirent_read < 0)
       print_and_exit("getdents failed\n", -dirent_read);
-    if (set_dirent_read == DIRENT_BUF_SIZE)
-      print_and_exit("could not read all items in input set, ran out of dirent "
-                     "buffer space",
-                     -1);
-    char *ident_buffer = (char *)debug_alloc(ident_len);
-    my_memcpy(ident_buffer, dirent->d_name, ident_len);
-    input_sets[input_set_index].ident = ident_buffer;
-    input_sets[input_set_index].ident_len = ident_len;
-    input_sets[input_set_index].offset = total_buffers;
-    input_set_index++;
-    // add items
-    for (long set_dirent_offset = 0; set_dirent_offset < set_dirent_read;
-         set_dirent_offset +=
-         ((linux_dirent *)&set_dirent_buffer[set_dirent_offset])->d_reclen) {
-      linux_dirent *set_dirent =
-          (linux_dirent *)&set_dirent_buffer[set_dirent_offset];
-      size_t item_ident_len = my_strlen(set_dirent->d_name);
-      if ((item_ident_len == 1 && set_dirent->d_name[0] == '.') ||
-          (item_ident_len == 2 && set_dirent->d_name[0] == '.' &&
-           set_dirent->d_name[1] == '.'))
-        continue;
-      write_all(1, "\t", 1);
-      write_all(1, set_dirent->d_name, item_ident_len);
-      write_all(1, "\n", 1);
-      // add one buffer to heap
-      IoBuffer *current_buffer = heap_ptr;
-      heap_ptr += sizeof(IoBuffer);
-      char *item_ident_buffer = (char *)debug_alloc(item_ident_len);
-      my_memcpy(item_ident_buffer, set_dirent->d_name, item_ident_len);
-      // pretend the files were in folders
-      for (size_t index = 0; index < item_ident_len; index++) {
-        if (item_ident_buffer[index] == '+') {
-          item_ident_buffer[index] = '/';
-        }
-      }
-      current_buffer->ident = item_ident_buffer;
-      current_buffer->ident_len = item_ident_len;
-      current_buffer->key = 0;
-      int item_fd =
-          __syscall(SYS_openat, set_folder_fd, set_dirent->d_name, O_RDONLY);
-      if (item_fd < 0)
-        print_and_exit("could not open item file", -1);
-      ptrdiff_t file_size = __syscall(SYS_lseek, item_fd, 0, 2);
-      if (file_size < 0)
-        print_and_exit("Could not get file size\n", -1);
-      char *file_addr = NULL;
-      if (file_size > 0) {
-        file_addr = (char *)__syscall(SYS_mmap, NULL, file_size, PROT_READ,
-                                      MAP_PRIVATE, item_fd, 0);
-        if ((long)file_addr < 0)
-          print_and_exit("Could not map item file\n", -(int)file_addr);
-      }
-      current_buffer->data = file_addr;
-      current_buffer->data_len = file_size;
-      total_buffers++;
-    }
+
+    input_sets[input_set].offset = total_buffers;
   }
+
   // set up sentinel set
-  input_sets[input_set_num].ident = NULL;
-  input_sets[input_set_num].ident_len = 0;
-  input_sets[input_set_num].offset = total_buffers;
+  input_sets[input_set_index].ident = NULL;
+  input_sets[input_set_index].ident_len = 0;
+  input_sets[input_set_index].offset = total_buffers;
 
   sysdata.input_sets = input_sets;
-  sysdata.input_sets_len = input_set_num;
+  sysdata.input_sets_len = input_set_index;
 
   // start processing output sets
+  write_all(1, "output_sets:\n", 14);
+
   int out_sets_fd = __syscall(SYS_openat, AT_FDCWD, "output_sets", O_RDONLY);
   if (out_sets_fd < 0) {
     print_and_exit("No output set directory in current working directory\n",
                    -1);
   }
-  dirent_read =
-      __syscall(SYS_getdents64, out_sets_fd, &dirent_buffer, DIRENT_BUF_SIZE);
-  if (dirent_read < 0) {
-    print_and_exit("getdents failed\n", -dirent_read);
-  }
-
-  size_t output_set_num = 0;
-  for (long dirent_offset = 0; dirent_offset < dirent_read;
-       dirent_offset +=
-       ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
-    linux_dirent *dirent = (linux_dirent *)&dirent_buffer[dirent_offset];
-    size_t ident_len = my_strlen(dirent->d_name);
-    if ((ident_len == 1 && dirent->d_name[0] == '.') ||
-        (ident_len == 2 && dirent->d_name[0] == '.' &&
-         dirent->d_name[1] == '.'))
-      continue;
-    output_set_num++;
-  }
 
   heap_ptr = round_up_to(heap_ptr, _Alignof(struct io_set_info));
   struct io_set_info *output_sets = heap_ptr;
-  heap_ptr += (output_set_num + 1) * sizeof(struct io_set_info);
   size_t output_set_index = 0;
-  for (long dirent_offset = 0; dirent_offset < dirent_read;
-       dirent_offset +=
-       ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
-    linux_dirent *dirent = (linux_dirent *)&dirent_buffer[dirent_offset];
-    size_t ident_len = my_strlen(dirent->d_name);
-    write_all(1, dirent->d_name, ident_len);
-    write_all(1, "\n", 1);
-    // check it is a directory
-    if ((ident_len == 1 && dirent->d_name[0] == '.') ||
-        (ident_len == 2 && dirent->d_name[0] == '.' &&
-         dirent->d_name[1] == '.'))
-      continue;
-    if (dirent->d_type != DT_DIR)
-      print_and_exit("file in output_sets not direcotory", -1);
-    char *ident_buffer = (char *)debug_alloc(ident_len);
-    my_memcpy(ident_buffer, dirent->d_name, ident_len);
-    output_sets[output_set_index].ident = ident_buffer;
-    output_sets[output_set_index].ident_len = ident_len;
-    output_sets[output_set_index].offset = 0;
-    output_set_index++;
+  while ((dirent_read = __syscall(SYS_getdents64, out_sets_fd, &dirent_buffer,
+                                  DIRENT_BUF_SIZE)) > 0) {
+    for (long dirent_offset = 0; dirent_offset < dirent_read;
+         dirent_offset +=
+         ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
+      linux_dirent *dirent = (linux_dirent *)&dirent_buffer[dirent_offset];
+      size_t ident_len = my_strlen(dirent->d_name);
+      if ((ident_len == 1 && dirent->d_name[0] == '.') ||
+          (ident_len == 2 && dirent->d_name[0] == '.' &&
+           dirent->d_name[1] == '.'))
+        continue;
+
+      write_all(1, "\t", 1);
+      write_all(1, dirent->d_name, ident_len);
+      write_all(1, "\n", 1);
+      // check it is a directory
+      if ((ident_len == 1 && dirent->d_name[0] == '.') ||
+          (ident_len == 2 && dirent->d_name[0] == '.' &&
+           dirent->d_name[1] == '.'))
+        continue;
+      if (dirent->d_type != DT_DIR)
+        print_and_exit("file in output_sets not direcotory", -1);
+      char *ident_buffer = (char *)debug_alloc(ident_len);
+      my_memcpy(ident_buffer, dirent->d_name, ident_len);
+      output_sets[output_set_index].ident = ident_buffer;
+      output_sets[output_set_index].ident_len = ident_len;
+      output_sets[output_set_index].offset = 0;
+      output_set_index++;
+    }
   }
+  if (dirent_read < 0)
+    print_and_exit("getdents failed\n", -dirent_read);
+
   // set up sentinel set
-  output_sets[output_set_num].ident = NULL;
-  output_sets[output_set_num].ident_len = 0;
-  output_sets[output_set_num].offset = 0;
+  output_sets[output_set_index].ident = NULL;
+  output_sets[output_set_index].ident_len = 0;
+  output_sets[output_set_index].offset = 0;
+
+  heap_ptr += (output_set_index + 1) * sizeof(struct io_set_info);
 
   sysdata.output_bufs = NULL;
   sysdata.output_sets = output_sets;
-  sysdata.output_sets_len = output_set_num;
+  sysdata.output_sets_len = output_set_index;
 
   sysdata.heap_begin = (uintptr_t)heap_ptr;
   sysdata.heap_end = (uintptr_t)heap_end;
