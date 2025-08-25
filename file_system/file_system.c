@@ -465,34 +465,6 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
   if (error != 0)
     return error;
 
-   // create dev folder and urandom file
-  D_File *dev_folder = dandelion_alloc(sizeof(D_File), _Alignof(D_File));
-  if (dev_folder == NULL) {
-    dandelion_exit(ENOMEM);
-    return -1;
-  }
-
-  memcpy(dev_folder->name, "dev", 4);
-  dev_folder->type = DIRECTORY;
-  dev_folder->child = NULL;
-  dev_folder->hard_links = 0;
-  if ((error = link_file_to_folder(fs_root, dev_folder)) != 0) {
-    return error;
-  }
-
-  // create and open urandom
-  Path urandom_path = path_from_string("urandom");
-  D_File *urandom_file = create_file(&urandom_path, NULL, 0, S_IWUSR);
-  if (urandom_file == NULL)
-    return -1;
-  error = open_existing_file(URANDOM_FILENO, urandom_file, O_WRONLY, 0, 0);
-  if (error != 0)
-    return error;
-  error = link_file_to_folder(dev_folder, urandom_file);
-  if (error != 0)
-    return error;
-
-
   // set to NULL to be able to check if it was set by inputs
   *argc = 0;
   *argv = NULL;

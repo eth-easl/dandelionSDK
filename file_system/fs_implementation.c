@@ -338,16 +338,6 @@ int64_t dandelion_lseek(int file, int64_t offset, int whence) {
 
 size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset,
                       char options) {
-
-  // handle special case /dev/urandom URANDOM_FILENO use fake random data
-  if (file == URANDOM_FILENO) {
-    // generate fake random data
-    for (size_t i = 0; i < len; i++) {
-      ptr[i] = (offset + i) % 256;
-    }
-    return len;
-  }
-
   // get the file descriptor
   OpenFile *open_file = &open_files[file];
   // check there is a valid file descriptor there and that it is writable
