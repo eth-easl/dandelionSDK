@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <unistd.h>
+#include <string.h>
 
 // Implement functions from unistd that are not already defined in other parts
 // of newlibs libc Or in something we supply
@@ -28,14 +29,20 @@ int chroot(const char *__path) {
 // int	daemon (int nochdir, int noclose);
 
 // function to duplicate file descriptor to second file number
-// the filedescriptors should act as one, meaning if seek is called on one of
-// them, the effects should also be visible accessing the file through the new
-// one. if the second parameter is -1, the lowest free file descriptor is
-// chosen, otherwise the file descriptor in filedes2 is used to duplicate the
-// filedescriptor. If filedes2 was open before, it will be closed.
-int dup3(int __fildes, int __fildes2, int flags) {
-  *__errno() = EMFILE;
-  return -1;
+// the filedescriptors should act as one, meaning if seek is called on one of them,
+// the effects should also be visible accessing the file through the new one.
+// if the second parameter is -1, the lowest free file descriptor is chosen,
+// otherwise the file descriptor in filedes2 is used to duplicate the filedescriptor.
+// If filedes2 was open before, it will be closed.
+int     dup3 (int __fildes, int __fildes2, int flags) {
+    *__errno() = EMFILE;
+    return -1;
+}
+int     dup2 (int __fildes, int __fildes2) {
+    return dup3(__fildes, __fildes2, 0);
+}
+int     dup (int __fildes) {
+    return dup3(__fildes, -1, 0);
 }
 int dup2(int __fildes, int __fildes2) { return dup3(__fildes, __fildes2, 0); }
 int dup(int __fildes) { return dup3(__fildes, -1, 0); }
@@ -74,7 +81,9 @@ int execv(const char *__path, char *const __argv[]) {
 int fsync(int __fd) { return 0; }
 int fdatasync(int __fd) { return 0; }
 // char *  get_current_dir_name (void);
-char *getcwd(char *__buf, size_t __size) { return "/"; }
+char *  getcwd (char *__buf, size_t __size) {
+    return (__buf && __size > 1) ? strcpy(__buf, "/") : 0;
+}
 // int	getdomainname  (char *__name, size_t __len);
 // gid_t   getegid (void);
 // uid_t   geteuid (void);
