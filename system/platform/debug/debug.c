@@ -329,7 +329,20 @@ void __dandelion_platform_init(void) {
 
 void __dandelion_platform_exit(void) {
   dump_global_data();
-  __syscall(SYS_exit_group, 0);
+  // print exit code
+  char exit_message[] = "Exiting with code ";
+  size_t message_len = my_strlen(exit_message); 
+  write_all(1, exit_message, message_len);
+  char exit_code_string[11] = "          \n";
+  // convert int to string
+  int exit_code = sysdata.exit_code;  
+  for(size_t index = 0; index < 10; index++) {
+    exit_code_string[9-index] = '0' + (exit_code % 10);
+    exit_code = exit_code / 10;
+    if (exit_code == 0) break;
+  }
+  write_all(1, exit_code_string, 11);
+  __syscall(SYS_exit_group, sysdata.exit_code);
   __builtin_unreachable();
 }
 
