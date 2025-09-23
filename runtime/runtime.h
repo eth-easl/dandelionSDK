@@ -4,6 +4,8 @@
 
 #include "dandelion/system/system.h"
 
+extern const size_t system_page_size;
+
 typedef struct IoSet {
   const char *ident;
   size_t ident_len;

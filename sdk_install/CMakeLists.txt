@@ -1,7 +1,7 @@
 # actions to make the SDK build possible for outside sources
 
 if(DANDELION_PLATFORM MATCHES "wasm")
-    set(DANDELION_TARGET "wasm32-unkown-dandelion")
+    set(DANDELION_TARGET "wasm32-unknown-dandelion")
     set(TEMPLATE_TARGET "wasm32-unknown-unknown")
 else()
     set(DANDELION_TARGET "${ARCHITECTURE}-unknown-dandelion")
@@ -16,19 +16,19 @@ configure_file(CMakeTemplate.txt ${CMAKE_INSTALL_PREFIX}/CMakeLists.txt
 )
 
 if(NEWLIB)
-    # Configure ARCHITECTURE-unkown-dandelion-clang
+    # Configure ARCHITECTURE-unknown-dandelion-clang
     configure_file(clang-template.cmake ${CMAKE_INSTALL_PREFIX}/${DANDELION_TARGET}-clang.cfg
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ
         @ONLY
     )
 
-    # Configure ARCHITECTURE-unkown-dandelion-clang++
+    # Configure ARCHITECTURE-unknown-dandelion-clang++
     configure_file(clangxx-template.cmake ${CMAKE_INSTALL_PREFIX}/${DANDELION_TARGET}-clang++.cfg
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ
         @ONLY
     )
 
-    # Configure ARCHITECTURE-unkown-dandelion-clang++
+    # Configure ARCHITECTURE-unknown-dandelion-clang++
     configure_file(toolchain-template.cmake ${CMAKE_INSTALL_PREFIX}/dandelion-toolchain.cmake
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ
         @ONLY

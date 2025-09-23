@@ -3,7 +3,7 @@ set(CMAKE_SYSTEM_NAME Generic)
 
 # which compilers to use for C and C++
 set(CMAKE_C_COMPILER "${CMAKE_CURRENT_LIST_DIR}/@DANDELION_TARGET@-clang")
-set(CMAKE_C_COMPILER "${CMAKE_CURRENT_LIST_DIR}/@DANDELION_TARGET@-clang++")
+set(CMAKE_CXX_COMPILER "${CMAKE_CURRENT_LIST_DIR}/@DANDELION_TARGET@-clang++")
 
 # where is the target environment located
 set(CMAKE_FIND_ROOT_PATH )

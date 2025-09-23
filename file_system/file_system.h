@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 #ifndef FS_NAME_LENGTH
-#define FS_NAME_LENGHT 64
+#define FS_NAME_LENGTH 64
 #endif
 
 #ifndef FS_CHUNK_SIZE
@@ -40,7 +40,7 @@ typedef struct FileChunk {
 
 // Use D_File instead of File, to avoid potential naming overlap
 typedef struct D_File {
-  char name[FS_NAME_LENGHT];
+  char name[FS_NAME_LENGTH];
   struct D_File *next;
   struct D_File *parent;
   FileType type;
