@@ -69,12 +69,14 @@ int link_file_to_folder(D_File *folder, D_File *file) {
     file->next = NULL;
   } else {
     D_File *current = folder->child;
-    if (namecmp(file->name, FS_NAME_LENGTH, current->name, FS_NAME_LENGTH) < 0) {
+    if (namecmp(file->name, FS_NAME_LENGTH, current->name, FS_NAME_LENGTH) <
+        0) {
       file->next = current;
       folder->child = file;
     } else {
       while (current->next != NULL) {
-        if (namecmp(file->name, FS_NAME_LENGTH, current->next->name, FS_NAME_LENGTH) < 0) {
+        if (namecmp(file->name, FS_NAME_LENGTH, current->next->name,
+                    FS_NAME_LENGTH) < 0) {
           break;
         } else {
           current = current->next;
@@ -482,8 +484,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
       // TODO write to stderr on what happened
       return -1;
     }
-    int is_stdio_folder =
-        namecmp(set_path.path, set_path.length, "stdio", 5);
+    int is_stdio_folder = namecmp(set_path.path, set_path.length, "stdio", 5);
     size_t input_items = dandelion_input_buffer_count(set_index);
     for (size_t item_index = 0; item_index < input_items; item_index++) {
       IoBuffer *item_buffer = dandelion_get_input(set_index, item_index);
@@ -509,8 +510,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
         return -1;
       }
       if (is_stdio_folder == 0) {
-        int is_stdin =
-            namecmp(file_path.path, file_path.length, "stdin", 5);
+        int is_stdin = namecmp(file_path.path, file_path.length, "stdin", 5);
         if (is_stdin == 0) {
           error = open_existing_file(STDIN_FILENO, item_file, O_RDONLY, 0, 0);
           if (error != 0)
