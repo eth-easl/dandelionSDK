@@ -125,7 +125,7 @@ int dandelion_open(const char *name, int flags, uint32_t mode) {
     Path total_path = path_from_string(name);
     Path dir_path = get_directories(total_path);
     Path file_name = get_file(total_path);
-    if (file_name.length >= FS_NAME_LENGHT) {
+    if (file_name.length >= FS_NAME_LENGTH) {
       return -EINVAL;
     }
     D_File *parent = create_directories(fs_root, dir_path, 0);
@@ -643,7 +643,7 @@ int dandelion_readdir(DIR *directory, struct dirent *dirent) {
     return -1;
   }
   directory->child++;
-  size_t max_name_length = MIN(256, FS_NAME_LENGHT);
+  size_t max_name_length = MIN(256, FS_NAME_LENGTH);
   memcpy(dirent->d_name, current_child->name, max_name_length - 1);
   dirent->d_name[max_name_length] = 0;
   dirent->d_ino = 0;

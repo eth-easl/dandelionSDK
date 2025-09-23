@@ -5,6 +5,13 @@
 
 #define sysdata __dandelion_system_data
 
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 4096
+#endif
+
+// assumed to be multiple of sizeof(size_t)
+const size_t system_page_size = PAGE_SIZE;
+
 RuntimeData __runtime_global_data;
 
 // internal state of the runtime
@@ -145,8 +152,6 @@ void *dandelion_sbrk(size_t size) {
   return result;
 }
 
-static const size_t DEFAULT_ALLOCATION =
-    4096; // assumed to be multiple of sizeof(size_t)
 static const size_t OCCUPIED_FLAG = ((size_t)-1) << ((sizeof(size_t) * 8 - 1));
 static const size_t MAX_VAL = (size_t)-1;
 
@@ -160,9 +165,9 @@ static inline int is_occupied(size_t allocation) {
 // Rounding up to next multiple of DEFAULT_ALLOCATION
 static inline size_t get_sbrk_size(size_t size, size_t alignment) {
   return ((size * sizeof(size_t) + 4 * sizeof(size_t) + alignment +
-           DEFAULT_ALLOCATION - 1) /
-          DEFAULT_ALLOCATION) *
-         DEFAULT_ALLOCATION;
+           system_page_size - 1) /
+          system_page_size) *
+         system_page_size;
 }
 
 /// @brief memmory allocation for internal usage

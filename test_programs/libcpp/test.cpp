@@ -11,7 +11,7 @@ int main(){
   fs.close();
 
   cout << "stdout print" << endl;
-
+  cerr << "stderr print" << endl;
   return 0;
 }
 

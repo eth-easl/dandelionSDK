@@ -30,6 +30,12 @@ dumping outputs to the terminal when terminating.
 Fixing it is on our agenda, but not of highest priority.
 If you want to use Dandelion and need C++ support for aarch64, please get in touch and we may be able to provide experimental builds or bump the priority to get it fixed.
 
+### Other parameters
+
+Additionally, the following parameters can be used to influence system behaviour.
+
+- `PAGE_SIZE` sets the page size the runtime will assume to optimize allocation etc. and makes available to others to depend on. Should be a multiple of sizeof(size_t) for the platform compiled for.
+
 ## Interface expectations
 ### libc
 When using libc or any system on top of it values can be fed into stdin, argv and environ by specifying a input set called "stdio".
@@ -96,6 +102,28 @@ To also build libc and libc++ set the variable `-DNEWLIB=ON`.
 For newlib to be built correctly the autoconf version 2.69.
 This also enables the build of the in memory file system,
 which can also be built without the other newlib builds by setting `-DDANDELION_FS=ON`
+
+## Build Container
+We also provide a docker file to construct a build container with the correct tools set up in them.
+To create the container with docker use the following command:
+```
+docker build -t dandelion_dev_docker . [--no-cache]
+```
+Use the `--no-cache` if you want to rebuild the container from scratch.
+
+To use the container use the following command:
+```
+docker run --rm -it --mount type=bind,src=<path to your source folder>,dst=/workspace --workdir=/workspace dandelion_dev_docker:latest bash
+``` 
+You will enter the container and your source folder will be mounted at `/workspace`.
+The default clang and clang++ are set up to compile for dandelion debug on the machine you are running.
+If you want a different target, you can set build, platform and architecture in the docker file.
+Files you build in the container will be visible outside, as long as they are in the workspace directory.
+
+To add more tools to the build environment, they can be added to the docker file, or you can base your container build on our docker file by importing it with:
+```
+FROM dandelion_dev_docker:latest
+```
 
 ## Freestanding
 The GCC/Clang standard expects 4 functions to allways be provided in any environment (even freestanding), which allow the compiler to always just insert them.

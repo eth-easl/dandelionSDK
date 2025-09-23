@@ -1,8 +1,8 @@
-name: make sure it still builds before merging into main 
+name: release latest with all library versions
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "dev/staging" ]
 
 jobs:
   build:
@@ -57,4 +57,15 @@ jobs:
       run: cmake --build ${{ steps.build.outputs.dir }}
 
     - name: Install
-      run: cmake --install ${{ steps.build.outputs.dir }} 
+      run: cmake --install ${{ steps.build.outputs.dir }}
+
+    - name: Compress
+      shell: bash
+      working-directory: ${{ steps.build.outputs.dir }}
+      run: tar -czf "dandelion_sdk_${{matrix.build}}_${{matrix.platform}}_${{matrix.cpu}}.tar.gz" dandelion_sdk
+    
+    - name: Add to release
+      shell: bash
+      run: gh release upload experimental "${{ steps.build.outputs.dir }}/dandelion_sdk_${{matrix.build}}_${{matrix.platform}}_${{matrix.cpu}}.tar.gz" --clobber
+      env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

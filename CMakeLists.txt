@@ -15,6 +15,7 @@ option(NEWLIB "toggles builing of newlib on top of dandelion interface" OFF)
 # string options
 set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "the architecture to build for")
 set(DANDELION_PLATFORM "debug" CACHE STRING "backend to build for")
+set(PAGE_SIZE "4096" CACHE STRING "Page size for the runtime to assume.")
 message(STATUS "Building for ${DANDELION_PLATFORM} on ${ARCHITECTURE}")
 
 # Constants
@@ -119,6 +120,33 @@ if(NEWLIB)
                 <INSTALL_DIR>/${ARCHITECTURE}-dandelion/lib
                 ${CMAKE_INSTALL_PREFIX}/lib 
     )
+    # Create folder at configuration time to avoid issues with includes
+    file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include)
+    file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/sys)
+
+    add_library(dlibc INTERFACE IMPORTED)
+    target_compile_options(dlibc INTERFACE 
+        -D_GNU_SOURCE=1
+        -D__GNU__
+        -D__rtems__
+    )
+    target_include_directories(dlibc INTERFACE
+        ${CMAKE_INSTALL_PREFIX}/include
+        ${CMAKE_INSTALL_PREFIX}/include/sys
+    )
+    target_link_directories(dlibc INTERFACE ${CMAKE_INSTALL_PREFIX}/lib)
+    target_link_libraries(dlibc INTERFACE
+        ${CMAKE_INSTALL_PREFIX}/lib/libc.a
+        ${CMAKE_INSTALL_PREFIX}/lib/libg.a
+        ${CMAKE_INSTALL_PREFIX}/lib/libm.a
+    )
+    target_link_options(dlibc INTERFACE
+        -T${CMAKE_CURRENT_SOURCE_DIR}/sdk_install/linker.ld
+        -fuse-ld=lld
+        -static
+        -nostdlib
+    )
+    add_dependencies(dlibc newlib)
 
     set(LLVM_C_FLAGS "-D_GNU_SOURCE=1")
     string(APPEND LLVM_C_FLAGS " -D_POSIX_TIMERS")
@@ -191,13 +219,37 @@ if(NEWLIB)
             -DLIBCXXABI_BAREMETAL=ON
             -DLIBCXXABI_ENABLE_SHARED=OFF
             -DLIBCXXABI_USE_LLVM_UNWINDER=ON
+            -DLIBCXXABI_ENABLE_THREADS=OFF
             -DLIBCXX_ENABLE_SHARED=OFF
             -DLIBCXX_ENABLE_STATIC=ON
             -DLIBCXX_INCLUDE_BENCHMARKS=OFF
             -DLIBCXX_CXX_ABI=libcxxabi
             -DLIBCXX_ENABLE_FILESYSTEM=ON
             -DLIBCXX_ENABLE_RANDOM_DEVICE=OFF
+            -DLIBCXX_HAS_PTHREAD_API=ON
     )
     add_dependencies(llvmproject newlib)
+
+    # Create folder at configuration time to avoid issues with includes
+    file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/c++/v1)
+
+    add_library(dlibcxx INTERFACE IMPORTED)
+    target_include_directories(dlibcxx INTERFACE
+        "${CMAKE_INSTALL_PREFIX}/include/c++/v1"
+    )
+    target_link_libraries(dlibcxx INTERFACE
+        "${CMAKE_INSTALL_PREFIX}/lib/libc++.a"
+        "${CMAKE_INSTALL_PREFIX}/lib/libc++abi.a"
+        "${CMAKE_INSTALL_PREFIX}/lib/libunwind.a"
+    )
+    add_dependencies(dlibcxx llvmproject)
+
+    add_library(runtime INTERFACE IMPORTED)
+    target_link_libraries(runtime INTERFACE
+        "${CMAKE_INSTALL_PREFIX}/lib/generic/libclang_rt.builtins-${ARCHITECTURE}.a"
+    )
+    add_dependencies(runtime llvmproject)
+
+    add_subdirectory(test_programs)
 
 endif()
