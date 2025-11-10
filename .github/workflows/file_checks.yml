@@ -16,3 +16,5 @@ jobs:
 
     - name: C format check
       run: find . -iname '*.h' -o -iname '*.c' | clang-format --dry-run -Werror --files=/dev/stdin --style=LLVM 
+    # if fails run the following to automatically correct it
+    # find ./file_system/ ./newlib_shim/ ./runtime/ ./sdk_install/ ./system/ ./test_programs/ -iname '*.h' -o -iname '*.c' | clang-format -Werror --files=/dev/stdin --style=LLVM -i 

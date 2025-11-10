@@ -185,9 +185,7 @@ int access(const char *file, int mode) {
 
 int lstat(const char *file, struct stat *buf) { return stat(file, buf); }
 
-mode_t umask(mode_t mask) {
-  return 0777;
-}
+mode_t umask(mode_t mask) { return 0777; }
 
 int statvfs(const char *file, struct statvfs *st) {
   errno = ENOSYS;

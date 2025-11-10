@@ -23,23 +23,25 @@ static inline size_t namelen(const char *const name, size_t max_len) {
   return length;
 }
 
-static inline int namecmp(const char *const name1, size_t name1_length, const char *const name2,
-                          size_t name2_length) {
+static inline int namecmp(const char *const name1, size_t name1_length,
+                          const char *const name2, size_t name2_length) {
   size_t max_length = name1_length < name2_length ? name1_length : name2_length;
   for (size_t index = 0; index < max_length; index++) {
-    // this also automatically returns -1 if one of them is null terminated earlier than their length
+    // this also automatically returns -1 if one of them is null terminated
+    // earlier than their length
     if (name1[index] != name2[index])
       return name1[index] < name2[index] ? -1 : 1;
     // are the same if we got here
     if (name1[index] == '\0')
       return 0;
   }
-  // they are the same until the end of the shorter one or there has not been null termination
-  if(name1_length < name2_length)
+  // they are the same until the end of the shorter one or there has not been
+  // null termination
+  if (name1_length < name2_length)
     return -1;
-  else if(name2_length < name1_length)
+  else if (name2_length < name1_length)
     return 1;
-  else 
+  else
     return 0;
 }
 

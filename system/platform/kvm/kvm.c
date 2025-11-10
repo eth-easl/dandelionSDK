@@ -4,7 +4,7 @@ void __dandelion_platform_init(void) {}
 
 void __dandelion_platform_exit(void) {
 #if defined(__x86_64__)
-  asm volatile("hlt");
+  asm volatile("int $32");
 #elif defined(__aarch64__)
   asm volatile("ldr x0, =0x84000008\n\t"
                "hvc #0");
