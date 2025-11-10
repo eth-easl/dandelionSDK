@@ -47,6 +47,7 @@ D_File *create_directory(Path *name, uint32_t mode) {
     return NULL;
   }
   memcpy(new_file->name, name->path, name->length);
+  new_file->name[name->length] = '\0';
   new_file->type = DIRECTORY;
   new_file->child = NULL;
   new_file->hard_links = 0;
@@ -165,6 +166,7 @@ D_File *create_directories(D_File *directory, Path path, char prevent_up) {
       D_File *new_dir = dandelion_alloc(sizeof(D_File), _Alignof(D_File));
       new_dir->type = DIRECTORY;
       memcpy(new_dir->name, current_path.path, current_path.length);
+      new_dir->name[current_path.length] = '\0';
       new_dir->child = NULL;
       int error = link_file_to_folder(directory, new_dir);
       if (error < 0) {
@@ -408,7 +410,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
     return -1;
   }
   fs_root->name[0] = '/';
-  fs_root->name[1] = 0;
+  fs_root->name[1] = '\0';
   fs_root->type = DIRECTORY;
   fs_root->next = NULL;
   fs_root->parent = NULL;
@@ -421,7 +423,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
     dandelion_exit(ENOMEM);
     return -1;
   }
-  memcpy(stdio_folder->name, "stdio", 6);
+  memcpy(stdio_folder->name, "stdio\0", 7);
   stdio_folder->type = DIRECTORY;
   stdio_folder->child = NULL;
   stdio_folder->hard_links = 0;

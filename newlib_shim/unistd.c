@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 // Implement functions from unistd that are not already defined in other parts
-// of newlibs libc Or in something we supply
+// of newlibs libc or in something we supply
 
 // unsigned  alarm (unsigned __secs);
 int chdir(const char *__path) {
@@ -20,11 +20,18 @@ int chroot(const char *__path) {
 }
 
 // int     chmod (const char *__path, mode_t __mode);
+
 // int     chown (const char *__path, uid_t __owner, gid_t __group);
+
 // int     close_range (unsigned int __firstfd, unsigned int __lastfd, int
-// __flags); size_t	confstr (int __name, char *__buf, size_t __len); char *
-// crypt (const char *__key, const char *__salt); char *  ctermid (char *__s);
-// char *  cuserid (char *__s);
+// __flags);
+
+// size_t	confstr (int __name, char *__buf, size_t __len);
+
+// char *crypt (const char *__key, const char *__salt);
+
+// char *  ctermid (char *__s); char *  cuserid (char *__s);
+
 // int	daemon (int nochdir, int noclose);
 
 // function to duplicate file descriptor to second file number
@@ -60,19 +67,28 @@ int execv(const char *__path, char *const __argv[]) {
 }
 // already given in newlib
 // int     execve (const char *__path, char * const __argv[], char * const
-// __envp[]); int     execvp (const char *__file, char * const __argv[]); int
-// execvpe (const char *__file, char * const __argv[], char * const __envp[]);
+// __envp[]);
+
+// int     execvp (const char *__file, char * const __argv[]);
+// int execvpe (const char *__file, char * const __argv[], char * const
+// __envp[]);
+
 // #if __ATFILE_VISIBLE
 // int	faccessat (int __dirfd, const char *__path, int __mode, int __flags);
 // #endif
-// int     fchmod (int __fildes, mode_t __mode);
-// int     fchown (int __fildes, uid_t __owner, gid_t __group);
+// int fchmod (int __fildes, mode_t __mode);
+
+// int fchown (int __fildes, uid_t __owner, gid_t __group);
 // #if __ATFILE_VISIBLE
 // int	fchownat (int __dirfd, const char *__path, uid_t __owner, gid_t __group,
-// int __flags); #endif int	fexecve (int __fd, char * const __argv[], char *
-// const __envp[]); long    fpathconf (int __fd, int __name);
+// int __flags);
+// #endif
+// int	fexecve (int __fd, char * const __argv[], char * const __envp[]);
+// long    fpathconf (int __fd, int __name);
+
 int fsync(int __fd) { return 0; }
 int fdatasync(int __fd) { return 0; }
+
 // char *  get_current_dir_name (void);
 char *getcwd(char *__buf, size_t __size) { return "/"; }
 // int	getdomainname  (char *__name, size_t __len);
@@ -97,27 +113,47 @@ char *getcwd(char *__buf, size_t __size) { return "/"; }
 // char *  getwd (char *__buf);
 // int     lchown (const char *__path, uid_t __owner, gid_t __group);
 // #if __ATFILE_VISIBLE
-// int     linkat (int __dirfd1, const char *__path1, int __dirfd2, const char
-// *__path2, int __flags); #endif #if __MISC_VISIBLE || __XSI_VISIBLE int
-// nice (int __nice_value); #endif #if __MISC_VISIBLE || __XSI_VISIBLE >= 4 int
-// lockf (int __fd, int __cmd, off_t __len); #endif long    pathconf (const char
-// *__path, int __name); int     pause (void); #if __POSIX_VISIBLE >= 199506 int
-// pthread_atfork (void (*)(void), void (*)(void), void (*)(void)); #endif int
-// pipe (int __fildes[2]) {
+// int linkat (int __dirfd1, const char *__path1, int __dirfd2, const char
+// *__path2, int __flags);
+
+// #endif #if __MISC_VISIBLE || __XSI_VISIBLE
+// int nice(int __nice_value);
+// #endif
+// #if __MISC_VISIBLE || __XSI_VISIBLE >= 4
+// int lockf(int __fd, int __cmd, off_t __len);
+// #endif
+// long pathconf (const char *__path, int __name);
+// int pause (void);
+// #if __POSIX_VISIBLE >= 199506
+// int pthread_atfork (void (*)(void), void (*)(void), void (*)(void));
+// #endif
+// int pipe (int __fildes[2]) {
 //     pipe2(__fileds[2], 0);
 // }
 // int     pipe2 (int __fildes[2], int flags);
 // #if __POSIX_VISIBLE >= 200809 || __XSI_VISIBLE >= 500
 // ssize_t pread (int __fd, void *__buf, size_t __nbytes, off_t __offset);
 // ssize_t pwrite (int __fd, const void *__buf, size_t __nbytes, off_t
-// __offset); #endif _READ_WRITE_RETURN_TYPE read (int __fd, void *__buf, size_t
-// __nbyte); #if __BSD_VISIBLE int	rresvport (int *__alport); int	revoke
-// (char *__path); #endif int     rmdir (const char *__path); #if __BSD_VISIBLE
-// int	ruserok (const char *rhost, int superuser, const char *ruser, const char
-// *luser); #endif #if __BSD_VISIBLE || (__XSI_VISIBLE >= 4 && __POSIX_VISIBLE <
-// 200112) void *  sbrk (ptrdiff_t __incr); #endif #if __BSD_VISIBLE ||
-// __POSIX_VISIBLE >= 200112 int     setegid (gid_t __gid); int     seteuid
-// (uid_t __uid); #endif int     setgid (gid_t __gid);
+// __offset);
+
+// #endif _READ_WRITE_RETURN_TYPE
+// read (int __fd, void *__buf, size_t __nbyte);
+// #if __BSD_VISIBLE
+// int rresvport (int *__alport);
+// int revoke(char *__path);
+// #endif
+// int rmdir (const char *__path);
+// #if __BSD_VISIBLE
+// int ruserok (const char *rhost, int superuser, const char *ruser, const char
+// *luser);
+// #endif
+// #if __BSD_VISIBLE || (__XSI_VISIBLE >= 4 && __POSIX_VISIBLE < 200112)
+// void * sbrk (ptrdiff_t __incr);
+// #endif #if __BSD_VISIBLE ||__POSIX_VISIBLE >= 200112
+// int setegid (gid_t __gid);
+// int seteuid(uid_t __uid);
+// #endif
+// int setgid(gid_t __gid);
 int setgroups(int ngroups, const gid_t *grouplist) {
   *__errno() = EPERM;
   return -1;

@@ -23,23 +23,31 @@ static inline size_t namelen(const char *const name, size_t max_len) {
   return length;
 }
 
+// the length parameters are the maximum length of the strings,
+// strings may be zero terminated earlier
 static inline int namecmp(const char *const name1, size_t name1_length,
                           const char *const name2, size_t name2_length) {
   size_t max_length = name1_length < name2_length ? name1_length : name2_length;
-  for (size_t index = 0; index < max_length; index++) {
-    // this also automatically returns -1 if one of them is null terminated
-    // earlier than their length
-    if (name1[index] != name2[index])
-      return name1[index] < name2[index] ? -1 : 1;
-    // are the same if we got here
-    if (name1[index] == '\0')
+  size_t index = 0;
+  for (; index < max_length; index++) {
+    if (name1[index] == name2[index] & name1[index] != '\0')
+      continue;
+    // know that either they are unequal or they are now both at null
+    // termination
+    if (name1[index] == '\0' && name2[index] == '\0')
       return 0;
+    else if (name1[index] == '\0')
+      return -1;
+    else if (name2[index] == '\0')
+      return 1;
+    else
+      return name1[index] < name2[index] ? -1 : 1;
   }
   // they are the same until the end of the shorter one or there has not been
   // null termination
-  if (name1_length < name2_length)
+  if (name1_length < name2_length && name2[index] != '\0')
     return -1;
-  else if (name2_length < name1_length)
+  else if (name2_length < name1_length && name1[index] != '\0')
     return 1;
   else
     return 0;
