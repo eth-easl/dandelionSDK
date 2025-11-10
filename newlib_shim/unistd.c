@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <unistd.h>
+#include <string.h>
 
 // Implement functions from unistd that are not already defined in other parts
 // of newlibs libc Or in something we supply
@@ -28,14 +29,20 @@ int chroot(const char *__path) {
 // int	daemon (int nochdir, int noclose);
 
 // function to duplicate file descriptor to second file number
-// the filedescriptors should act as one, meaning if seek is called on one of
-// them, the effects should also be visible accessing the file through the new
-// one. if the second parameter is -1, the lowest free file descriptor is
-// chosen, otherwise the file descriptor in filedes2 is used to duplicate the
-// filedescriptor. If filedes2 was open before, it will be closed.
-int dup3(int __fildes, int __fildes2, int flags) {
-  *__errno() = EMFILE;
-  return -1;
+// the filedescriptors should act as one, meaning if seek is called on one of them,
+// the effects should also be visible accessing the file through the new one.
+// if the second parameter is -1, the lowest free file descriptor is chosen,
+// otherwise the file descriptor in filedes2 is used to duplicate the filedescriptor.
+// If filedes2 was open before, it will be closed.
+int     dup3 (int __fildes, int __fildes2, int flags) {
+    *__errno() = EMFILE;
+    return -1;
+}
+int     dup2 (int __fildes, int __fildes2) {
+    return dup3(__fildes, __fildes2, 0);
+}
+int     dup (int __fildes) {
+    return dup3(__fildes, -1, 0);
 }
 int dup2(int __fildes, int __fildes2) { return dup3(__fildes, __fildes2, 0); }
 int dup(int __fildes) { return dup3(__fildes, -1, 0); }
@@ -74,7 +81,9 @@ int execv(const char *__path, char *const __argv[]) {
 int fsync(int __fd) { return 0; }
 int fdatasync(int __fd) { return 0; }
 // char *  get_current_dir_name (void);
-char *getcwd(char *__buf, size_t __size) { return "/"; }
+char *  getcwd (char *__buf, size_t __size) {
+    return (__buf && __size > 1) ? strcpy(__buf, "/") : 0;
+}
 // int	getdomainname  (char *__name, size_t __len);
 // gid_t   getegid (void);
 // uid_t   geteuid (void);
@@ -86,7 +95,9 @@ char *getcwd(char *__buf, size_t __size) { return "/"; }
 // int getlogin_r (char *name, size_t namesize) ;
 // #endif
 // char *  getpass (const char *__prompt);
-// int	getpagesize (void);
+int	getpagesize (void) {
+    return 4096; // assuming a page size of 4096 bytes
+}
 // pid_t   getpgid (pid_t);
 // pid_t   getpgrp (void);
 // pid_t   getpid (void); // already implementedc
@@ -96,12 +107,14 @@ char *getcwd(char *__buf, size_t __size) { return "/"; }
 // char *	getusershell (void);
 // char *  getwd (char *__buf);
 // int     lchown (const char *__path, uid_t __owner, gid_t __group);
-// #if __ATFILE_VISIBLE
-// int     linkat (int __dirfd1, const char *__path1, int __dirfd2, const char
-// *__path2, int __flags); #endif #if __MISC_VISIBLE || __XSI_VISIBLE int
-// nice (int __nice_value); #endif #if __MISC_VISIBLE || __XSI_VISIBLE >= 4 int
-// lockf (int __fd, int __cmd, off_t __len); #endif long    pathconf (const char
-// *__path, int __name); int     pause (void); #if __POSIX_VISIBLE >= 199506 int
+// #if __ATFILE_VISIBLE int     linkat (int __dirfd1, const char *__path1, int __dirfd2, const char *__path2, int __flags); #endif 
+// #if __MISC_VISIBLE || __XSI_VISIBLE int nice (int __nice_value); #endif 
+// #if __MISC_VISIBLE || __XSI_VISIBLE >= 4 int lockf (int __fd, int __cmd, off_t __len); #endif 
+// long    pathconf (const char *__path, int __name); 
+int pause (void) {
+    return 0;
+}
+//#if __POSIX_VISIBLE >= 199506 int
 // pthread_atfork (void (*)(void), void (*)(void), void (*)(void)); #endif int
 // pipe (int __fildes[2]) {
 //     pipe2(__fileds[2], 0);

@@ -18,7 +18,7 @@ while getopts "c:d" opt; do
         DEFAULT_CLANG=true
         ;;
         ?)
-        echo "Unkown argument to scipt"
+        echo "Unknown argument to script"
         ;;
     esac
 done
@@ -26,8 +26,17 @@ done
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR
 
+# Detect BSD vs GNU sed
+if sed --version >/dev/null 2>&1; then
+    # GNU sed
+    SED_INPLACE() { sed -i "$@"; }
+else
+    # BSD sed (macOS)
+    SED_INPLACE() { sed -i '' "$@"; }
+fi
+
 COMPILER_INCLUDES=$($CLANG_NAME -print-file-name=include)
-sed -i "s|COMPILER_INCLUDES|$COMPILER_INCLUDES|g" @DANDELION_TARGET@-clang.cfg
+SED_INPLACE "s|COMPILER_INCLUDES|$COMPILER_INCLUDES|g" @DANDELION_TARGET@-clang.cfg
 
 CLANG_PATH="$(which $CLANG_NAME)"
 CLANG_DIR="$(dirname $CLANG_PATH)"
@@ -40,10 +49,10 @@ fi
 if [ $DEFAULT_CLANG = true ] && ! [[ -f $CLANG_DIR/clang ]]; then
     cp "$CLANG_PATH" "$CLANG_DIR/clang"
     ln -s "$CLANG_DIR/clang" "$CLANG_DIR/clang++"
-    sed "s|<CFGDIR>|$SCRIPT_DIR|g" @DANDELION_TARGET@-clang.cfg >> "$CLANG_DIR/clang.cfg" 
+    sed "s|<CFGDIR>|$SCRIPT_DIR|g" @DANDELION_TARGET@-clang.cfg >> "$CLANG_DIR/clang.cfg"
     # enable stdinc, as we assume it has been cleared when we install our clang as system clang
-    sed -i "s|-nostdinc||g" "$CLANG_DIR/clang.cfg" 
-    sed "s|<CFGDIR>|$SCRIPT_DIR|g" @DANDELION_TARGET@-clang++.cfg >> "$CLANG_DIR/clang++.cfg" 
+    SED_INPLACE "s|-nostdinc||g" "$CLANG_DIR/clang.cfg"
+    sed "s|<CFGDIR>|$SCRIPT_DIR|g" @DANDELION_TARGET@-clang++.cfg >> "$CLANG_DIR/clang++.cfg"
     # need to change the config to use the clang.cfg in the same folder, so remove prefix
-    sed -i "s|@DANDELION_TARGET@-||g" "$CLANG_DIR/clang++.cfg" 
+    SED_INPLACE "s|@DANDELION_TARGET@-||g" "$CLANG_DIR/clang++.cfg"
 fi

@@ -189,6 +189,10 @@ void __dandelion_platform_init(void) {
     write_all(1, "\t", 1);
     write_all(1, input_sets[input_set].ident, input_sets[input_set].ident_len);
     write_all(1, "\n", 1);
+
+    // Set the starting offset for this set
+    input_sets[input_set].offset = total_buffers;
+
     // open the input set folder
     int set_folder_fd = __syscall(SYS_openat, in_sets_fd,
                                   input_sets[input_set].ident, O_RDONLY);
@@ -251,7 +255,6 @@ void __dandelion_platform_init(void) {
     if (set_dirent_read < 0)
       print_and_exit("getdents failed\n", -dirent_read);
 
-    input_sets[input_set].offset = total_buffers;
   }
 
   // set up sentinel set
