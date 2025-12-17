@@ -1,4 +1,4 @@
-#include <socket.h>
+#include <sys/socket.h>
 
 int accept (int __fd, struct sockaddr *__addr, socklen_t *__addr_len) {
     return -1;

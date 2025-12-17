@@ -1,7 +1,6 @@
 #include <malloc.h>
 #include <sys/signal.h>
 #include <sys/stat.h>
-#include <sys/statvfs.h>
 #include <sys/unistd.h>
 #include <time.h>
 #include <wordexp.h>
@@ -186,16 +185,6 @@ int access(const char *file, int mode) {
 int lstat(const char *file, struct stat *buf) { return stat(file, buf); }
 
 mode_t umask(mode_t mask) { return 0777; }
-
-int statvfs(const char *file, struct statvfs *st) {
-  errno = ENOSYS;
-  return -1;
-}
-
-int fstatvfs(int fd, struct statvfs *buf) {
-  errno = ENOSYS;
-  return -1;
-}
 
 int posix_memalign(void **memptr, size_t alignment, size_t size) {
   void *new_allocation = memalign(alignment, size);
