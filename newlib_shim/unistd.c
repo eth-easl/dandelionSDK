@@ -69,7 +69,7 @@ int execv(const char *__path, char *const __argv[]) {
 // int     execve (const char *__path, char * const __argv[], char * const
 // __envp[]);
 
-// int     execvp (const char *__file, char * const __argv[]);
+// int execvp (const char *__file, char * const __argv[]);
 // int execvpe (const char *__file, char * const __argv[], char * const
 // __envp[]);
 
