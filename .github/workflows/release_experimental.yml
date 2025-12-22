@@ -1,8 +1,9 @@
-name: release latest with all library versions
+name: release experimental with all library versions
 
 on:
-  pull_request:
+  push:
     branches: [ "dev/staging" ]
+
 
 jobs:
   build:
