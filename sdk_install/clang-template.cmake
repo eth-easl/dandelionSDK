@@ -23,6 +23,7 @@
 -lm 
 -lc 
 -lg 
+-lc_extension
 -ldandelion_file_system
 -ldandelion_runtime 
 -ldandelion_system

@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <sys/types.h>
+#include <errno.h>
 
 #define ST_RDONLY 1
 #define ST_NOSUID 2
@@ -27,8 +28,14 @@ struct statvfs {
   unsigned long f_namemax; // Maximum filename length.
 };
 
-int statvfs(const char *path, struct statvfs *buf);
-int fstatvfs(int fd, struct statvfs *buf);
+int statvfs(const char *path, struct statvfs *buf) {
+  errno = ENOSYS;
+  return -1;
+}
+int fstatvfs(int fd, struct statvfs *buf) {
+  errno = ENOSYS;
+  return -1;
+}
 
 #ifdef __cplusplus
 }

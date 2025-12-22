@@ -50,6 +50,7 @@ target_link_libraries(dlibc INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/lib/libc.a"
   "${CMAKE_CURRENT_SOURCE_DIR}/lib/libg.a"
   "${CMAKE_CURRENT_SOURCE_DIR}/lib/libm.a"
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/libc_extension.a"
   "${CMAKE_CURRENT_SOURCE_DIR}/lib/libdandelion_file_system.a"
 )
 target_link_options(dlibc INTERFACE
