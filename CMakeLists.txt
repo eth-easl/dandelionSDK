@@ -148,6 +148,11 @@ if(NEWLIB)
     )
     add_dependencies(dlibc newlib)
 
+    # Additional headers / code needed to get libc to linux compatibility
+    set(LIBC_EXTENSION "c_extension")
+    add_subdirectory(libc_extension)
+    add_dependencies(${LIBC_EXTENSION} dlibc)
+
     set(LLVM_C_FLAGS "-D_GNU_SOURCE=1")
     string(APPEND LLVM_C_FLAGS " -D_POSIX_TIMERS")
     string(APPEND LLVM_C_FLAGS " -D_POSIX_THREADS")
@@ -227,7 +232,7 @@ if(NEWLIB)
             -DLIBCXX_ENABLE_RANDOM_DEVICE=OFF
             -DLIBCXX_HAS_PTHREAD_API=ON
     )
-    add_dependencies(llvmproject newlib)
+    add_dependencies(llvmproject newlib ${LIBC_EXTENSION})
 
     # Create folder at configuration time to avoid issues with includes
     file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/c++/v1)
