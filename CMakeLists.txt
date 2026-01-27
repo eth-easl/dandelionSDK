@@ -46,11 +46,6 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
     add_compile_options(-gdwarf-4)
 endif()
 
-# wasm does not support newlib
-if(DANDELION_PLATFORM MATCHES "wasm")
-    set(NEWLIB OFF)
-endif()
-
 # set dependent options
 if(NEWLIB)
     set(DANDELION_FS ON)

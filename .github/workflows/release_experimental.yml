@@ -13,7 +13,7 @@ jobs:
 
       matrix:
         cpu: ["x86_64", "aarch64"]
-        platform: ["debug", "mmu_linux", "kvm", "wasm"]
+        platform: ["debug", "mmu_linux", "kvm"]
         build: ["Debug", "Release"]
         include:
           - host: "ubuntu-24.04"
