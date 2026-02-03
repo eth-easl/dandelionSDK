@@ -3,12 +3,14 @@ add_library(${LIBC_EXTENSION} STATIC)
 target_sources(${LIBC_EXTENSION}
     PRIVATE
     dirent.c
+    dlfcn.c
     netdb.c
     socket.c
     uio.c
     PUBLIC FILE_SET public_headers TYPE HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/
     FILES
+    include/dlfcn.h
     include/netdb.h
     include/sys/cpuset.h
     include/sys/dirent.h
