@@ -1,3 +1,5 @@
+/* THIS IS A DUMMY HEADER */
+
 #ifndef	_DLFCN_H
 #define	_DLFCN_H 1
 

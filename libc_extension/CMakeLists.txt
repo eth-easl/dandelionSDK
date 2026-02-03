@@ -4,7 +4,9 @@ target_sources(${LIBC_EXTENSION}
     PRIVATE
     dirent.c
     dlfcn.c
+    inet.c
     netdb.c
+    semaphore.c
     socket.c
     uio.c
     PUBLIC FILE_SET public_headers TYPE HEADERS
@@ -12,6 +14,9 @@ target_sources(${LIBC_EXTENSION}
     FILES
     include/dlfcn.h
     include/netdb.h
+    include/semaphore.h
+    include/arpa/inet.h
+    include/netinet/in.h
     include/sys/cpuset.h
     include/sys/dirent.h
     include/sys/sched.h
