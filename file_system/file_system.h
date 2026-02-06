@@ -29,6 +29,7 @@
 typedef enum FileType {
   FILE,
   DIRECTORY,
+  DEVICE,
 } FileType;
 
 typedef struct FileChunk {
@@ -38,6 +39,14 @@ typedef struct FileChunk {
   struct FileChunk *next;
 } FileChunk;
 
+typedef struct Device {
+  // for devices that need state can store pointer to arbitrary function
+  void* state;
+  // functions a device needs to implement
+  size_t(*read)(char*, size_t, int64_t, char);
+  size_t(*write)(char*, size_t, int64_t, char);
+} Device;
+
 // Use D_File instead of File, to avoid potential naming overlap
 typedef struct D_File {
   char name[FS_NAME_LENGTH];
@@ -45,8 +54,9 @@ typedef struct D_File {
   struct D_File *parent;
   FileType type;
   union {
-    struct D_File *child;
     FileChunk *content;
+    struct D_File *child;
+    Device *device;
   };
   unsigned short hard_links;
   unsigned short open_descripotors;

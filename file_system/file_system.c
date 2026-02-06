@@ -1,4 +1,5 @@
 #include "file_system.h"
+#include "devices.h"
 #include "include/fs_interface.h"
 
 #include <stdint.h>
@@ -7,9 +8,57 @@
 #include "dandelion/system/system.h"
 #include "paths.h"
 
-// static variables
-D_File *fs_root;
-OpenFile *open_files;
+OpenFile open_files[FS_MAX_FILES] = {NULL};
+
+// folders that are always present
+// initialize with hard links = 1 to make sure we never attempt deallocation
+D_File fs_root = {
+  .name = "/\0",
+  .next = NULL,
+  .parent = NULL,
+  .type = DIRECTORY,
+  .child = NULL,
+  .hard_links = 1,
+  .open_descripotors = 0,
+  .mode = 0,
+};
+static D_File stdio_folder = {
+  .name = "stdio\0",
+  .next = NULL,
+  .parent = NULL,
+  .type = DIRECTORY,
+  .child = NULL,
+  .hard_links = 1,
+  .open_descripotors = 0,
+  .mode = 0,
+};
+static D_File device_folder = {
+  .name = "dev\0",
+  .next = NULL,
+  .parent = NULL,
+  .type = DIRECTORY,
+  .child = NULL,
+  .hard_links = 1,
+  .open_descripotors = 0,
+  .mode = 0,
+};
+
+// static devices
+static Device urandom_device = {
+  .state = NULL,
+  .read = urandom_read,
+  .write = urandom_write,
+};
+static D_File urandom_file = {
+  .name = "urandom\0",
+  .next = NULL,
+  .parent = NULL,
+  .type = DEVICE,
+  .device = &urandom_device,
+  .hard_links = 1,
+  .open_descripotors = 0,
+  .mode = S_IRUSR,
+};
 
 D_File *create_file(Path *name, char *content, size_t length, uint32_t mode) {
   D_File *new_file = dandelion_alloc(sizeof(D_File), _Alignof(D_File));
@@ -90,6 +139,7 @@ int link_file_to_folder(D_File *folder, D_File *file) {
   return 0;
 }
 
+// Assumes the file has already been checked to be a directory
 D_File *find_file_in_dir(D_File *directory, Path file) {
   // handle special cases for . and ..
   if (file.length == 1 && file.path[0] == '.') {
@@ -113,7 +163,7 @@ D_File *find_file_in_dir(D_File *directory, Path file) {
 }
 
 D_File *find_file_path(Path file_path) {
-  D_File *current = fs_root;
+  D_File *current = &fs_root;
   for (Path subpath = get_component_advance(&file_path); subpath.length != 0;
        subpath = get_component_advance(&file_path)) {
     if (current->type != DIRECTORY) {
@@ -201,6 +251,10 @@ int free_data(D_File *file) {
     break;
   case FILE:
     free_file_chunks(file->content);
+    break;
+  case DEVICE:
+    // device should never have 0 hard links
+    // TODO insert panic here
     break;
   default:
     // unkown file type
@@ -290,9 +344,6 @@ int open_existing_file(unsigned int index, D_File *file, int flags,
   if (file->type == FILE) {
     new_chunk = file->content;
   }
-  // an open file stays open even if it is removed from the file system, so
-  // we add a hard link while it is open
-  file->hard_links += 1;
   // mark that the file is open
   file->open_descripotors += 1;
 
@@ -403,44 +454,19 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
   // error value
   int error;
 
-  // create root folder
-  fs_root = dandelion_alloc(sizeof(D_File), _Alignof(D_File));
-  if (fs_root == NULL) {
-    dandelion_exit(ENOMEM);
-    return -1;
-  }
-  fs_root->name[0] = '/';
-  fs_root->name[1] = '\0';
-  fs_root->type = DIRECTORY;
-  fs_root->next = NULL;
-  fs_root->parent = NULL;
-  fs_root->child = NULL;
-  fs_root->hard_links = 1;
-
-  // create stdio folder and stdout/stderr file
-  D_File *stdio_folder = dandelion_alloc(sizeof(D_File), _Alignof(D_File));
-  if (stdio_folder == NULL) {
-    dandelion_exit(ENOMEM);
-    return -1;
-  }
-  memcpy(stdio_folder->name, "stdio\0", 7);
-  stdio_folder->type = DIRECTORY;
-  stdio_folder->child = NULL;
-  stdio_folder->hard_links = 0;
-  if ((error = link_file_to_folder(fs_root, stdio_folder)) != 0) {
+  if ((error = link_file_to_folder(&fs_root, &device_folder)) != 0) {
     return error;
   }
-
-  // allocate the file table
-  open_files =
-      dandelion_alloc(sizeof(OpenFile) * FS_MAX_FILES, _Alignof(OpenFile));
-  if (open_files == NULL) {
-    dandelion_exit(ENOMEM);
-    return -1;
+ 
+  // initialize and add urandom device
+  urandom_init(0x39917A73ACA200E4ull); // TODO: get this from input struct
+  if ((error = link_file_to_folder(&device_folder, &urandom_file)) != 0) {
+    return error;
   }
-  // make sure file pointers are zeroed, as we used them to detect used files
-  for (size_t index = 0; index < FS_MAX_FILES; index++) {
-    open_files[index].file = NULL;
+  
+  // create stdio folder and stdout/stderr file
+  if ((error = link_file_to_folder(&fs_root, &stdio_folder)) != 0) {
+    return error;
   }
 
   // create and open stderr
@@ -451,7 +477,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
   error = open_existing_file(STDERR_FILENO, stderr_file, O_WRONLY, 0, 0);
   if (error != 0)
     return error;
-  error = link_file_to_folder(stdio_folder, stderr_file);
+  error = link_file_to_folder(&stdio_folder, stderr_file);
   if (error != 0)
     return error;
 
@@ -463,7 +489,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
   error = open_existing_file(STDOUT_FILENO, stdout_file, O_WRONLY, 0, 0);
   if (error != 0)
     return error;
-  error = link_file_to_folder(stdio_folder, stdout_file);
+  error = link_file_to_folder(&stdio_folder, stdout_file);
   if (error != 0)
     return error;
 
@@ -481,7 +507,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
     if (set_path.length == 0)
       continue;
     // create directories for set
-    D_File *set_directory = create_directories(fs_root, set_path, 1);
+    D_File *set_directory = create_directories(&fs_root, set_path, 1);
     if (set_directory == NULL) {
       // TODO write to stderr on what happened
       return -1;
@@ -543,7 +569,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
     if (set_path.length == 0)
       continue;
     // create directories for set
-    D_File *set_directory = create_directories(fs_root, set_path, 1);
+    D_File *set_directory = create_directories(&fs_root, set_path, 1);
     if (set_directory == NULL) {
       // TODO write to stderr on what happened
       return -1;
@@ -564,7 +590,7 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
     if (error != 0) {
       return error;
     }
-    if (link_file_to_folder(stdio_folder, stdin_file) != 0) {
+    if (link_file_to_folder(&stdio_folder, stdin_file) != 0) {
       return -1;
     }
   }
@@ -659,18 +685,14 @@ int add_output_from_file(D_File *file, Path previous_path, size_t set_index) {
   return 0;
 }
 
-int fs_terminate() {
-  // if fs has not been initialized properly, nothing we can do
-  if (fs_root == NULL) {
-    return 0;
-  }
+int fs_terminate() { 
   // go through output set names and find all files in folders that are
   // named after them
   size_t output_sets = dandelion_output_set_count();
   for (size_t set_index = 0; set_index < output_sets; set_index++) {
     Path set_ident = {.path = dandelion_output_set_ident(set_index),
                       .length = dandelion_output_set_ident_len(set_index)};
-    D_File *set_directory = find_file_in_dir(fs_root, set_ident);
+    D_File *set_directory = find_file_in_dir(&fs_root, set_ident);
     if (set_directory == NULL) {
       continue;
     }

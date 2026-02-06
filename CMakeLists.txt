@@ -9,7 +9,6 @@ include(ExternalProject)
 
 # binary options
 option(FREESTANDING "toggles the include of memcpy, memset, memmove and memcmp" ON)
-option(DANDELION_FS "toggles include of lowes level file system provided by dandelion" OFF)
 option(NEWLIB "toggles builing of newlib on top of dandelion interface" OFF)
 
 # string options
@@ -46,11 +45,6 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
     add_compile_options(-gdwarf-4)
 endif()
 
-# set dependent options
-if(NEWLIB)
-    set(DANDELION_FS ON)
-endif()
-
 # if freestanding is on add the FREESTANDING definition to all compilation
 if(FREESTANDING)
 add_compile_definitions(FREESTANDING)
@@ -60,11 +54,6 @@ add_subdirectory(system)
 add_subdirectory(runtime)
 add_subdirectory(sdk_install)
 
-if(DANDELION_FS)
-    set(FILE_SYSTEM_LIB "dandelion_file_system")
-    add_subdirectory(file_system)
-endif()
-
 # set default level of parallelism
 if(NOT CMAKE_BUILD_PARALLEL_LEVEL)
     cmake_host_system_information(RESULT CMAKE_BUILD_PARALLEL_LEVEL QUERY NUMBER_OF_LOGICAL_CORES)
@@ -73,9 +62,13 @@ else()
 endif()
 
 if(NEWLIB) 
+    set(FILE_SYSTEM_LIB "dandelion_file_system")
+    add_subdirectory(file_system)
+
     set(NEWLIB_C_FLAGS "--target=${ARCHITECTURE}-none-elf")
     string(APPEND NEWLIB_C_FLAGS " -nostdinc")
     string(APPEND NEWLIB_C_FLAGS " -nostdlib")
+    string(APPEND NEWLIB_C_FLAGS " -fPIC")
     string(APPEND NEWLIB_C_FLAGS " -idirafter${COMPILER_RUNTIME_INCLUDE}")
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
       string(APPEND NEWLIB_C_FLAGS " -gdwarf-4")
@@ -83,7 +76,7 @@ if(NEWLIB)
 
     set(NEWLIB_COMPILER ${CMAKE_BINARY_DIR}/compiler_wrapped.sh)
     configure_file(newlib_shim/compiler_wrapper_template.sh ${NEWLIB_COMPILER} 
-        FILE_PERMISSIONS OWNER_READ OWNER_EXECUTE)
+        FILE_PERMISSIONS OWNER_READ OWNER_EXECUTE @ONLY)
 
     set(NEWLIB_CONFIG_ARGS "--host=${ARCHITECTURE}-dandelion")
     list(APPEND NEWLIB_CONFIG_ARGS "--disable-newlib-reent-thread-local")
@@ -206,6 +199,7 @@ if(NEWLIB)
             -DCMAKE_CXX_FLAGS:STRING=${LLVM_CXX_FLAGS}
             -DLLVM_DEFAULT_TARGET_TRIPLE=${ARCHITECTURE}-none-elf
             -DLLVM_INCLUDE_TESTS=OFF
+            -DLLVM_ENABLE_PIC=ON
             -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON
             -DCOMPILER_RT_BUILD_BUILTINS=ON
             -DCOMPILER_RT_BAREMETAL_BUILD=ON
@@ -225,7 +219,7 @@ if(NEWLIB)
             -DLIBCXX_INCLUDE_BENCHMARKS=OFF
             -DLIBCXX_CXX_ABI=libcxxabi
             -DLIBCXX_ENABLE_FILESYSTEM=ON
-            -DLIBCXX_ENABLE_RANDOM_DEVICE=OFF
+            -DLIBCXX_ENABLE_RANDOM_DEVICE=ON
             -DLIBCXX_HAS_PTHREAD_API=ON
     )
     add_dependencies(llvmproject newlib ${LIBC_EXTENSION})
