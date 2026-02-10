@@ -4,8 +4,12 @@ target_sources(${LIBC_EXTENSION}
     PRIVATE
     dirent.c
     dlfcn.c
+    if.c
+    ifaddrs.c
     inet.c
     netdb.c
+    pthread.c
+    sched.c
     semaphore.c
     socket.c
     uio.c
@@ -13,9 +17,11 @@ target_sources(${LIBC_EXTENSION}
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/
     FILES
     include/dlfcn.h
+    include/ifaddrs.h
     include/netdb.h
     include/semaphore.h
     include/arpa/inet.h
+    include/net/if.h
     include/netinet/in.h
     include/sys/cpuset.h
     include/sys/dirent.h
