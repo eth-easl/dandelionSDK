@@ -7,6 +7,7 @@ target_sources(${LIBC_EXTENSION}
     if.c
     ifaddrs.c
     inet.c
+    mman.c
     netdb.c
     pthread.c
     sched.c
@@ -25,6 +26,7 @@ target_sources(${LIBC_EXTENSION}
     include/netinet/in.h
     include/sys/cpuset.h
     include/sys/dirent.h
+    include/sys/mman.h
     include/sys/sched.h
     include/sys/socket.h
     include/sys/statvfs.h
