@@ -3,6 +3,8 @@
 -D_GNU_SOURCE=1
 -D__GNU__
 -D__rtems__
+# prevent thread local storage in compilation, TODO: remove if we can provide TLS
+-D__thread=""
 
 # compiler flags
 -fPIE
