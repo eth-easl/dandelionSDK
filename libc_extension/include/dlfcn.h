@@ -1,16 +1,26 @@
-/* THIS IS A DUMMY HEADER */
+#ifndef _DLFCN_H
+#define _DLFCN_H
 
-#ifndef	_DLFCN_H
-#define	_DLFCN_H 1
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define RTLD_LAZY	0x00001
-#define RTLD_NOW	0x00002
-#define RTLD_GLOBAL	0x00100
-#define RTLD_LOCAL	0
+/*
+ * Macro values from musl:
+ * https://sources.debian.org/src/musl/1.1.5-2%2Bdeb8u1/include/dlfcn.h
+ */
+#define RTLD_LAZY 1
+#define RTLD_NOW 2
+#define RTLD_GLOBAL 256
+#define RTLD_LOCAL 0
 
-extern int dlclose (void *__handle);
-extern char *dlerror (void);
-extern void *dlopen (const char *__file, int __mode);
-extern void *dlsym (void *__restrict __handle, const char *__restrict __name);
+int dlclose(void *);
+char *dlerror(void);
+void *dlopen(const char *, int);
+void *dlsym(void *restrict, const char *restrict);
 
-#endif	/* dlfcn.h */
+#ifdef __cplusplus
+}
+#endif
+
+#endif

@@ -4,6 +4,7 @@ target_sources(${LIBC_EXTENSION}
     PRIVATE
     arpa_inet.c
     aio.c
+    dlfcn.c
     dirent.c
     dlfcn.c
     if.c
@@ -21,6 +22,7 @@ target_sources(${LIBC_EXTENSION}
     FILES
     include/arpa/inet.h
     include/aio.h
+    include/dlfcn.h
     include/netdb.h
     include/semaphore.h
     include/arpa/inet.h
