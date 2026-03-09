@@ -2,6 +2,7 @@ add_library(${LIBC_EXTENSION} STATIC)
 
 target_sources(${LIBC_EXTENSION}
     PRIVATE
+    aio.c
     dirent.c
     dlfcn.c
     if.c
@@ -17,8 +18,7 @@ target_sources(${LIBC_EXTENSION}
     PUBLIC FILE_SET public_headers TYPE HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/
     FILES
-    include/dlfcn.h
-    include/ifaddrs.h
+    include/aio.h
     include/netdb.h
     include/semaphore.h
     include/arpa/inet.h
