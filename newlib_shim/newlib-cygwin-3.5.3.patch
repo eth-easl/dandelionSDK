@@ -229,6 +229,109 @@ index 92cadcd55..c8f8922e8 100644
  #define	GLOB_NOSPACE	(-1)	/* Malloc call failed. */
  #define	GLOB_ABEND	(-2)	/* Unignored error. */
  
+# src/api/fcntl.c:23:3: error: use of undeclared identifier 'SEEK_SET'
+#    23 | C(SEEK_SET)
+#       |   ^
+# src/api/fcntl.c:23:3: error: use of undeclared identifier 'SEEK_SET'
+# src/api/fcntl.c:24:3: error: use of undeclared identifier 'SEEK_CUR'
+#    24 | C(SEEK_CUR)
+#       |   ^
+# src/api/fcntl.c:24:3: error: use of undeclared identifier 'SEEK_CUR'
+# src/api/fcntl.c:25:3: error: use of undeclared identifier 'SEEK_END'
+#    25 | C(SEEK_END)
+#       |   ^
+# src/api/fcntl.c:25:3: error: use of undeclared identifier 'SEEK_END'
+# src/api/fcntl.c:30:3: error: use of undeclared identifier 'O_TTY_INIT'
+#    30 | C(O_TTY_INIT)
+#       |   ^
+# src/api/fcntl.c:30:3: error: use of undeclared identifier 'O_TTY_INIT'
+# src/api/fcntl.c:34:3: error: use of undeclared identifier 'O_DSYNC'
+#    34 | C(O_DSYNC)
+#       |   ^
+# src/api/fcntl.c:34:3: error: use of undeclared identifier 'O_DSYNC'
+# src/api/fcntl.c:35:3: error: use of undeclared identifier 'O_RSYNC'
+#    35 | C(O_RSYNC)
+#       |   ^
+# src/api/fcntl.c:35:3: error: use of undeclared identifier 'O_RSYNC'
+# src/api/fcntl.c:69:3: error: use of undeclared identifier 'POSIX_FADV_DONTNEED'
+#    69 | C(POSIX_FADV_DONTNEED)
+#       |   ^
+# src/api/fcntl.c:69:3: error: use of undeclared identifier 'POSIX_FADV_DONTNEED'
+# src/api/fcntl.c:70:3: error: use of undeclared identifier 'POSIX_FADV_NOREUSE'
+#    70 | C(POSIX_FADV_NOREUSE)
+#       |   ^
+# src/api/fcntl.c:70:3: error: use of undeclared identifier 'POSIX_FADV_NOREUSE'
+# src/api/fcntl.c:71:3: error: use of undeclared identifier 'POSIX_FADV_NORMAL'
+#    71 | C(POSIX_FADV_NORMAL)
+#       |   ^
+# src/api/fcntl.c:71:3: error: use of undeclared identifier 'POSIX_FADV_NORMAL'
+# src/api/fcntl.c:72:3: error: use of undeclared identifier 'POSIX_FADV_RANDOM'
+#    72 | C(POSIX_FADV_RANDOM)
+#       |   ^
+# fatal error: too many errors emitted, stopping now [-ferror-limit=]
+# 20 errors generated.
+
+
+
+diff --git a/newlib/libc/include/sys/_default_fcntl.h b/newlib/libc/include/sys/_default_fcntl.h
+index df1fa4b15..f679fd395 100644
+--- a/newlib/libc/include/sys/_default_fcntl.h
++++ b/newlib/libc/include/sys/_default_fcntl.h
+@@ -71,7 +71,7 @@
+ #define	O_DIRECT	_FDIRECT
+ #endif
+ 
+-#if defined (__CYGWIN__)
++#if defined (__CYGWIN__) || defined (__DANDELION__)
+ #define O_BINARY	_FBINARY
+ #define O_TEXT		_FTEXT
+ #define O_DSYNC         _FSYNC
+@@ -196,7 +196,7 @@ struct flock {
+ 	short	l_whence;	/* flag to choose starting offset */
+ 	long	l_start;	/* relative offset, in bytes */
+ 	long	l_len;		/* length, in bytes; 0 means lock to EOF */
+-	short	l_pid;		/* returned with F_GETLK */
++	int	l_pid;		/* returned with F_GETLK */
+ 	short	l_xxx;		/* reserved for future use */
+ };
+ #endif /* __CYGWIN__ */
+diff --git a/newlib/libc/include/fcntl.h b/newlib/libc/include/fcntl.h
+index 6756cf771..cf6763a48 100644
+--- a/newlib/libc/include/fcntl.h
++++ b/newlib/libc/include/fcntl.h
+@@ -1 +1,31 @@
+ #include <sys/fcntl.h>
++
++/* Values match musl libc: https://git.musl-libc.org/cgit/musl/tree/include/fcntl.h */
++#ifndef O_TTY_INIT
++#define O_TTY_INIT 0
++#endif
++/* Gnulib documents defining these to 0 when absent as generally safe: https://www.gnu.org/s/gnulib/manual/html_node/fcntl_002eh.html */
++#ifndef O_DSYNC
++#define O_DSYNC 0
++#endif
++#ifndef O_RSYNC
++#define O_RSYNC 0
++#endif
++#ifndef POSIX_FADV_NORMAL
++#define POSIX_FADV_NORMAL 0
++#define POSIX_FADV_RANDOM 1
++#define POSIX_FADV_SEQUENTIAL 2
++#define POSIX_FADV_WILLNEED 3
++#define POSIX_FADV_DONTNEED 4
++#define POSIX_FADV_NOREUSE 5
++#endif
++#ifndef SEEK_SET
++#define SEEK_SET 0
++#define SEEK_CUR 1
++#define SEEK_END 2
++#endif
++
++__BEGIN_DECLS
++int posix_fadvise (int, off_t, off_t, int);
++int posix_fallocate (int, off_t, off_t);
++__END_DECLS
++
 
 # BUILDERROR src/api/complex.o
 # src/api/complex.c:7:26: error: imaginary constants are a GNU extension [-Werror,-Wgnu-imaginary-constant]
