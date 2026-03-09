@@ -7,6 +7,7 @@ target_sources(${LIBC_EXTENSION}
     dlfcn.c
     dirent.c
     monetary.c
+    net_if.c
     netdb.c
     pthread.c
     sched.c
@@ -20,6 +21,7 @@ target_sources(${LIBC_EXTENSION}
     include/aio.h
     include/dlfcn.h
     include/monetary.h
+    include/net/if.h
     include/netdb.h
     include/semaphore.h
     include/arpa/inet.h
