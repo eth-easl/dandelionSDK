@@ -21,6 +21,7 @@ target_sources(${LIBC_EXTENSION}
     sched.c
     semaphore.c
     socket.c
+    sys_mman.c
     uio.c
     PUBLIC FILE_SET public_headers TYPE HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/
@@ -44,6 +45,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/cpuset.h
     include/sys/dirent.h
     include/sys/ipc.h
+    include/sys/mman.h
     include/sys/msg.h
     include/sys/sem.h
     include/sys/poll.h
