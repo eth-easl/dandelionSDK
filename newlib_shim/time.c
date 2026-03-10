@@ -43,8 +43,7 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp) {
   uint64_t divisor = 1000000000;
   tp->tv_nsec = time_diff % divisor;
   tp->tv_sec = time_diff / divisor;
-  errno = EINVAL;
-  return -1;
+  return 0;
 }
 int clock_getres(clockid_t clock_id, struct timespec *res) {
   errno = EINVAL;
