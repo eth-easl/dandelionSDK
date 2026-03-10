@@ -1,32 +1,32 @@
-/* THIS IS A DUMMY HEADER */
-
 #ifndef _SEMAPHORE_H
-#define _SEMAPHORE_H	1
+#define _SEMAPHORE_H
 
+#include <sys/types.h>
 #include <time.h>
 
-#if __WORDSIZE == 64
-# define __SIZEOF_SEM_T	32
-#else
-# define __SIZEOF_SEM_T	16
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-typedef union {
-  char __size[__SIZEOF_SEM_T];
-  long int __align;
+typedef struct {
+  int __value;
 } sem_t;
 
-#define SEM_FAILED      ((sem_t *) 0)
+#define SEM_FAILED ((sem_t *)0)
 
-extern int sem_close (sem_t *__sem);
-extern int sem_destroy (sem_t *__sem);
-extern int sem_getvalue (sem_t *__sem, int *__sval);
-extern int sem_init (sem_t *__sem, int __pshared, unsigned int __value);
-extern sem_t *sem_open (const char *__name, int __oflag, ...);
-extern int sem_post (sem_t *__sem);
-extern int sem_timedwait (sem_t *__sem, const struct timespec *__abstime);
-extern int sem_trywait (sem_t *__sem);
-extern int sem_unlink (const char *__name);
-extern int sem_wait (sem_t *__sem);
+int sem_close(sem_t *);
+int sem_destroy(sem_t *);
+int sem_getvalue(sem_t *restrict, int *restrict);
+int sem_init(sem_t *, int, unsigned);
+sem_t *sem_open(const char *, int, ...);
+int sem_post(sem_t *);
+int sem_timedwait(sem_t *restrict, const struct timespec *restrict);
+int sem_trywait(sem_t *);
+int sem_unlink(const char *);
+int sem_wait(sem_t *);
 
-#endif	/* semaphore.h */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _SEMAPHORE_H */

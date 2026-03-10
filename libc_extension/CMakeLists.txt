@@ -9,6 +9,7 @@ target_sources(${LIBC_EXTENSION}
     mqueue.c
     nl_types.c
     poll.c
+    semaphore.c
     monetary.c
     net_if.c
     netinet_in.c
@@ -27,6 +28,7 @@ target_sources(${LIBC_EXTENSION}
     include/mqueue.h
     include/nl_types.h
     include/poll.h
+    include/semaphore.h
     include/monetary.h
     include/net/if.h
     include/netinet/in.h
