@@ -24,6 +24,7 @@ target_sources(${LIBC_EXTENSION}
     sys_mman.c
     sys_shm.c
     sys_utsname.c
+    syslog.c
     uio.c
     PUBLIC FILE_SET public_headers TYPE HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/
@@ -58,6 +59,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/uio.h
     include/sys/un.h
     include/sys/utsname.h
+    include/syslog.h
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
