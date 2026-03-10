@@ -23,6 +23,7 @@ target_sources(${LIBC_EXTENSION}
     socket.c
     sys_mman.c
     sys_shm.c
+    sys_utsname.c
     uio.c
     PUBLIC FILE_SET public_headers TYPE HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/
@@ -56,6 +57,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/statvfs.h
     include/sys/uio.h
     include/sys/un.h
+    include/sys/utsname.h
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
