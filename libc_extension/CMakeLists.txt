@@ -23,6 +23,7 @@ target_sources(${LIBC_EXTENSION}
     socket.c
     sys_mman.c
     sys_shm.c
+    sys_termios.c
     sys_utsname.c
     syslog.c
     uio.c
@@ -56,6 +57,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/sched.h
     include/sys/socket.h
     include/sys/statvfs.h
+    include/sys/termios.h
     include/sys/uio.h
     include/sys/un.h
     include/sys/utsname.h
