@@ -55,6 +55,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/socket.h
     include/sys/statvfs.h
     include/sys/uio.h
+    include/sys/un.h
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
