@@ -10,6 +10,7 @@ target_sources(${LIBC_EXTENSION}
     nl_types.c
     poll.c
     semaphore.c
+    sys_ipc.c
     monetary.c
     net_if.c
     netinet_in.c
@@ -40,6 +41,7 @@ target_sources(${LIBC_EXTENSION}
     include/netinet/in.h
     include/sys/cpuset.h
     include/sys/dirent.h
+    include/sys/ipc.h
     include/sys/poll.h
     include/sys/sched.h
     include/sys/socket.h
