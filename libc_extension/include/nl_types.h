@@ -8,9 +8,9 @@ extern "C" {
 #endif
 
 /* Values match glibc nl_types.h:
- * https://sources.debian.org/src/glibc/2.41-7/catgets/nl_types.h/
+ * https://sources.debian.org/src/glibc/2.43-1/catgets/nl_types.h
  */
-#define NL_SETD 0
+#define NL_SETD 1
 #define NL_CAT_LOCALE 1
 
 typedef struct __nl_cat_d {
