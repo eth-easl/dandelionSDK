@@ -8,6 +8,7 @@ target_sources(${LIBC_EXTENSION}
     dirent.c
     mqueue.c
     nl_types.c
+    poll.c
     monetary.c
     net_if.c
     netinet_in.c
@@ -25,6 +26,7 @@ target_sources(${LIBC_EXTENSION}
     include/dlfcn.h
     include/mqueue.h
     include/nl_types.h
+    include/poll.h
     include/monetary.h
     include/net/if.h
     include/netinet/in.h
@@ -36,7 +38,7 @@ target_sources(${LIBC_EXTENSION}
     include/netinet/in.h
     include/sys/cpuset.h
     include/sys/dirent.h
-    include/sys/mman.h
+    include/sys/poll.h
     include/sys/sched.h
     include/sys/socket.h
     include/sys/statvfs.h
