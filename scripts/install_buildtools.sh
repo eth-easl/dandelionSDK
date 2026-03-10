@@ -1,8 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-install_dir=$HOME/.local
-
+readonly install_dir=$HOME/.local
 readonly autoconf_version="2.69"
 
 if [ ! -d "$install_dir/bin" ]; then
@@ -12,13 +11,15 @@ if [ ! -d "$install_dir/bin" ]; then
 fi
 
 # install m4 (required to build autoconf)
-if [ ! type m4 &> /dev/null ]; then
-    sudo apt install m4
+if ! command -v m4 > /dev/null 2>&1; then
+    sudo apt update
+    sudo apt install -y m4
 fi
 
 # install automake
-if [ ! type automake &> /dev/null ]; then
-    sudo apt install automake
+if ! command automake > /dev/null 2>&1; then
+    sudo apt update
+    sudo apt install -y automake
 fi
 
 # install (specific version of) autoconf
