@@ -2,6 +2,7 @@
 #define	_SYS_SOCKET_H 1
 
 #include <sys/types.h>
+#include <sys/uio.h>
 
 /* Type for length arguments in socket calls.  */
 typedef unsigned int socklen_t;
@@ -33,13 +34,10 @@ struct msghdr
     socklen_t msg_namelen;	/* Length of address data.  */
 
     struct iovec *msg_iov;	/* Vector of data to send/receive into.  */
-    size_t msg_iovlen;		/* Number of elements in the vector.  */
+    int msg_iovlen;		/* Number of elements in the vector.  */
 
     void *msg_control;		/* Ancillary data (eg BSD filedesc passing). */
-    size_t msg_controllen;	/* Ancillary data buffer length.
-				   !! The type should be socklen_t but the
-				   definition of the kernel is incompatible
-				   with this.  */
+    socklen_t msg_controllen;	/* Ancillary data buffer length.  */
 
     int msg_flags;		/* Flags on received message.  */
 };
@@ -47,13 +45,15 @@ struct msghdr
 /* Structure used for storage of ancillary data object information.  */
 struct cmsghdr
 {
-    size_t cmsg_len;		/* Length of data in cmsg_data plus length
-				   of cmsghdr structure.
-				   !! The type should be socklen_t but the
-				   definition of the kernel is incompatible
-				   with this.  */
+    socklen_t cmsg_len;		/* Length of data in cmsg_data plus header.  */
     int cmsg_level;		/* Originating protocol.  */
     int cmsg_type;		/* Protocol specific type.  */
+};
+
+struct linger
+{
+    int l_onoff;
+    int l_linger;
 };
 
 /* Types of sockets.  */
@@ -194,6 +194,32 @@ enum __socket_type
 #define AF_MCTP		PF_MCTP
 #define AF_MAX		PF_MAX
 
+/* Values match Linux musl sys/socket.h:
+ * https://git.musl-libc.org/cgit/musl/tree/include/sys/socket.h
+ */
+#define SO_DEBUG        1
+#define SO_REUSEADDR    2
+#define SO_TYPE         3
+#define SO_ERROR        4
+#define SO_DONTROUTE    5
+#define SO_BROADCAST    6
+#define SO_SNDBUF       7
+#define SO_RCVBUF       8
+#define SO_KEEPALIVE    9
+#define SO_OOBINLINE    10
+#define SO_LINGER       13
+#define SO_RCVLOWAT     18
+#define SO_SNDLOWAT     19
+#define SO_RCVTIMEO     20
+#define SO_SNDTIMEO     21
+#define SO_ACCEPTCONN   30
+#define SOL_SOCKET      1
+#define SOMAXCONN       128
+
+#define SHUT_RD         0
+#define SHUT_WR         1
+#define SHUT_RDWR       2
+
 /* Bits in the FLAGS argument to `send', `recv', et al.  */
 enum
   {
@@ -244,15 +270,43 @@ enum
 #define MSG_CMSG_CLOEXEC MSG_CMSG_CLOEXEC
   };
 
+/* Values match Linux musl sys/socket.h:
+ * https://git.musl-libc.org/cgit/musl/tree/include/sys/socket.h
+ */
+#define CMSG_DATA(cmsg) \
+  ((unsigned char *) (((struct cmsghdr *)(cmsg)) + 1))
+#define CMSG_NXTHDR(mhdr, cmsg) \
+  ((cmsg)->cmsg_len < sizeof (struct cmsghdr) || \
+   (((((cmsg)->cmsg_len + sizeof(long) - 1) & ~(long)(sizeof(long) - 1)) + \
+     sizeof(struct cmsghdr)) >= \
+    ((unsigned char *)(mhdr)->msg_control + (mhdr)->msg_controllen) - \
+      (unsigned char *)(cmsg)) \
+   ? 0 : (struct cmsghdr *)((unsigned char *)(cmsg) + \
+       (((cmsg)->cmsg_len + sizeof(long) - 1) & ~(long)(sizeof(long) - 1))))
+#define CMSG_FIRSTHDR(mhdr) \
+  ((size_t) (mhdr)->msg_controllen >= sizeof (struct cmsghdr) ? \
+   (struct cmsghdr *) (mhdr)->msg_control : (struct cmsghdr *) 0)
+#define CMSG_ALIGN(len) \
+  (((len) + sizeof (size_t) - 1) & (size_t) ~(sizeof (size_t) - 1))
+#define CMSG_SPACE(len) \
+  (CMSG_ALIGN (len) + CMSG_ALIGN (sizeof (struct cmsghdr)))
+#define CMSG_LEN(len) \
+  (CMSG_ALIGN (sizeof (struct cmsghdr)) + (len))
+
+/* Value matches Linux musl sys/socket.h:
+ * https://git.musl-libc.org/cgit/musl/tree/include/sys/socket.h
+ */
+#define SCM_RIGHTS      0x01
+
 extern int accept (int __fd, struct sockaddr *__addr, socklen_t *__addr_len);
 extern int bind (int __fd, const struct sockaddr *__addr, socklen_t __len);
 extern int connect (int __fd, const struct sockaddr *__addr, socklen_t __len);
-extern int getpeername (int __fd, struct sockaddr __addr, socklen_t *__len);
-extern int getsockname (int __fd, struct sockaddr __addr, socklen_t *__len);
+extern int getpeername (int __fd, struct sockaddr *__addr, socklen_t *__len);
+extern int getsockname (int __fd, struct sockaddr *__addr, socklen_t *__len);
 extern int getsockopt (int __fd, int __level, int __optname, void *__optval, socklen_t *__optlen);
 extern int listen (int __fd, int __n);
 extern ssize_t recv (int __fd, void *__buf, size_t __n, int __flags);
-extern ssize_t recvfrom (int __fd, void *__buf, size_t __n, int __flags, struct sockaddr __addr, 
+extern ssize_t recvfrom (int __fd, void *__buf, size_t __n, int __flags, struct sockaddr *__addr, 
                          socklen_t *__addr_len);
 extern ssize_t recvmsg (int __fd, struct msghdr *__message, int __flags);
 extern ssize_t send (int __fd, const void *__buf, size_t __n, int __flags);
