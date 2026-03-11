@@ -209,6 +209,23 @@ int execve(const char *name, char *const argv[], char *const env[]) {
 
 int fcntl(int fd, int op, ...) { return -1; }
 
+int posix_fadvise(int fd, off_t offset, off_t len, int advice) {
+  (void)fd;
+  (void)offset;
+  (void)len;
+  (void)advice;
+  errno = ENOSYS;
+  return -1;
+}
+
+int posix_fallocate(int fd, off_t offset, off_t len) {
+  (void)fd;
+  (void)offset;
+  (void)len;
+  errno = ENOSYS;
+  return -1;
+}
+
 int fork() {
   errno = EAGAIN;
   return -1;
