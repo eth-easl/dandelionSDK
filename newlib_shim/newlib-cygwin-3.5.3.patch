@@ -364,3 +364,21 @@ index 4f3556909..954d4ce79 100644
  #define I _Complex_I
  
  #include <sys/cdefs.h>
+
+# /work/dandelion_sdk/include/regex.h:43:9: error: unknown type name 'off_t'
+#    43 | typedef off_t regoff_t;
+#       |         ^
+# 1 error generated.
+
+
+diff --git a/newlib/libc/include/regex.h b/newlib/libc/include/regex.h
+--- a/newlib/libc/include/regex.h
++++ b/newlib/libc/include/regex.h
+@@ -38,6 +38,7 @@
+ #define	_REGEX_H_
+ 
+ #include <sys/cdefs.h>
++#include <sys/types.h>
+ 
+ /* types */
+ typedef off_t regoff_t;
