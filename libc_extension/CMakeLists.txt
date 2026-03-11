@@ -21,21 +21,29 @@ target_sources(${LIBC_EXTENSION}
     sched.c
     semaphore.c
     socket.c
+    crypt.c
+    mntent.c
+    resolv.c
     sys_mman.c
     sys_shm.c
+    sys_syscall.c
     sys_termios.c
     sys_utsname.c
     syslog.c
+    utmpx.c
     uio.c
     PUBLIC FILE_SET public_headers TYPE HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/
     FILES
     include/arpa/inet.h
     include/aio.h
+    include/crypt.h
     include/dlfcn.h
     include/mqueue.h
+    include/mntent.h
     include/nl_types.h
     include/poll.h
+    include/resolv.h
     include/semaphore.h
     include/monetary.h
     include/net/if.h
@@ -53,6 +61,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/msg.h
     include/sys/sem.h
     include/sys/shm.h
+    include/sys/syscall.h
     include/sys/poll.h
     include/sys/sched.h
     include/sys/socket.h
@@ -62,6 +71,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/un.h
     include/sys/utsname.h
     include/syslog.h
+    include/utmpx.h
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
