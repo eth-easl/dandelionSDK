@@ -18,7 +18,7 @@ RUN apt-get install -y gcc g++ # clang uses gcc to interface with the linker
 RUN wget https://apt.llvm.org/llvm.sh -O ~/llvm.sh
 RUN chmod +x ~/llvm.sh
 RUN ~/llvm.sh 20
-RUN ln -s /usr/bin/ld.lld-19 /usr/bin/ld.lld
+RUN ln -s /usr/bin/ld.lld-20 /usr/bin/ld.lld
 RUN rm -r /usr/include/*
 
 # download and set up dandelionSDK
