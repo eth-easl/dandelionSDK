@@ -51,8 +51,7 @@ D_File *create_directory(Path *name, uint32_t mode) {
   new_file->type = DIRECTORY;
   new_file->child = NULL;
   new_file->hard_links = 0;
-  // directory where user has full permissions
-  new_file->mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR;
+  new_file->mode = mode | S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR;
   return new_file;
 }
 
@@ -61,6 +60,13 @@ int link_file_to_folder(D_File *folder, D_File *file) {
     // TODO set proper error number
     return -1;
   };
+
+  // Check if file already exists in this directory to prevent duplicates
+  D_File *existing = find_file_in_dir(folder, (Path){.path = file->name, .length = namelen(file->name, FS_NAME_LENGTH)});
+  if (existing != NULL) {
+    return -1;
+  }
+
   // set file parent to folder
   file->parent = folder;
   // increase the number of hard links to the file
@@ -70,18 +76,24 @@ int link_file_to_folder(D_File *folder, D_File *file) {
     file->next = NULL;
   } else {
     D_File *current = folder->child;
-    if (namecmp(file->name, FS_NAME_LENGTH, current->name, FS_NAME_LENGTH) <
-        0) {
+    int cmp_first = namecmp(file->name, FS_NAME_LENGTH, current->name, FS_NAME_LENGTH);
+    if (cmp_first < 0) {
       file->next = current;
       folder->child = file;
+    } else if (cmp_first == 0) {
+      file->hard_links -= 1;
+      return -1;
     } else {
+      // Find correct position to insert
       while (current->next != NULL) {
-        if (namecmp(file->name, FS_NAME_LENGTH, current->next->name,
-                    FS_NAME_LENGTH) < 0) {
+        int cmp_next = namecmp(file->name, FS_NAME_LENGTH, current->next->name, FS_NAME_LENGTH);
+        if (cmp_next < 0) {
           break;
-        } else {
-          current = current->next;
+        } else if (cmp_next == 0) {
+          file->hard_links -= 1;
+          return -1;
         }
+        current = current->next;
       }
       file->next = current->next;
       current->next = file;
@@ -163,11 +175,12 @@ D_File *create_directories(D_File *directory, Path path, char prevent_up) {
         directory = candidate_dir;
         continue;
       }
-      D_File *new_dir = dandelion_alloc(sizeof(D_File), _Alignof(D_File));
-      new_dir->type = DIRECTORY;
-      memcpy(new_dir->name, current_path.path, current_path.length);
-      new_dir->name[current_path.length] = '\0';
-      new_dir->child = NULL;
+      uint32_t dir_mode = S_IRUSR | S_IWUSR | S_IXUSR;
+      D_File *new_dir = create_directory(&current_path, dir_mode);
+      if (new_dir == NULL) {
+        return NULL;
+      }
+
       int error = link_file_to_folder(directory, new_dir);
       if (error < 0) {
         dandelion_free(new_dir);
@@ -416,9 +429,12 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
   fs_root->parent = NULL;
   fs_root->child = NULL;
   fs_root->hard_links = 1;
+  // Set proper root directory mode
+  //fs_root->mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR;
 
   // create stdio folder and stdout/stderr file
-  D_File *stdio_folder = dandelion_alloc(sizeof(D_File), _Alignof(D_File));
+  Path stdio_path = path_from_string("stdio");
+  D_File *stdio_folder = create_directory(&stdio_path, S_IRUSR | S_IWUSR | S_IXUSR);
   if (stdio_folder == NULL) {
     dandelion_exit(ENOMEM);
     return -1;

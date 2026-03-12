@@ -186,7 +186,9 @@ void __dandelion_platform_init(void) {
   sysdata.input_bufs = heap_ptr;
 
   for (size_t input_set = 0; input_set < input_set_index; input_set++) {
+    // Set the starting offset for this set
     input_sets[input_set].offset = total_buffers;
+
     write_all(1, "\t", 1);
     write_all(1, input_sets[input_set].ident, input_sets[input_set].ident_len);
     write_all(1, "\n", 1);

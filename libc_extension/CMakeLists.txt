@@ -12,6 +12,7 @@ target_sources(${LIBC_EXTENSION}
     include/netdb.h
     include/sys/cpuset.h
     include/sys/dirent.h
+    include/sys/mman.h
     include/sys/sched.h
     include/sys/socket.h
     include/sys/statvfs.h

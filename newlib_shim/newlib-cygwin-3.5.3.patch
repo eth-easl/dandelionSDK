@@ -159,3 +159,33 @@ index c99ad395d..109112630 100644
  #endif /* defined(__rtems__) */
  #endif /* __GNU_VISIBLE */
  
+diff --git a/newlib/libc/include/limits.h a/newlib/libc/include/limits.h
+index 893f108..f07076d 100644
+--- a/newlib/libc/include/limits.h
++++ b/newlib/libc/include/limits.h
+@@ -145,3 +145,7 @@
+ #ifndef PATH_MAX
+ #define PATH_MAX	4096
+ #endif
++
++#ifndef SSIZE_MAX
++#define SSIZE_MAX LONG_MAX
++#endif
++
+diff --git a/newlib/libc/include/sys/time.h b/newlib/libc/include/sys/time.h
+index 5a3dec7ab..980f3378d 100644
+--- a/newlib/libc/include/sys/time.h
++++ b/newlib/libc/include/sys/time.h
+@@ -440,6 +440,9 @@ int futimesat (int, const char *, const struct timeval [2]);
+ int _gettimeofday (struct timeval *__p, void *__tz);
+ #endif
+
++time_t time(time_t *tloc);
++int utime(const char *filename, const struct utimbuf *times);
++
+ __END_DECLS
+
+ #endif /* !_KERNEL */
+--
+2.50.1
+
