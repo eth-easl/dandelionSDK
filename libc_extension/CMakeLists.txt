@@ -8,6 +8,12 @@ configure_file(
     ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/shm.h
     @ONLY
 )
+# Render sys/utsname.h from the source template so field sizes track the configured UTSNAME_FIELD_SIZE.
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/sys/utsname.h
+    ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/utsname.h
+    @ONLY
+)
 
 target_sources(${LIBC_EXTENSION}
     PRIVATE
@@ -80,7 +86,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/termios.h
     include/sys/uio.h
     include/sys/un.h
-    include/sys/utsname.h
+    ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/utsname.h
     include/syslog.h
     include/utmpx.h
 )
@@ -90,6 +96,10 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_options(${LIBC_EXTENSION} PRIVATE -g)
 endif()
 
+# Compile against generated headers before source templates
+target_include_directories(${LIBC_EXTENSION} BEFORE PRIVATE
+    ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}
+)
 target_link_libraries(${LIBC_EXTENSION} PRIVATE dlibc)
 
 include(GNUInstallDirs)

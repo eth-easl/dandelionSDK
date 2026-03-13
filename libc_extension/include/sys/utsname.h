@@ -8,13 +8,14 @@ extern "C" {
 /* Linux utsname fields are 65 bytes:
  * https://man7.org/linux/man-pages/man2/uname.2.html
  * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/utsname.h.html
+ * Dandelion SDK sets UTSNAME_FIELD_SIZE in the top-level CMakeLists.txt defaults.
  */
 struct utsname {
-  char sysname[65];
-  char nodename[65];
-  char release[65];
-  char version[65];
-  char machine[65];
+  char sysname[@UTSNAME_FIELD_SIZE@];
+  char nodename[@UTSNAME_FIELD_SIZE@];
+  char release[@UTSNAME_FIELD_SIZE@];
+  char version[@UTSNAME_FIELD_SIZE@];
+  char machine[@UTSNAME_FIELD_SIZE@];
 };
 
 int uname(struct utsname *);
