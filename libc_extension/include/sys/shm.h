@@ -18,10 +18,9 @@ typedef unsigned long shmatt_t;
 
 /* Linux AMD64 defines SHMLBA as __getpagesize():
  * https://refspecs.linuxfoundation.org/LSB_2.0.1/LSB-Core-AMD64/LSB-Core-AMD64.diff.pdf
- * Dandelion SDK sets PAGE_SIZE to 4096 in the top-level CMake defaults.
- * TODO: __getpagesize() should be used instead.
+ * Dandelion SDK sets PAGE_SIZE in the top-level CMakeLists.txt defaults.
  */
-#define SHMLBA 4096
+#define SHMLBA @PAGE_SIZE@
 
 struct shmid_ds {
   struct ipc_perm shm_perm;

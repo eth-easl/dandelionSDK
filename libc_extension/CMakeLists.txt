@@ -1,5 +1,14 @@
 add_library(${LIBC_EXTENSION} STATIC)
 
+set(LIBC_EXTENSION_GENERATED_INCLUDE_DIR
+    ${CMAKE_CURRENT_BINARY_DIR}/include)
+# Render sys/shm.h from the source template so SHMLBA tracks the configured PAGE_SIZE.
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/sys/shm.h
+    ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/shm.h
+    @ONLY
+)
+
 target_sources(${LIBC_EXTENSION}
     PRIVATE
     arpa_inet.c
@@ -33,7 +42,9 @@ target_sources(${LIBC_EXTENSION}
     utmpx.c
     uio.c
     PUBLIC FILE_SET public_headers TYPE HEADERS
-    BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    BASE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}
     FILES
     include/arpa/inet.h
     include/aio.h
@@ -60,7 +71,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/mman.h
     include/sys/msg.h
     include/sys/sem.h
-    include/sys/shm.h
+    ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/shm.h
     include/sys/syscall.h
     include/sys/poll.h
     include/sys/sched.h
