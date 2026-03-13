@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <sys/resource.h>
 #include <sys/signal.h>
 #include <sys/stat.h>
 #include <sys/unistd.h>
@@ -233,7 +234,33 @@ int fork() {
 
 int getpid() { return 1; }
 
-int gettimeofday(struct timeval *p, struct timezone *z) { return -1; }
+int getpriority(int which, id_t who) {
+  (void)which;
+  (void)who;
+  errno = ENOSYS;
+  return -1;
+}
+
+int getrlimit(int resource, struct rlimit *rlim) {
+  (void)resource;
+  (void)rlim;
+  errno = ENOSYS;
+  return -1;
+}
+
+int getrusage(int who, struct rusage *usage) {
+  (void)who;
+  (void)usage;
+  errno = ENOSYS;
+  return -1;
+}
+
+int gettimeofday(struct timeval *restrict p, void *restrict tz) {
+  (void)p;
+  (void)tz;
+  errno = ENOSYS;
+  return -1;
+}
 
 int kill(int pid, int sig) {
   errno = EINVAL;
@@ -242,6 +269,21 @@ int kill(int pid, int sig) {
 
 int pipe(int pipefd[2]) {
   errno = EFAULT;
+  return -1;
+}
+
+int setpriority(int which, id_t who, int prio) {
+  (void)which;
+  (void)who;
+  (void)prio;
+  errno = ENOSYS;
+  return -1;
+}
+
+int setrlimit(int resource, const struct rlimit *rlim) {
+  (void)resource;
+  (void)rlim;
+  errno = ENOSYS;
   return -1;
 }
 
