@@ -194,6 +194,28 @@ index 893f1083..fd044002 100644
  #ifndef PATH_MAX
  #define PATH_MAX	4096
  #endif
+
+diff --git a/newlib/libc/include/search.h b/newlib/libc/include/search.h
+index 8e1061dd..9595223c 100644
+--- a/newlib/libc/include/search.h
++++ b/newlib/libc/include/search.h
+@@ -51,11 +51,15 @@ __BEGIN_DECLS
+ int	 hcreate(size_t);
+ void	 hdestroy(void);
+ ENTRY	*hsearch(ENTRY, ACTION);
++void	 insque(void *, void *);
++void	*lfind(const void *, const void *, size_t *, size_t, __compar_fn_t);
++void	*lsearch(const void *, void *, size_t *, size_t, __compar_fn_t);
+ int	 hcreate_r(size_t, struct hsearch_data *);
+ void	 hdestroy_r(struct hsearch_data *);
+ int	hsearch_r(ENTRY, ACTION, ENTRY **, struct hsearch_data *);
+ void	*tdelete(const void *__restrict, void **__restrict, __compar_fn_t);
+ void	tdestroy (void *, void (*)(void *));
+-void	*tfind(const void *, void **, __compar_fn_t);
++void	*tfind(const void *, void *const *, __compar_fn_t);
+ void	*tsearch(const void *, void **, __compar_fn_t);
+ void      twalk(const void *, void (*)(const void *, VISIT, int));
++void	 remque(void *);
 +
 +#if __POSIX_VISIBLE >= 2
 +/* POSIX utility limit values:
