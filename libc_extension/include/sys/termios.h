@@ -137,8 +137,20 @@ struct termios {
 #define TOSTOP   0000400
 #define IEXTEN   0100000
 
-/* Linux glibc attribute actions and queue selectors:
+/* 
  * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios-tcflow.h/
+ */
+#ifndef TCSANOW
+#define TCSANOW   0
+#endif
+#ifndef TCSADRAIN
+#define TCSADRAIN 1
+#endif
+#ifndef TCSAFLUSH
+#define TCSAFLUSH 2
+#endif
+/* 
+ * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios.h/
  */
 #define TCOOFF    0
 #define TCOON     1
