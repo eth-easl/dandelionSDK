@@ -569,6 +569,53 @@ index 77966578..248a39ff 100644
  FILE *	open_memstream (char **, size_t *);
  int	vdprintf (int, const char *__restrict, __VALIST)
                 _ATTRIBUTE ((__format__ (__printf__, 2, 0)));
+diff --git a/newlib/libc/include/stdlib.h b/newlib/libc/include/stdlib.h
+index fd89f5ba..dc5bc3de 100644
+--- a/newlib/libc/include/stdlib.h
++++ b/newlib/libc/include/stdlib.h
+@@ -30,6 +30,10 @@
+ #include <sys/_locale.h>
+ #endif
+ 
++#if __POSIX_VISIBLE
++#include <sys/wait.h>
++#endif
++
+ _BEGIN_STD_C
+ 
+ typedef struct 
+@@ -62,7 +66,9 @@ typedef int (*__compar_fn_t) (const void *, const void *);
+ 
+ #define RAND_MAX __RAND_MAX
+ 
+-int	__locale_mb_cur_max (void);
++/* Glibc exposes MB_CUR_MAX via a size_t-returning helper:
++   https://sources.debian.org/src/glibc/2.31-13%2Bdeb11u6/stdlib/stdlib.h/#L104 */
++size_t	__locale_mb_cur_max (void);
+ 
+ #define MB_CUR_MAX __locale_mb_cur_max()
+ 
+@@ -155,6 +161,9 @@ int	rpmatch (const char *response);
+ #endif
+ #if __XSI_VISIBLE
+ void	setkey (const char *__key);
++int	grantpt (int);
++char *	ptsname (int);
++int	unlockpt (int);
+ #endif
+ void	srand (unsigned __seed);
+ double	strtod (const char *__restrict __n, char **__restrict __end_PTR);
+@@ -221,6 +230,10 @@ char *	ecvtbuf (double, int, int*, int*, char *);
+ char *	fcvtbuf (double, int, int*, int*, char *);
+ char *	ecvtf (float,int,int *,int *);
+ #endif
++
++#if __XSI_VISIBLE
++int	posix_openpt (int);
++#endif
+ #ifndef __CYGWIN__
+ char *	__itoa (int, char *, int);
+ char *	__utoa (unsigned, char *, int);
 diff --git a/newlib/libc/include/sys/_default_fcntl.h b/newlib/libc/include/sys/_default_fcntl.h
 index ce721fa2..3677ccdc 100644
 --- a/newlib/libc/include/sys/_default_fcntl.h
@@ -676,10 +723,10 @@ index c0a0d201..5fab350f 100644
  #endif /* !_SYS_RESOURCE_H_ */
 -
 diff --git a/newlib/libc/include/sys/signal.h b/newlib/libc/include/sys/signal.h
-index 96bf9781..473a33da 100644
+index 96bf9781..e6ad1b90 100644
 --- a/newlib/libc/include/sys/signal.h
 +++ b/newlib/libc/include/sys/signal.h
-@@ -19,6 +19,8 @@ extern "C" {
+@@ -19,11 +19,13 @@ extern "C" {
  typedef	__sigset_t	sigset_t;
  #endif
  
@@ -688,6 +735,12 @@ index 96bf9781..473a33da 100644
  #if defined(__CYGWIN__)
  #include <cygwin/signal.h>
  #else
+ 
+-#if defined(_POSIX_REALTIME_SIGNALS) || __POSIX_VISIBLE >= 199309
++#if defined(_POSIX_REALTIME_SIGNALS) || __POSIX_VISIBLE >= 199309 || __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
+ 
+ /* sigev_notify values
+    NOTE: P1003.1c/D10, p. 34 adds SIGEV_THREAD.  */
 @@ -69,19 +71,70 @@ struct sigevent {
  typedef struct {
    int          si_signo;    /* Signal number */
@@ -976,6 +1029,19 @@ index ed6cc70f..da618c88 100644
  
  #endif /* _TIME_H_ */
 -
+diff --git a/newlib/libc/locale/locale.c b/newlib/libc/locale/locale.c
+index b16ec151..62986f65 100644
+--- a/newlib/libc/locale/locale.c
++++ b/newlib/libc/locale/locale.c
+@@ -995,7 +995,7 @@ __get_locale_env (struct _reent *p, int category)
+ }
+ #endif /* _MB_CAPABLE */
+ 
+-int
++size_t
+ __locale_mb_cur_max (void)
+ {
+ #ifdef __HAVE_LOCALE_INFO__
 diff --git a/newlib/libc/sys/Makefile.inc b/newlib/libc/sys/Makefile.inc
 index 24d8407d..c2298733 100644
 --- a/newlib/libc/sys/Makefile.inc

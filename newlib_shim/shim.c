@@ -232,6 +232,12 @@ int fork() {
   return -1;
 }
 
+int grantpt(int fd) {
+  (void)fd;
+  errno = ENOSYS;
+  return -1;
+}
+
 int getpid() { return 1; }
 
 int getpriority(int which, id_t who) {
@@ -272,6 +278,18 @@ int pipe(int pipefd[2]) {
   return -1;
 }
 
+int posix_openpt(int flags) {
+  (void)flags;
+  errno = ENOSYS;
+  return -1;
+}
+
+char *ptsname(int fd) {
+  (void)fd;
+  errno = ENOSYS;
+  return NULL;
+}
+
 int setpriority(int which, id_t who, int prio) {
   (void)which;
   (void)who;
@@ -307,6 +325,12 @@ int sigaction(int signum, const struct sigaction *_Nullable restrict act,
 long sysconf(int name) { return -1; }
 
 clock_t times(struct tms *buf) { return -1; }
+
+int unlockpt(int fd) {
+  (void)fd;
+  errno = ENOSYS;
+  return -1;
+}
 
 int wait(int *status) {
   errno = ECHILD;
