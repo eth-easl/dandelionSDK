@@ -7,7 +7,7 @@ extern "C" {
 
 /* Linux utsname fields are 65 bytes:
  * https://man7.org/linux/man-pages/man2/uname.2.html
- * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/utsname.h.html
+ * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/utsname.h/
  * Dandelion SDK sets UTSNAME_FIELD_SIZE in the top-level CMakeLists.txt defaults.
  */
 struct utsname {
