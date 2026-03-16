@@ -886,6 +886,20 @@ index 98f5addb..046cb91b 100644
  int	mknod (const char *__path, mode_t __mode, dev_t __dev );
  #endif
  
+diff --git a/newlib/libc/include/tgmath.h b/newlib/libc/include/tgmath.h
+index 97dc50ea..131e2d6d 100644
+--- a/newlib/libc/include/tgmath.h
++++ b/newlib/libc/include/tgmath.h
+@@ -162,9 +162,7 @@
+ #define	nearbyint(__x)		__tg_simple(__x, nearbyint)
+ #define	nextafter(__x, __y)	__tg_simple2(__x, __y, nextafter)
+ /* not yet implemented even for _LDBL_EQ_DBL platforms */
+-#ifdef __CYGWIN__
+ #define	nexttoward(__x, __y)	__tg_simplev(__x, nexttoward, __x, __y)
+-#endif
+ #define	remainder(__x, __y)	__tg_simple2(__x, __y, remainder)
+ #define	remquo(__x, __y, __z)	__tg_impl_simple(__x, __x, __y, remquo, remquof,	\
+ 						 remquol, __x, __y, __z)
 diff --git a/newlib/libc/include/time.h b/newlib/libc/include/time.h
 index ed6cc70f..da618c88 100644
 --- a/newlib/libc/include/time.h
@@ -933,3 +947,140 @@ index 24d8407d..c2298733 100644
  if HAVE_LIBC_SYS_A29KHIF_DIR
  include %D%/a29khif/Makefile.inc
  endif
+diff --git a/newlib/libm/ld/s_nextafterl.c b/newlib/libm/ld/s_nextafterl.c
+index 9c61a436..b0d8154c 100644
+--- a/newlib/libm/ld/s_nextafterl.c
++++ b/newlib/libm/ld/s_nextafterl.c
+@@ -21,6 +21,7 @@ __FBSDID("$FreeBSD$");
+  */
+ 
+ #include <float.h>
++#include <errno.h>
+ 
+ #include "fpmath.h"
+ #include "math.h"
+@@ -77,4 +78,11 @@ nextafterl(long double x, long double y)
+ 	return ux.e;
+ }
+ 
+-__strong_reference(nextafterl, nexttowardl);
++long double
++nexttowardl(long double x, long double y)
++{
++	(void)x;
++	(void)y;
++	errno = ENOSYS;
++	return (long double)NAN;
++}
+diff --git a/newlib/libm/ld/s_nexttoward.c b/newlib/libm/ld/s_nexttoward.c
+index b2a50d31..5e66d903 100644
+--- a/newlib/libm/ld/s_nexttoward.c
++++ b/newlib/libm/ld/s_nexttoward.c
+@@ -20,6 +20,7 @@ __FBSDID("$FreeBSD$");
+  */
+ 
+ #include <float.h>
++#include <errno.h>
+ 
+ #include "fpmath.h"
+ #include "math.h"
+@@ -32,41 +33,8 @@ __FBSDID("$FreeBSD$");
+ double
+ nexttoward(double x, long double y)
+ {
+-	union IEEEl2bits uy;
+-	volatile double t;
+-	int32_t hx,ix;
+-	u_int32_t lx;
+-
+-	EXTRACT_WORDS(hx,lx,x);
+-	ix = hx&0x7fffffff;		/* |x| */
+-	uy.e = y;
+-
+-	if(((ix>=0x7ff00000)&&((ix-0x7ff00000)|lx)!=0) ||
+-	    (uy.bits.exp == 0x7fff &&
+-	     ((uy.bits.manh&~LDBL_NBIT)|uy.bits.manl) != 0))
+-	   return x+y;	/* x or y is nan */
+-	if(x==y) return (double)y;		/* x=y, return y */
+-	if(x==0.0) {
+-	    INSERT_WORDS(x,uy.bits.sign<<31,1);	/* return +-minsubnormal */
+-	    t = x*x;
+-	    if(t==x) return t; else return x;	/* raise underflow flag */
+-	}
+-	if(hx>0.0 ^ x < y) {			/* x -= ulp */
+-	    if(lx==0) hx -= 1;
+-	    lx -= 1;
+-	} else {				/* x += ulp */
+-	    lx += 1;
+-	    if(lx==0) hx += 1;
+-	}
+-	ix = hx&0x7ff00000;
+-	if(ix>=0x7ff00000) return x+x;	/* overflow  */
+-	if(ix<0x00100000) {		/* underflow */
+-	    t = x*x;
+-	    if(t!=x) {		/* raise underflow flag */
+-	        INSERT_WORDS(x,hx,lx);
+-		return x;
+-	    }
+-	}
+-	INSERT_WORDS(x,hx,lx);
+-	return x;
++	(void)x;
++	(void)y;
++	errno = ENOSYS;
++	return NAN;
+ }
+diff --git a/newlib/libm/ld/s_nexttowardf.c b/newlib/libm/ld/s_nexttowardf.c
+index 9ddfff96..5a47a065 100644
+--- a/newlib/libm/ld/s_nexttowardf.c
++++ b/newlib/libm/ld/s_nexttowardf.c
+@@ -13,6 +13,7 @@
+ __FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
++#include <errno.h>
+ 
+ #include "fpmath.h"
+ #include "math.h"
+@@ -23,37 +24,8 @@ __FBSDID("$FreeBSD$");
+ float
+ nexttowardf(float x, long double y)
+ {
+-	union IEEEl2bits uy;
+-	volatile float t;
+-	int32_t hx,ix;
+-
+-	GET_FLOAT_WORD(hx,x);
+-	ix = hx&0x7fffffff;		/* |x| */
+-	uy.e = y;
+-
+-	if((ix>0x7f800000) ||
+-	   (uy.bits.exp == LDBL_INFNAN_EXP &&
+-	    ((uy.bits.manh&~LDBL_NBIT)|uy.bits.manl) != 0))
+-	   return x+y;	/* x or y is nan */
+-	if(x==y) return (float)y;		/* x=y, return y */
+-	if(ix==0) {				/* x == 0 */
+-	    SET_FLOAT_WORD(x,(uy.bits.sign<<31)|1);/* return +-minsubnormal */
+-	    t = x*x;
+-	    if(t==x) return t; else return x;	/* raise underflow flag */
+-	}
+-	if(hx>=0 ^ x < y)			/* x -= ulp */
+-	    hx -= 1;
+-	else					/* x += ulp */
+-	    hx += 1;
+-	ix = hx&0x7f800000;
+-	if(ix>=0x7f800000) return x+x;	/* overflow  */
+-	if(ix<0x00800000) {		/* underflow */
+-	    t = x*x;
+-	    if(t!=x) {		/* raise underflow flag */
+-	        SET_FLOAT_WORD(x,hx);
+-		return x;
+-	    }
+-	}
+-	SET_FLOAT_WORD(x,hx);
+-	return x;
++	(void)x;
++	(void)y;
++	errno = ENOSYS;
++	return NAN;
+ }
