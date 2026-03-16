@@ -6,6 +6,7 @@
 #define _POSIX_MONOTONIC_CLOCK
 #define __GNU_VISIBLE 0
 #include <errno.h>
+#include <sys/reent.h>
 #include <time.h>
 #undef errno
 extern int errno;
@@ -25,6 +26,24 @@ extern int errno;
 #error "Unsupported architecture"
 #endif
 
+static int dandelion_getdate_err;
+
+int *__getdate_err(void) { return &dandelion_getdate_err; }
+
+struct tm *getdate(const char *string) {
+  (void)string;
+  dandelion_getdate_err = 0;
+  errno = ENOSYS;
+  return NULL;
+}
+
+int getdate_r(const char *string, struct tm *result) {
+  (void)string;
+  (void)result;
+  dandelion_getdate_err = 0;
+  errno = ENOSYS;
+  return -1;
+}
 
 int clock_settime(clockid_t clock_id, const struct timespec *tp) {
   errno = EINVAL;
