@@ -194,28 +194,6 @@ index 893f1083..fd044002 100644
  #ifndef PATH_MAX
  #define PATH_MAX	4096
  #endif
-
-diff --git a/newlib/libc/include/search.h b/newlib/libc/include/search.h
-index 8e1061dd..9595223c 100644
---- a/newlib/libc/include/search.h
-+++ b/newlib/libc/include/search.h
-@@ -51,11 +51,15 @@ __BEGIN_DECLS
- int	 hcreate(size_t);
- void	 hdestroy(void);
- ENTRY	*hsearch(ENTRY, ACTION);
-+void	 insque(void *, void *);
-+void	*lfind(const void *, const void *, size_t *, size_t, __compar_fn_t);
-+void	*lsearch(const void *, void *, size_t *, size_t, __compar_fn_t);
- int	 hcreate_r(size_t, struct hsearch_data *);
- void	 hdestroy_r(struct hsearch_data *);
- int	hsearch_r(ENTRY, ACTION, ENTRY **, struct hsearch_data *);
- void	*tdelete(const void *__restrict, void **__restrict, __compar_fn_t);
- void	tdestroy (void *, void (*)(void *));
--void	*tfind(const void *, void **, __compar_fn_t);
-+void	*tfind(const void *, void *const *, __compar_fn_t);
- void	*tsearch(const void *, void **, __compar_fn_t);
- void      twalk(const void *, void (*)(const void *, VISIT, int));
-+void	 remque(void *);
 +
 +#if __POSIX_VISIBLE >= 2
 +/* POSIX utility limit values:
@@ -498,6 +476,28 @@ index fa3e2687..c260aeb4 100644
  
  /* types */
  typedef off_t regoff_t;
+diff --git a/newlib/libc/include/search.h b/newlib/libc/include/search.h
+index ed321b0f..a6d84028 100644
+--- a/newlib/libc/include/search.h
++++ b/newlib/libc/include/search.h
+@@ -51,6 +51,9 @@ __BEGIN_DECLS
+ int	 hcreate(size_t);
+ void	 hdestroy(void);
+ ENTRY	*hsearch(ENTRY, ACTION);
++void	 insque(void *, void *);
++void	*lfind(const void *, const void *, size_t *, size_t, __compar_fn_t);
++void	*lsearch(const void *, void *, size_t *, size_t, __compar_fn_t);
+ int	 hcreate_r(size_t, struct hsearch_data *);
+ void	 hdestroy_r(struct hsearch_data *);
+ int	hsearch_r(ENTRY, ACTION, ENTRY **, struct hsearch_data *);
+@@ -59,6 +62,7 @@ void	tdestroy (void *, void (*)(void *));
+ void	*tfind(const void *, void **, __compar_fn_t);
+ void	*tsearch(const void *, void **, __compar_fn_t);
+ void      twalk(const void *, void (*)(const void *, VISIT, int));
++void	 remque(void *);
+ __END_DECLS
+ 
+ #endif /* !_SEARCH_H_ */
 diff --git a/newlib/libc/include/stdio.h b/newlib/libc/include/stdio.h
 index 77966578..248a39ff 100644
 --- a/newlib/libc/include/stdio.h
@@ -619,10 +619,10 @@ index 98f5addb..046cb91b 100644
  #endif
  
 diff --git a/newlib/libc/include/time.h b/newlib/libc/include/time.h
-index ed6cc70f..da618c88 100644
+index ed6cc70f..447ae937 100644
 --- a/newlib/libc/include/time.h
 +++ b/newlib/libc/include/time.h
-@@ -104,7 +104,8 @@ void      _tzset_r 	(struct _reent *);
+@@ -104,7 +104,7 @@ void      _tzset_r 	(struct _reent *);
  
  /* getdate functions */
  
@@ -631,7 +631,7 @@ index ed6cc70f..da618c88 100644
  #if __XSI_VISIBLE >= 4
  #ifndef _REENT_ONLY
  #define getdate_err (*__getdate_err())
-@@ -127,12 +128,17 @@ struct tm *	getdate (const char *);
+@@ -127,12 +127,18 @@ struct tm *	getdate (const char *);
  /* getdate_r returns the error code as above */
  int		getdate_r (const char *, struct tm *);
  #endif /* __GNU_VISIBLE */
@@ -651,7 +651,7 @@ index ed6cc70f..da618c88 100644
  #endif
  #if __POSIX_VISIBLE
  extern __IMPORT char *_tzname[2];
-@@ -310,4 +314,3 @@ int clock_getenable_attr (clockid_t clock_id, int *attr);
+@@ -310,4 +316,3 @@ int clock_getenable_attr (clockid_t clock_id, int *attr);
  #endif
  
  #endif /* _TIME_H_ */
