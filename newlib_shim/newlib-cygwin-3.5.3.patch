@@ -430,10 +430,29 @@ index 893f1083..fd044002 100644
 +#endif
 +#endif
 diff --git a/newlib/libc/include/pthread.h b/newlib/libc/include/pthread.h
-index c99ad395..10911263 100644
+index c99ad395..ba50c700 100644
 --- a/newlib/libc/include/pthread.h
 +++ b/newlib/libc/include/pthread.h
-@@ -235,18 +235,18 @@ int	pthread_attr_setguardsize (pthread_attr_t *__attr, size_t __guardsize);
+@@ -57,6 +57,10 @@ int	pthread_mutexattr_setpshared (pthread_mutexattr_t *__attr,
+ 
+ int pthread_mutexattr_gettype (const pthread_mutexattr_t *__attr, int *__kind);
+ int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind);
++int pthread_mutexattr_getrobust (const pthread_mutexattr_t *__attr,
++				 int *__robustness);
++int pthread_mutexattr_setrobust (pthread_mutexattr_t *__attr,
++				 int __robustness);
+ 
+ #endif
+ 
+@@ -79,6 +83,7 @@ int	pthread_mutex_destroy (pthread_mutex_t *__mutex);
+ int	pthread_mutex_lock (pthread_mutex_t *__mutex);
+ int	pthread_mutex_trylock (pthread_mutex_t *__mutex);
+ int	pthread_mutex_unlock (pthread_mutex_t *__mutex);
++int	pthread_mutex_consistent (pthread_mutex_t *__mutex);
+ 
+ #if defined(_POSIX_TIMEOUTS)
+ 
+@@ -235,18 +240,18 @@ int	pthread_attr_setguardsize (pthread_attr_t *__attr, size_t __guardsize);
   */
  #if __GNU_VISIBLE
  #if defined(__rtems__) 
@@ -572,6 +591,23 @@ index ce721fa2..3677ccdc 100644
  	short	l_xxx;		/* reserved for future use */
  };
  #endif /* __CYGWIN__ */
+diff --git a/newlib/libc/include/sys/_pthreadtypes.h b/newlib/libc/include/sys/_pthreadtypes.h
+index 75e9e1cb..8253f4e2 100644
+--- a/newlib/libc/include/sys/_pthreadtypes.h
++++ b/newlib/libc/include/sys/_pthreadtypes.h
+@@ -189,6 +189,12 @@ typedef struct {
+ 
+ typedef __uint32_t pthread_key_t;        /* thread-specific data keys */
+ 
++/* Linux/glibc public values inferred from the zero-based enum order in
++   pthread.h:
++   https://sources.debian.org/src/glibc/2.41-12/sysdeps/nptl/pthread.h/ */
++#define PTHREAD_MUTEX_STALLED 0
++#define PTHREAD_MUTEX_ROBUST  1
++
+ typedef struct {
+   int   is_initialized;  /* is this structure initialized? */
+   int   init_executed;   /* has the initialization routine been run? */
 diff --git a/newlib/libc/include/sys/resource.h b/newlib/libc/include/sys/resource.h
 index c0a0d201..5fab350f 100644
 --- a/newlib/libc/include/sys/resource.h

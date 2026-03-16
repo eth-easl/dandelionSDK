@@ -21,6 +21,15 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t *restrict attr,
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type) {
   return EINVAL;
 }
+int pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
+                                int *restrict robust) {
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust) {
+  errno = ENOSYS;
+  return ENOSYS;
+}
 
 int pthread_mutex_init(pthread_mutex_t *restrict mutex,
                        const pthread_mutexattr_t *restrict attr) {
@@ -71,6 +80,10 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
     return EPERM;
   *mutex |= LOCKED;
   return 0;
+}
+int pthread_mutex_consistent(pthread_mutex_t *mutex) {
+  errno = ENOSYS;
+  return ENOSYS;
 }
 
 int pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,
