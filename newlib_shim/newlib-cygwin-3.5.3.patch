@@ -498,6 +498,43 @@ index ed321b0f..a6d84028 100644
  __END_DECLS
  
  #endif /* !_SEARCH_H_ */
+diff --git a/newlib/libc/include/signal.h b/newlib/libc/include/signal.h
+index 23a9863e..f6946902 100644
+--- a/newlib/libc/include/signal.h
++++ b/newlib/libc/include/signal.h
+@@ -18,6 +18,11 @@ typedef _sig_func_ptr sighandler_t;	/* glibc naming */
+ #define SIG_DFL ((_sig_func_ptr)0)	/* Default action */
+ #define SIG_IGN ((_sig_func_ptr)1)	/* Ignore action */
+ #define SIG_ERR ((_sig_func_ptr)-1)	/* Error return */
++#if __XSI_VISIBLE >= 4
++/* glibc signal.h exposes SIG_HOLD as ((__sighandler_t) 2):
++   https://sources.debian.org/src/glibc/2.41-12/signal/signal.h/ */
++#define SIG_HOLD ((_sig_func_ptr)2)	/* Hold signal */
++#endif
+ 
+ struct _reent;
+ 
+@@ -28,6 +33,20 @@ int	_raise_r (struct _reent *, int);
+ _sig_func_ptr signal (int, _sig_func_ptr);
+ int	raise (int);
+ void	psignal (int, const char *);
++#if __POSIX_VISIBLE >= 200809
++/* POSIX Issue 7 declares psiginfo():
++   https://man7.org/linux/man-pages/man0/signal.h.0p.html */
++void	psiginfo (const siginfo_t *, const char *);
++#endif
++#if __XSI_VISIBLE >= 4
++/* glibc signal.h exposes these XSI signal APIs:
++   https://sources.debian.org/src/glibc/2.41-12/signal/signal.h/ */
++int	sighold (int);
++int	sigignore (int);
++int	siginterrupt (int, int);
++int	sigrelse (int);
++_sig_func_ptr sigset (int, _sig_func_ptr);
++#endif
+ #endif
+ 
+ _END_STD_C
 diff --git a/newlib/libc/include/stdio.h b/newlib/libc/include/stdio.h
 index 77966578..248a39ff 100644
 --- a/newlib/libc/include/stdio.h
@@ -602,6 +639,201 @@ index c0a0d201..5fab350f 100644
  #endif
  #endif /* !_SYS_RESOURCE_H_ */
 -
+diff --git a/newlib/libc/include/sys/signal.h b/newlib/libc/include/sys/signal.h
+index 96bf9781..473a33da 100644
+--- a/newlib/libc/include/sys/signal.h
++++ b/newlib/libc/include/sys/signal.h
+@@ -19,6 +19,8 @@ extern "C" {
+ typedef	__sigset_t	sigset_t;
+ #endif
+ 
++typedef void (*_sig_func_ptr)(int);
++
+ #if defined(__CYGWIN__)
+ #include <cygwin/signal.h>
+ #else
+@@ -69,19 +71,70 @@ struct sigevent {
+ typedef struct {
+   int          si_signo;    /* Signal number */
+   int          si_code;     /* Cause of the signal */
++  /* Linux/glibc siginfo_t exposes these common members:
++     https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/types/siginfo_t.h/ */
++  int          si_errno;    /* Error number */
++  pid_t        si_pid;      /* Sending process ID */
++  uid_t        si_uid;      /* Real user ID of sending process */
++  void        *si_addr;     /* Faulting instruction/memory reference */
++  int          si_status;   /* Exit value or signal */
+   union sigval si_value;    /* Signal value */
+ } siginfo_t;
++
++/* Linux asm-generic siginfo codes:
++   https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/siginfo.h */
++#define ILL_ILLOPC	1
++#define ILL_ILLOPN	2
++#define ILL_ILLADR	3
++#define ILL_ILLTRP	4
++#define ILL_PRVOPC	5
++#define ILL_PRVREG	6
++#define ILL_COPROC	7
++#define ILL_BADSTK	8
++
++#define FPE_INTDIV	1
++#define FPE_INTOVF	2
++#define FPE_FLTDIV	3
++#define FPE_FLTOVF	4
++#define FPE_FLTUND	5
++#define FPE_FLTRES	6
++#define FPE_FLTINV	7
++#define FPE_FLTSUB	8
++
++#define SEGV_MAPERR	1
++#define SEGV_ACCERR	2
++
++#define BUS_ADRALN	1
++#define BUS_ADRERR	2
++#define BUS_OBJERR	3
++
++#define TRAP_BRKPT	1
++#define TRAP_TRACE	2
++
++#define CLD_EXITED	1
++#define CLD_KILLED	2
++#define CLD_DUMPED	3
++#define CLD_TRAPPED	4
++#define CLD_STOPPED	5
++#define CLD_CONTINUED	6
+ #endif /* defined(_POSIX_REALTIME_SIGNALS) || __POSIX_VISIBLE >= 199309 */
+ 
+ #if defined(__rtems__)
+ 
+ /*  3.3.8 Synchronously Accept a Signal, P1003.1b-1993, p. 76 */
+ 
+-#define SA_NOCLDSTOP 0x1   /* Do not generate SIGCHLD when children stop */
+-#define SA_SIGINFO   0x2   /* Invoke the signal catching function with */
+-                           /*   three arguments instead of one. */
++/* Linux asm-generic signal flag values:
++   https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal-defs.h */
++#define SA_NOCLDSTOP 0x00000001
++#define SA_NOCLDWAIT 0x00000002
++#define SA_SIGINFO   0x00000004
+ #if __BSD_VISIBLE || __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
+-#define SA_ONSTACK   0x4   /* Signal delivery will be on a separate stack. */
++#define SA_ONSTACK   0x08000000
++#endif
++#if __XSI_VISIBLE >= 4
++#define SA_RESTART   0x10000000
++#define SA_NODEFER   0x40000000
++#define SA_RESETHAND 0x80000000
+ #endif
+ 
+ /* struct sigaction notes from POSIX:
+@@ -93,8 +146,6 @@ typedef struct {
+  *      application should not use both simultaneously.
+  */
+ 
+-typedef void (*_sig_func_ptr)(int);
+-
+ struct sigaction {
+   int         sa_flags;       /* Special flags to affect behavior of signal */
+   sigset_t    sa_mask;        /* Additional set of signals to be blocked */
+@@ -115,9 +166,19 @@ struct sigaction {
+ 
+ #else /* defined(__rtems__) */
+ 
+-#define SA_NOCLDSTOP 1  /* only value supported now for sa_flags */
+-
+-typedef void (*_sig_func_ptr)(int);
++/* Linux asm-generic signal flag values:
++   https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal-defs.h */
++#define SA_NOCLDSTOP 0x00000001
++#define SA_NOCLDWAIT 0x00000002
++#define SA_SIGINFO   0x00000004
++#if __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++#define SA_ONSTACK   0x08000000
++#endif
++#if __XSI_VISIBLE >= 4
++#define SA_RESTART   0x10000000
++#define SA_NODEFER   0x40000000
++#define SA_RESETHAND 0x80000000
++#endif
+ 
+ struct sigaction 
+ {
+@@ -157,6 +218,22 @@ typedef struct sigaltstack {
+   size_t    ss_size;  /* Stack size.  */
+ } stack_t;
+ 
++#if __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++/* glibc ucontext.h exposes these outer type names and ucontext_t fields:
++   https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/x86/sys/ucontext.h/
++   Dandelion keeps mcontext_t intentionally opaque here for compile compatibility. */
++typedef struct __mcontext {
++  int __mc_placeholder;
++} mcontext_t;
++
++typedef struct __ucontext {
++  struct __ucontext *uc_link;
++  sigset_t uc_sigmask;
++  stack_t uc_stack;
++  mcontext_t uc_mcontext;
++} ucontext_t;
++#endif
++
+ #if __POSIX_VISIBLE
+ #define SIG_SETMASK 0	/* set mask with sigprocmask() */
+ #define SIG_BLOCK 1	/* set of signals to block */
+@@ -318,20 +395,51 @@ int str2sig(const char *__restrict, int *__restrict);
+ #define	SIGTTOU	22	/* like TTIN for output if (tp->t_local&LTOSTOP) */
+ #define	SIGIO	23	/* input/output possible signal */
+ #define	SIGPOLL	SIGIO	/* System V name for SIGIO */
++#if __XSI_VISIBLE >= 4
++/* Linux signal number assignments for these XSI names:
++   https://man7.org/linux/man-pages/man7/signal.7.html */
++#define	SIGXCPU	24	/* exceeded CPU time limit */
++#define	SIGXFSZ	25	/* exceeded file size limit */
++#define	SIGVTALRM 26	/* virtual time alarm */
++#define	SIGPROF	27	/* profiling time alarm */
++#define	SIGWINCH 28	/* window changed */
++#define	SIGUSR1 10	/* user defined signal 1 */
++#define	SIGUSR2 12	/* user defined signal 2 */
++#else
+ #define	SIGWINCH 24	/* window changed */
+ #define	SIGUSR1 25	/* user defined signal 1 */
+ #define	SIGUSR2 26	/* user defined signal 2 */
++#endif
+ 
+ /* Real-Time Signals Range, P1003.1b-1993, p. 61
+    NOTE: By P1003.1b-1993, this should be at least RTSIG_MAX
+          (which is a minimum of 8) signals.
+  */
++#if __XSI_VISIBLE >= 4
++/* Linux kernel asm-generic signal.h defines SIGRTMIN as 32 and SIGRTMAX as
++   _NSIG, with _NSIG equal to 64:
++   https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal.h
++   signal(7) likewise documents the Linux kernel real-time signal range as
++   32 to 64:
++   https://man7.org/linux/man-pages/man7/signal.7.html */
++#define SIGRTMIN 32
++#define SIGRTMAX 64
++#else
+ #define SIGRTMIN 27
+ #define SIGRTMAX 31
++#endif
+ #define __SIGFIRSTNOTRT SIGHUP
+ #define __SIGLASTNOTRT  SIGUSR2
+ 
++#if __XSI_VISIBLE >= 4
++/* glibc signal.h exposes NSIG as _NSIG, and Linux asm-generic signal.h sets
++   _NSIG to 64:
++   https://sources.debian.org/src/glibc/2.31-13%2Bdeb11u5/signal/signal.h
++   https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal.h */
++#define NSIG	64      /* signal 0 implied */
++#else
+ #define NSIG	32      /* signal 0 implied */
++#endif
+ 
+ #elif defined(__svr4__)
+ /* svr4 specifics. different signals above 15, and sigaction. */
 diff --git a/newlib/libc/include/sys/stat.h b/newlib/libc/include/sys/stat.h
 index 98f5addb..046cb91b 100644
 --- a/newlib/libc/include/sys/stat.h

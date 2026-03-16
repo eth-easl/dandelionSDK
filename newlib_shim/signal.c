@@ -34,6 +34,12 @@ int sigrelse(int sig) {
   return -1;
 }
 
+int raise(int sig) {
+  (void)sig;
+  errno = ENOSYS;
+  return -1;
+}
+
 _sig_func_ptr sigset(int sig, _sig_func_ptr disp) {
   (void)sig;
   (void)disp;
