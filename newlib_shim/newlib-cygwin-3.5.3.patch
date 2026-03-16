@@ -187,7 +187,7 @@ index 7a300e69..5000fc40 100644
  #define	GLOB_ABEND	(-2)	/* Unignored error. */
  
 diff --git a/newlib/libc/include/limits.h b/newlib/libc/include/limits.h
-index 893f1083..4695d8fc 100644
+index 893f1083..fd044002 100644
 --- a/newlib/libc/include/limits.h
 +++ b/newlib/libc/include/limits.h
 @@ -145,3 +145,238 @@
@@ -476,6 +476,21 @@ index fa3e2687..c260aeb4 100644
  
  /* types */
  typedef off_t regoff_t;
+diff --git a/newlib/libc/include/stdio.h b/newlib/libc/include/stdio.h
+index 77966578..248a39ff 100644
+--- a/newlib/libc/include/stdio.h
++++ b/newlib/libc/include/stdio.h
+@@ -381,8 +381,8 @@ int	dprintf (int, const char *__restrict, ...)
+                _ATTRIBUTE ((__format__ (__printf__, 2, 3)));
+ #  endif
+ FILE *	fmemopen (void *__restrict, size_t, const char *__restrict);
+-/* getdelim - see __getdelim for now */
+-/* getline - see __getline for now */
++ssize_t	getdelim (char **__restrict, size_t *__restrict, int, FILE *__restrict);
++ssize_t	getline (char **__restrict, size_t *__restrict, FILE *__restrict);
+ FILE *	open_memstream (char **, size_t *);
+ int	vdprintf (int, const char *__restrict, __VALIST)
+                _ATTRIBUTE ((__format__ (__printf__, 2, 0)));
 diff --git a/newlib/libc/include/sys/_default_fcntl.h b/newlib/libc/include/sys/_default_fcntl.h
 index ce721fa2..3677ccdc 100644
 --- a/newlib/libc/include/sys/_default_fcntl.h
