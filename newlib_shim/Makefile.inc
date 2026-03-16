@@ -5,4 +5,5 @@ libc_a_SOURCES += \
     %D%/shim.c \
     %D%/stdio.c \
     %D%/time.c \
+    %D%/wait.c \
     %D%/unistd.c

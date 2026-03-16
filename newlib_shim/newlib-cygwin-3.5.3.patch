@@ -886,6 +886,46 @@ index 98f5addb..046cb91b 100644
  int	mknod (const char *__path, mode_t __mode, dev_t __dev );
  #endif
  
+diff --git a/newlib/libc/include/sys/wait.h b/newlib/libc/include/sys/wait.h
+index d15eec9c..1a3e5317 100644
+--- a/newlib/libc/include/sys/wait.h
++++ b/newlib/libc/include/sys/wait.h
+@@ -26,9 +26,35 @@ extern "C" {
+ #define WTERMSIG(w)	((w) & 0x7f)
+ #define WSTOPSIG	WEXITSTATUS
+ 
++#if __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++#include <signal.h>
++
++/* Linux/glibc wait option values and WIFCONTINUED encoding:
++   https://sources.debian.org/src/glibc/2.31-13%2Bdeb11u6/sysdeps/unix/sysv/linux/bits/waitflags.h/
++   https://sources.debian.org/src/glibc/2.31-13%2Bdeb11u6/bits/waitstatus.h/ */
++#define WSTOPPED 2
++#define WEXITED 4
++#define WCONTINUED 8
++#define WNOWAIT 0x01000000
++#define WIFCONTINUED(w) ((w) == 0xffff)
++
++/* POSIX waitid() idtype_t values and Linux/glibc enum layout:
++   https://man7.org/linux/man-pages/man2/waitpid.2.html
++   https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/types/idtype_t.h/ */
++typedef enum {
++  P_ALL,
++  P_PID,
++  P_PGID
++} idtype_t;
++#endif
++
+ pid_t wait (int *);
+ pid_t waitpid (pid_t, int *, int);
+ 
++#if __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++int waitid (idtype_t, id_t, siginfo_t *, int);
++#endif
++
+ #ifdef _LIBC
+ pid_t _wait (int *);
+ #endif
 diff --git a/newlib/libc/include/tgmath.h b/newlib/libc/include/tgmath.h
 index 97dc50ea..131e2d6d 100644
 --- a/newlib/libc/include/tgmath.h

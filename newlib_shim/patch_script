@@ -24,6 +24,7 @@ cp $THIS_DIR/search.c $1/newlib/libc/sys/dandelion/search.c
 cp $THIS_DIR/signal.c $1/newlib/libc/sys/dandelion/signal.c
 cp $THIS_DIR/stdio.c $1/newlib/libc/sys/dandelion/stdio.c
 cp $THIS_DIR/time.c $1/newlib/libc/sys/dandelion/time.c
+cp $THIS_DIR/wait.c $1/newlib/libc/sys/dandelion/wait.c
 cp $THIS_DIR/unistd.c $1/newlib/libc/sys/dandelion/unistd.c
 cp $THIS_DIR/../include/dandelion/crt.h $1/newlib/libc/sys/dandelion/crt.h
 cd $1
