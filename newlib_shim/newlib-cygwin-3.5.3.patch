@@ -538,10 +538,10 @@ index fa3e2687..c260aeb4 100644
  /* types */
  typedef off_t regoff_t;
 diff --git a/newlib/libc/include/search.h b/newlib/libc/include/search.h
-index ed321b0f..a6d84028 100644
+index ed321b0f..3d0d2005 100644
 --- a/newlib/libc/include/search.h
 +++ b/newlib/libc/include/search.h
-@@ -51,6 +51,9 @@ __BEGIN_DECLS
+@@ -51,14 +51,18 @@ __BEGIN_DECLS
  int	 hcreate(size_t);
  void	 hdestroy(void);
  ENTRY	*hsearch(ENTRY, ACTION);
@@ -551,8 +551,10 @@ index ed321b0f..a6d84028 100644
  int	 hcreate_r(size_t, struct hsearch_data *);
  void	 hdestroy_r(struct hsearch_data *);
  int	hsearch_r(ENTRY, ACTION, ENTRY **, struct hsearch_data *);
-@@ -59,6 +62,7 @@ void	tdestroy (void *, void (*)(void *));
- void	*tfind(const void *, void **, __compar_fn_t);
+ void	*tdelete(const void *__restrict, void **__restrict, __compar_fn_t);
+ void	tdestroy (void *, void (*)(void *));
+-void	*tfind(const void *, void **, __compar_fn_t);
++void	*tfind(const void *, void *const *, __compar_fn_t);
  void	*tsearch(const void *, void **, __compar_fn_t);
  void      twalk(const void *, void (*)(const void *, VISIT, int));
 +void	 remque(void *);
@@ -1235,6 +1237,19 @@ index b16ec151..62986f65 100644
  __locale_mb_cur_max (void)
  {
  #ifdef __HAVE_LOCALE_INFO__
+diff --git a/newlib/libc/search/tfind.c b/newlib/libc/search/tfind.c
+index 670f41fc..fcf85d19 100644
+--- a/newlib/libc/search/tfind.c
++++ b/newlib/libc/search/tfind.c
+@@ -26,7 +26,7 @@ __RCSID("$NetBSD: tfind.c,v 1.2 1999/09/16 11:45:37 lukem Exp $");
+ /* find a node, or return 0 */
+ void *
+ tfind (const void *vkey,		/* key to be found */
+-	void **vrootp,		/* address of the tree root */
++	void *const *vrootp,		/* address of the tree root */
+ 	int (*compar)(const void *, const void *))
+ {
+ 	node_t **rootp = (node_t **)vrootp;
 diff --git a/newlib/libc/sys/Makefile.inc b/newlib/libc/sys/Makefile.inc
 index 24d8407d..c2298733 100644
 --- a/newlib/libc/sys/Makefile.inc
