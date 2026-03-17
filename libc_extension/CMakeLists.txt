@@ -18,6 +18,7 @@ configure_file(
 target_sources(${LIBC_EXTENSION}
     PRIVATE
     arpa_inet.c
+    setjmp.c
     aio.c
     dlfcn.c
     dirent.c
