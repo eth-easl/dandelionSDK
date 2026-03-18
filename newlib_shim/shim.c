@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <setjmp.h>
 #include <stdio.h>
 #include <sys/resource.h>
 #include <sys/signal.h>
@@ -210,6 +211,12 @@ int execve(const char *name, char *const argv[], char *const env[]) {
 }
 
 int fcntl(int fd, int op, ...) { return -1; }
+
+void siglongjmp(sigjmp_buf env, int val) {
+  (void)env;
+  fprintf(stderr, "Error: siglongjmp called.\n");
+  exit(val);
+}
 
 int posix_fadvise(int fd, off_t offset, off_t len, int advice) {
   (void)fd;
