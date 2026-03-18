@@ -1,6 +1,7 @@
 #include <malloc.h>
 #include <setjmp.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/resource.h>
 #include <sys/signal.h>
 #include <sys/stat.h>
@@ -214,6 +215,7 @@ int fcntl(int fd, int op, ...) { return -1; }
 
 void siglongjmp(sigjmp_buf env, int val) {
   (void)env;
+  (void)val;
   fprintf(stderr, "Error: siglongjmp called.\n");
   exit(val);
 }

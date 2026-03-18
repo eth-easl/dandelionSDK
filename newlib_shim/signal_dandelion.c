@@ -1,0 +1,96 @@
+#include <errno.h>
+#include <signal.h>
+#include <string.h>
+
+#undef errno
+#undef sigaddset
+#undef sigemptyset
+#undef sigismember
+extern int errno;
+
+void psiginfo(const siginfo_t *info, const char *message) {
+  (void)info;
+  (void)message;
+}
+
+int sighold(int sig) {
+  (void)sig;
+  errno = ENOSYS;
+  return -1;
+}
+
+int sigignore(int sig) {
+  (void)sig;
+  errno = ENOSYS;
+  return -1;
+}
+
+int siginterrupt(int sig, int flag) {
+  (void)sig;
+  (void)flag;
+  errno = ENOSYS;
+  return -1;
+}
+
+int sigrelse(int sig) {
+  (void)sig;
+  errno = ENOSYS;
+  return -1;
+}
+
+int raise(int sig) {
+  (void)sig;
+  errno = ENOSYS;
+  return -1;
+}
+
+_sig_func_ptr sigset(int sig, _sig_func_ptr disp) {
+  (void)sig;
+  (void)disp;
+  errno = ENOSYS;
+  return SIG_ERR;
+}
+
+int pthread_sigmask(int how, const sigset_t *restrict set,
+                    sigset_t *restrict oldset) {
+  (void)how;
+  (void)set;
+  if (oldset != NULL) {
+    memset(oldset, 0, sizeof(*oldset));
+  }
+  errno = ENOSYS;
+  return -1;
+}
+
+int sigaddset(sigset_t *set, int signo) {
+  (void)set;
+  (void)signo;
+  errno = ENOSYS;
+  return -1;
+}
+
+int sigemptyset(sigset_t *set) {
+  if (set != NULL) {
+    memset(set, 0, sizeof(*set));
+  }
+  errno = ENOSYS;
+  return -1;
+}
+
+int sigismember(const sigset_t *set, int signo) {
+  (void)set;
+  (void)signo;
+  errno = ENOSYS;
+  return -1;
+}
+
+int sigprocmask(int how, const sigset_t *restrict set,
+                sigset_t *restrict oldset) {
+  (void)how;
+  (void)set;
+  if (oldset != NULL) {
+    memset(oldset, 0, sizeof(*oldset));
+  }
+  errno = ENOSYS;
+  return -1;
+}
