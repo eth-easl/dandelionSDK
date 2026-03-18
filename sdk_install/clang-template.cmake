@@ -7,7 +7,7 @@
 -D__rtems__
 # prevent thread local storage in compilation, TODO: remove if we can provide TLS
 -D__thread=""
--D__TM_GMTOFF=tm_gmtoff
+-D__DANDELION__
 
 # compiler flags
 -fPIE
