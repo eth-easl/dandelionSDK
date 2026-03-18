@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <stdio.h>
 #include <sys/resource.h>
 #include <sys/signal.h>
 #include <sys/stat.h>
@@ -223,6 +224,25 @@ int posix_fallocate(int fd, off_t offset, off_t len) {
   (void)fd;
   (void)offset;
   (void)len;
+  errno = ENOSYS;
+  return -1;
+}
+
+ssize_t getdelim(char **restrict lineptr, size_t *restrict n, int delimiter,
+                 FILE *restrict stream) {
+  (void)lineptr;
+  (void)n;
+  (void)delimiter;
+  (void)stream;
+  errno = ENOSYS;
+  return -1;
+}
+
+ssize_t getline(char **restrict lineptr, size_t *restrict n,
+                FILE *restrict stream) {
+  (void)lineptr;
+  (void)n;
+  (void)stream;
   errno = ENOSYS;
   return -1;
 }
