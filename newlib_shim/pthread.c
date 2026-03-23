@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <pthread.h>
+#include <unistd.h>
 #undef errno
 extern int errno;
 
@@ -210,6 +211,13 @@ int pthread_cancel(pthread_t thread) {
   return ENOSYS;
 }
 
+int pthread_kill(pthread_t thread, int sig) {
+  (void)thread;
+  (void)sig;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
 int pthread_setcancelstate(int state, int *oldstate) {
   (void)state;
   if (oldstate != NULL) {
@@ -229,6 +237,12 @@ int pthread_setcanceltype(int type, int *oldtype) {
 }
 
 void pthread_testcancel(void) { errno = ENOSYS; }
+
+void pthread_exit(void *value_ptr) {
+  (void)value_ptr;
+  errno = ENOSYS;
+  _exit(1);
+}
 
 void _pthread_cleanup_push(struct _pthread_cleanup_context *context,
                            void (*routine)(void *), void *arg) {
