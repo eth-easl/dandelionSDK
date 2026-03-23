@@ -685,9 +685,27 @@ index fd89f5ba..dc5bc3de 100644
  char *	__itoa (int, char *, int);
  char *	__utoa (unsigned, char *, int);
 diff --git a/newlib/libc/include/sys/_default_fcntl.h b/newlib/libc/include/sys/_default_fcntl.h
-index ce721fa2..3677ccdc 100644
+index ce721fa2..87868abc 100644
 --- a/newlib/libc/include/sys/_default_fcntl.h
 +++ b/newlib/libc/include/sys/_default_fcntl.h
+@@ -23,7 +23,7 @@ extern "C" {
+ #define	_FNONBLOCK	0x4000	/* non blocking I/O (POSIX style) */
+ #define	_FNDELAY	_FNONBLOCK	/* non blocking I/O (4.2 style) */
+ #define	_FNOCTTY	0x8000	/* don't assign a ctty on this open */
+-#if defined (__CYGWIN__)
++#if defined (__CYGWIN__) || defined (__DANDELION__)
+ #define	_FBINARY	0x10000
+ #define	_FTEXT		0x20000
+ #endif
+@@ -32,7 +32,7 @@ extern "C" {
+ #define	_FNOFOLLOW	0x100000
+ #define	_FDIRECTORY	0x200000
+ #define	_FEXECSRCH	0x400000
+-#if defined (__CYGWIN__)
++#if defined (__CYGWIN__) || defined (__DANDELION__)
+ #define	_FTMPFILE	0x800000
+ #define	_FNOATIME	0x1000000
+ #define	_FPATH		0x2000000
 @@ -71,7 +71,7 @@ extern "C" {
  #define	O_DIRECT	_FDIRECT
  #endif
