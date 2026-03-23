@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <fnmatch.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -291,6 +292,14 @@ int getpid() { return 1; }
 pid_t getppid(void) {
   errno = ENOSYS;
   return 0;
+}
+
+int fnmatch(const char *pattern, const char *string, int flags) {
+  (void)pattern;
+  (void)string;
+  (void)flags;
+  errno = ENOSYS;
+  return FNM_NOMATCH;
 }
 
 pid_t waitpid(pid_t pid, int *status, int options) {
