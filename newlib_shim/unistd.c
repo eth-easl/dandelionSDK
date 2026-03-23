@@ -56,7 +56,12 @@ int euidaccess(const char *__path, int __mode) {
 // void	endusershell (void);
 
 // execve is defined in newlib
-// int     execl (const char *__path, const char *, ...);
+int execl(const char *__path, const char *arg, ...) {
+  (void)__path;
+  (void)arg;
+  *__errno() = ENOSYS;
+  return -1;
+}
 // int     execle (const char *__path, const char *, ...);
 // int     execlp (const char *__file, const char *, ...);
 // #if __MISC_VISIBLE
@@ -207,7 +212,10 @@ int usleep(useconds_t __useconds) { return 0; }
 // #endif
 
 // #if __BSD_VISIBLE || (__XSI_VISIBLE >= 4 && __POSIX_VISIBLE < 200809)
-// pid_t   vfork (void);
+pid_t vfork(void) {
+  *__errno() = ENOSYS;
+  return -1;
+}
 // #endif
 
 // #if __BSD_VISIBLE || __POSIX_VISIBLE < 200112
