@@ -295,6 +295,16 @@ pid_t getppid(void) {
   return 0;
 }
 
+gid_t getegid(void) {
+  errno = ENOSYS;
+  return 0;
+}
+
+uid_t geteuid(void) {
+  errno = ENOSYS;
+  return 0;
+}
+
 int fnmatch(const char *pattern, const char *string, int flags) {
   (void)pattern;
   (void)string;
@@ -325,6 +335,14 @@ int iconv_close(iconv_t cd) {
   (void)cd;
   errno = ENOSYS;
   return -1;
+}
+
+time_t time(time_t *timer) {
+  errno = ENOSYS;
+  if (timer != NULL) {
+    *timer = (time_t)-1;
+  }
+  return (time_t)-1;
 }
 
 pid_t waitpid(pid_t pid, int *status, int options) {
