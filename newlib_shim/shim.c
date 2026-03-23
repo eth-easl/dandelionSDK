@@ -1,6 +1,7 @@
 #include <malloc.h>
 #include <fnmatch.h>
 #include <iconv.h>
+#include <math.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -432,6 +433,29 @@ int utimensat(int dirfd, const char *pathname, const struct timespec times[2],
   (void)flags;
   errno = ENOSYS;
   return -1;
+}
+
+long double exp10l(long double x) {
+  (void)x;
+  errno = ENOSYS;
+  return NAN;
+}
+
+long double pow10l(long double x) {
+  (void)x;
+  errno = ENOSYS;
+  return NAN;
+}
+
+void sincosl(long double x, long double *sinx, long double *cosx) {
+  (void)x;
+  if (sinx != NULL) {
+    *sinx = NAN;
+  }
+  if (cosx != NULL) {
+    *cosx = NAN;
+  }
+  errno = ENOSYS;
 }
 
 pid_t waitpid(pid_t pid, int *status, int options) {

@@ -32,7 +32,12 @@ int chroot(const char *__path) {
 
 // char *  ctermid (char *__s); char *  cuserid (char *__s);
 
-// int	daemon (int nochdir, int noclose);
+int daemon(int nochdir, int noclose) {
+  (void)nochdir;
+  (void)noclose;
+  *__errno() = ENOSYS;
+  return -1;
+}
 
 // function to duplicate file descriptor to second file number
 // the filedescriptors should act as one, meaning if seek is called on one of
