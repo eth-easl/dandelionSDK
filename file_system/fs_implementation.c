@@ -7,8 +7,8 @@
 
 #include <stddef.h>
 
-extern D_File *fs_root;
-extern OpenFile *open_files;
+extern D_File fs_root;
+extern OpenFile open_files[];
 
 // Allocate new filesystem chunk, return NULL if ENOMEM;
 // round up allocation to next multiple of FS_CHUNK_SIZE
@@ -72,7 +72,7 @@ int dandelion_link(const char *old, const char *new_name) {
   Path new_path = path_from_string(new_name);
   Path new_file_name = get_file(new_path);
   Path new_file_dir = get_directories(new_path);
-  D_File *new_dir = create_directories(fs_root, new_file_dir, 0);
+  D_File *new_dir = create_directories(&fs_root, new_file_dir, 0);
   if (new_dir == NULL) {
     return -ENOTDIR;
   }
@@ -128,7 +128,7 @@ int dandelion_open(const char *name, int flags, uint32_t mode) {
     if (file_name.length >= FS_NAME_LENGTH) {
       return -EINVAL;
     }
-    D_File *parent = create_directories(fs_root, dir_path, 0);
+    D_File *parent = create_directories(&fs_root, dir_path, 0);
     if (parent == NULL) {
       return -ENOTDIR;
     }
@@ -157,7 +157,6 @@ int dandelion_open(const char *name, int flags, uint32_t mode) {
   if (open_error < 0)
     return open_error;
 
-  current->open_descripotors += 1;
   return file_descriptor;
 }
 
@@ -344,7 +343,11 @@ size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset,
   if (open_file->file == NULL || open_file->open_flags & O_WRONLY) {
     return -EBADF;
   }
-  if (open_file->file->type != FILE) {
+
+  if(open_file->file->type == DEVICE){
+    size_t result = open_file->file->device->read(ptr, len, offset, options);
+    return result;
+  } else if (open_file->file->type != FILE) {
     return -EINVAL;
   }
   // if len is 0, it is supposed to only check for these errors and return
@@ -424,7 +427,10 @@ size_t dandelion_write(int file, char *ptr, size_t len, int64_t offset,
   if (open_file->file == NULL || open_file->open_flags & O_RDONLY) {
     return -EBADF;
   }
-  if (open_file->file->type != FILE) {
+
+  if(open_file->file->type == DEVICE){
+    return open_file->file->device->write(ptr, len, offset, options);
+  } else if (open_file->file->type != FILE) {
     return -EINVAL;
   }
 
@@ -554,7 +560,7 @@ static inline int __dandelion_truncate(D_File *file, int64_t length) {
   if (length < 0)
     return -EINVAL;
   if (file->type != FILE)
-    return -EISDIR;
+    return -EBADF;
   int64_t remaining_size = length;
   FileChunk *current = file->content;
   // go to length, and cut off left over after that if there is any
@@ -623,7 +629,7 @@ int dandelion_opendir(const char *name, DIR *dir) {
 }
 
 int dandelion_closedir(DIR *dir) {
-  dir->dir -= 1;
+  dir->dir->open_descripotors -= 1;
   int err = free_data(dir->dir);
   return err;
 }

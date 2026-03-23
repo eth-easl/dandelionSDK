@@ -10,6 +10,17 @@ int main(){
   fs << "test print " << endl;
   fs.close();
 
+  std::fstream random;
+  random.open("/dev/urandom", std::fstream::in);
+  if(!random) {
+     cerr << "Failed to open /dev/urandom" << endl;
+    return -1;
+  }
+  int64_t random_number;
+  random.read((char*)&random_number,8);
+  cout << "Random number: " << random_number << endl;
+
+
   std::fstream in1;   
   string in_file_1 = "/in_a/input_1.txt";
   in1.open(in_file_1, std::fstream::in);
