@@ -67,7 +67,12 @@ int execl(const char *__path, const char *arg, ...) {
   *__errno() = ENOSYS;
   return -1;
 }
-// int     execle (const char *__path, const char *, ...);
+int execle(const char *__path, const char *arg, ...) {
+  (void)__path;
+  (void)arg;
+  *__errno() = ENOSYS;
+  return -1;
+}
 // int     execlp (const char *__file, const char *, ...);
 // #if __MISC_VISIBLE
 // int     execlpe (const char *__file, const char *, ...);
