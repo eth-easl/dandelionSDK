@@ -2,6 +2,8 @@
 #include <fnmatch.h>
 #include <iconv.h>
 #include <math.h>
+#include <pwd.h>
+#include <regex.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -352,6 +354,16 @@ int pclose(FILE *stream) {
   return -1;
 }
 
+void flockfile(FILE *stream) {
+  (void)stream;
+  errno = ENOSYS;
+}
+
+void funlockfile(FILE *stream) {
+  (void)stream;
+  errno = ENOSYS;
+}
+
 int posix_spawn_file_actions_init(posix_spawn_file_actions_t *file_actions) {
   (void)file_actions;
   errno = ENOSYS;
@@ -435,6 +447,54 @@ int utimensat(int dirfd, const char *pathname, const struct timespec times[2],
   return -1;
 }
 
+int getpwnam_r(const char *name, struct passwd *pwd, char *buffer, size_t buflen,
+               struct passwd **result) {
+  (void)name;
+  (void)pwd;
+  (void)buffer;
+  (void)buflen;
+  if (result != NULL) {
+    *result = NULL;
+  }
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int regcomp(regex_t *restrict preg, const char *restrict pattern, int cflags) {
+  (void)preg;
+  (void)pattern;
+  (void)cflags;
+  errno = ENOSYS;
+  return REG_BADPAT;
+}
+
+size_t regerror(int errcode, const regex_t *restrict preg,
+                char *restrict errbuf, size_t errbuf_size) {
+  (void)errcode;
+  (void)preg;
+  if (errbuf != NULL && errbuf_size != 0) {
+    errbuf[0] = '\0';
+  }
+  errno = ENOSYS;
+  return 0;
+}
+
+int regexec(const regex_t *restrict preg, const char *restrict string,
+            size_t nmatch, regmatch_t pmatch[restrict], int eflags) {
+  (void)preg;
+  (void)string;
+  (void)nmatch;
+  (void)pmatch;
+  (void)eflags;
+  errno = ENOSYS;
+  return REG_NOMATCH;
+}
+
+void regfree(regex_t *preg) {
+  (void)preg;
+  errno = ENOSYS;
+}
+
 long double exp10l(long double x) {
   (void)x;
   errno = ENOSYS;
@@ -456,6 +516,21 @@ void sincosl(long double x, long double *sinx, long double *cosx) {
     *cosx = NAN;
   }
   errno = ENOSYS;
+}
+
+long double __kernel_tanl(long double x, long double y, int iy) {
+  (void)x;
+  (void)y;
+  (void)iy;
+  errno = ENOSYS;
+  return NAN;
+}
+
+unsigned long __pleval(const char *expr, unsigned long n) {
+  (void)expr;
+  (void)n;
+  errno = ENOSYS;
+  return (unsigned long)-1;
 }
 
 pid_t waitpid(pid_t pid, int *status, int options) {
