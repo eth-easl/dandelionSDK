@@ -14,7 +14,8 @@ extern int errno;
 #if defined(__aarch64__)
   static uint64_t __rdtsc() {
     uint64_t t;
-    __asm volatile ("mrs %0, cntvct_el0"::"r"(thread_data));
+    __asm volatile ("mrs %0, cntvct_el0" : "=r"(t));
+    return t;
   }
 #elif defined(__x86_64__)
   static uint64_t __rdtsc() {
