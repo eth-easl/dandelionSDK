@@ -241,6 +241,14 @@ int symlink(const char *__name1, const char *__name2) {
   *__errno() = EPERM;
   return -1;
 }
+
+int mknod(const char *__path, mode_t __mode, dev_t __dev) {
+  (void)__path;
+  (void)__mode;
+  (void)__dev;
+  *__errno() = ENOSYS;
+  return -1;
+}
 // #endif
 // #if __ATFILE_VISIBLE
 // ssize_t        readlinkat (int __dirfd1, const char *__restrict __path,
