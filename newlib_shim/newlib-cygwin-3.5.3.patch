@@ -70,7 +70,7 @@ index 38618346..2fb422d5 100644
 +	sys_dir=dandelion
 +	have_crt0="no"
 +	have_init_fini="no"
-+	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES -fPIC"
++	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
 +	;;
    *-*-netware*)
  	signal_dir=
