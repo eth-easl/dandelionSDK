@@ -732,6 +732,21 @@ index 75e9e1cb..939d8f3c 100644
  typedef struct {
    int   is_initialized;  /* is this structure initialized? */
    int   init_executed;   /* has the initialization routine been run? */
+diff --git a/newlib/libc/include/sys/config.h b/newlib/libc/include/sys/config.h
+index 5dcc77a8..c327cc53 100644
+--- a/newlib/libc/include/sys/config.h
++++ b/newlib/libc/include/sys/config.h
+@@ -238,8 +238,8 @@
+ #include <cygwin/config.h>
+ #endif
+ 
+-#if defined(__rtems__)
+-#define __FILENAME_MAX__ 255
++#if defined(__rtems__) || defined(__DANDELION__)
++#define __FILENAME_MAX__ 64
+ #define _READ_WRITE_RETURN_TYPE _ssize_t
+ #define __DYNAMIC_REENT__
+ #endif
 diff --git a/newlib/libc/include/sys/features.h b/newlib/libc/include/sys/features.h
 index 6a925c87..a3281fad 100644
 --- a/newlib/libc/include/sys/features.h
