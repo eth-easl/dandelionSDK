@@ -733,7 +733,7 @@ index 75e9e1cb..939d8f3c 100644
    int   is_initialized;  /* is this structure initialized? */
    int   init_executed;   /* has the initialization routine been run? */
 diff --git a/newlib/libc/include/sys/features.h b/newlib/libc/include/sys/features.h
-index 6a925c87..61d00eed 100644
+index 6a925c87..a3281fad 100644
 --- a/newlib/libc/include/sys/features.h
 +++ b/newlib/libc/include/sys/features.h
 @@ -420,7 +420,7 @@ extern "C" {
@@ -745,7 +745,19 @@ index 6a925c87..61d00eed 100644
  
  #if __POSIX_VISIBLE >= 200809
  #define _POSIX_VERSION				200809L
-@@ -477,7 +477,10 @@ extern "C" {
+@@ -454,7 +454,10 @@ extern "C" {
+ #define _POSIX_IPV6				200809L
+ #define _POSIX_JOB_CONTROL			     1
+ #define _POSIX_MAPPED_FILES			200809L
+-/* #define _POSIX_MEMLOCK			    -1 */
++/* POSIX option values in this block follow the 2008 profile already exposed
++   for Dandelion in this header:
++   https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
++#define _POSIX_MEMLOCK			200809L
+ #define _POSIX_MEMLOCK_RANGE			200809L
+ #define _POSIX_MEMORY_PROTECTION		200809L
+ #define _POSIX_MESSAGE_PASSING			200809L
+@@ -477,7 +480,10 @@ extern "C" {
  #define _POSIX_THREAD_ATTR_STACKADDR		200809L
  #define _POSIX_THREAD_ATTR_STACKSIZE		200809L
  #define _POSIX_THREAD_CPUTIME			200809L
@@ -757,7 +769,7 @@ index 6a925c87..61d00eed 100644
  /* #define _POSIX_THREAD_PRIO_PROTECT		    -1 */
  #define _POSIX_THREAD_PRIORITY_SCHEDULING	200809L
  #define _POSIX_THREAD_PROCESS_SHARED		200809L
-@@ -486,6 +489,9 @@ extern "C" {
+@@ -486,6 +492,9 @@ extern "C" {
  #define _POSIX_THREADS				200809L
  #define _POSIX_TIMEOUTS				200809L
  #define _POSIX_TIMERS				200809L
@@ -767,7 +779,18 @@ index 6a925c87..61d00eed 100644
  /* #define _POSIX_TRACE				    -1 */
  /* #define _POSIX_TRACE_EVENT_FILTER		    -1 */
  /* #define _POSIX_TRACE_INHERIT			    -1 */
-@@ -549,7 +555,7 @@ extern "C" {
+@@ -538,7 +547,9 @@ extern "C" {
+ /* #define _XOPEN_REALTIME_THREADS		    -1 */
+ #define _XOPEN_SHM				     1
+ /* #define _XOPEN_STREAMS			    -1 */
+-/* #define _XOPEN_UNIX				    -1 */
++/* The Open Group Base Specs mark _XOPEN_UNIX as an XSI option indicator:
++   https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
++#define _XOPEN_UNIX				     1
+ #endif /* __XSI_VISIBLE */
+ 
+ /*
+@@ -549,7 +560,7 @@ extern "C" {
   */
  #define __STDC_ISO_10646__ 201806L
  
@@ -1117,6 +1140,21 @@ index 98f5addb..18887cd9 100644
  int	mknod (const char *__path, mode_t __mode, dev_t __dev );
  #endif
  
+diff --git a/newlib/libc/include/sys/unistd.h b/newlib/libc/include/sys/unistd.h
+index 00901540..b66976f7 100644
+--- a/newlib/libc/include/sys/unistd.h
++++ b/newlib/libc/include/sys/unistd.h
+@@ -530,8 +530,8 @@ int	unlinkat (int, const char *, int);
+  *  confstr values per IEEE Std 1003.1, 2004 Edition
+  */
+ 
+-/* Only defined on Cygwin and RTEMS for now. */
+-#if defined (__CYGWIN__) || defined(__rtems__)
++/* Only defined on Cygwin, RTEMS, and Dandelion for now. */
++#if defined (__CYGWIN__) || defined(__rtems__) || defined(__DANDELION__)
+ #define _CS_PATH                               0
+ #define _CS_POSIX_V7_ILP32_OFF32_CFLAGS        1
+ #define _CS_POSIX_V6_ILP32_OFF32_CFLAGS       _CS_POSIX_V7_ILP32_OFF32_CFLAGS
 diff --git a/newlib/libc/include/sys/wait.h b/newlib/libc/include/sys/wait.h
 index d15eec9c..1a3e5317 100644
 --- a/newlib/libc/include/sys/wait.h
