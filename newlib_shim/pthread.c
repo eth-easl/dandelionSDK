@@ -29,10 +29,27 @@ int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type) {
 }
 int pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
                                 int *restrict robust) {
+  (void)attr;
+  (void)robust;
   errno = ENOSYS;
   return ENOSYS;
 }
 int pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust) {
+  (void)attr;
+  (void)robust;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *restrict attr,
+                                  int *restrict protocol) {
+  (void)attr;
+  (void)protocol;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int protocol) {
+  (void)attr;
+  (void)protocol;
   errno = ENOSYS;
   return ENOSYS;
 }

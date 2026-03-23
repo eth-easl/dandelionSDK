@@ -707,9 +707,18 @@ index ce721fa2..3677ccdc 100644
  };
  #endif /* __CYGWIN__ */
 diff --git a/newlib/libc/include/sys/_pthreadtypes.h b/newlib/libc/include/sys/_pthreadtypes.h
-index 75e9e1cb..8253f4e2 100644
+index 75e9e1cb..939d8f3c 100644
 --- a/newlib/libc/include/sys/_pthreadtypes.h
 +++ b/newlib/libc/include/sys/_pthreadtypes.h
+@@ -85,7 +85,7 @@ typedef struct {
+                                   /*   located */
+ #endif
+ 
+-#if defined(_POSIX_THREAD_PRIO_PROTECT)
++#if defined(_POSIX_THREAD_PRIO_INHERIT) || defined(_POSIX_THREAD_PRIO_PROTECT)
+ /* Mutexes */
+ 
+ /* Values for blocking protocol. */
 @@ -189,6 +189,12 @@ typedef struct {
  
  typedef __uint32_t pthread_key_t;        /* thread-specific data keys */
@@ -724,7 +733,7 @@ index 75e9e1cb..8253f4e2 100644
    int   is_initialized;  /* is this structure initialized? */
    int   init_executed;   /* has the initialization routine been run? */
 diff --git a/newlib/libc/include/sys/features.h b/newlib/libc/include/sys/features.h
-index 6a925c87..4991f6f6 100644
+index 6a925c87..61d00eed 100644
 --- a/newlib/libc/include/sys/features.h
 +++ b/newlib/libc/include/sys/features.h
 @@ -420,7 +420,7 @@ extern "C" {
@@ -736,7 +745,19 @@ index 6a925c87..4991f6f6 100644
  
  #if __POSIX_VISIBLE >= 200809
  #define _POSIX_VERSION				200809L
-@@ -486,6 +486,9 @@ extern "C" {
+@@ -477,7 +477,10 @@ extern "C" {
+ #define _POSIX_THREAD_ATTR_STACKADDR		200809L
+ #define _POSIX_THREAD_ATTR_STACKSIZE		200809L
+ #define _POSIX_THREAD_CPUTIME			200809L
+-/* #define _POSIX_THREAD_PRIO_INHERIT		    -1 */
++/* POSIX option values in this block follow the 2008 profile already exposed
++   for Dandelion in this header:
++   https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
++#define _POSIX_THREAD_PRIO_INHERIT		200809L
+ /* #define _POSIX_THREAD_PRIO_PROTECT		    -1 */
+ #define _POSIX_THREAD_PRIORITY_SCHEDULING	200809L
+ #define _POSIX_THREAD_PROCESS_SHARED		200809L
+@@ -486,6 +489,9 @@ extern "C" {
  #define _POSIX_THREADS				200809L
  #define _POSIX_TIMEOUTS				200809L
  #define _POSIX_TIMERS				200809L
@@ -746,7 +767,7 @@ index 6a925c87..4991f6f6 100644
  /* #define _POSIX_TRACE				    -1 */
  /* #define _POSIX_TRACE_EVENT_FILTER		    -1 */
  /* #define _POSIX_TRACE_INHERIT			    -1 */
-@@ -549,7 +552,7 @@ extern "C" {
+@@ -549,7 +555,7 @@ extern "C" {
   */
  #define __STDC_ISO_10646__ 201806L
  
