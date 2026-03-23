@@ -813,7 +813,7 @@ index c0a0d201..5fab350f 100644
  #endif /* !_SYS_RESOURCE_H_ */
 -
 diff --git a/newlib/libc/include/sys/signal.h b/newlib/libc/include/sys/signal.h
-index 96bf9781..e6ad1b90 100644
+index 96bf9781..52227921 100644
 --- a/newlib/libc/include/sys/signal.h
 +++ b/newlib/libc/include/sys/signal.h
 @@ -19,11 +19,13 @@ extern "C" {
@@ -915,7 +915,7 @@ index 96bf9781..e6ad1b90 100644
  struct sigaction {
    int         sa_flags;       /* Special flags to affect behavior of signal */
    sigset_t    sa_mask;        /* Additional set of signals to be blocked */
-@@ -115,9 +166,19 @@ struct sigaction {
+@@ -115,16 +166,41 @@ struct sigaction {
  
  #else /* defined(__rtems__) */
  
@@ -936,9 +936,34 @@ index 96bf9781..e6ad1b90 100644
 +#define SA_RESETHAND 0x80000000
 +#endif
  
++/* POSIX signal.h permits sa_handler and sa_sigaction to overlap, and
++   signal(7) documents the SA_SIGINFO handler form:
++   https://man7.org/linux/man-pages/man0/signal.h.0p.html
++   https://man7.org/linux/man-pages/man7/signal.7.html */
  struct sigaction 
  {
-@@ -157,6 +218,22 @@ typedef struct sigaltstack {
+-	_sig_func_ptr sa_handler;
+-	sigset_t sa_mask;
+-	int sa_flags;
++  int         sa_flags;       /* Special flags to affect behavior of signal */
++  sigset_t    sa_mask;        /* Additional set of signals to be blocked */
++                              /*   during execution of signal-catching */
++                              /*   function. */
++  union {
++    _sig_func_ptr _handler;  /* SIG_DFL, SIG_IGN, or pointer to a function */
++#if defined(_POSIX_REALTIME_SIGNALS) || __POSIX_VISIBLE >= 199309 || __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++    void      (*_sigaction)( int, siginfo_t *, void * );
++#endif
++  } _signal_handlers;
+ };
++#define sa_handler    _signal_handlers._handler
++#if defined(_POSIX_REALTIME_SIGNALS) || __POSIX_VISIBLE >= 199309 || __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++#define sa_sigaction  _signal_handlers._sigaction
++#endif
+ #endif /* defined(__rtems__) */
+ #endif /* defined(__CYGWIN__) */
+ 
+@@ -157,6 +233,22 @@ typedef struct sigaltstack {
    size_t    ss_size;  /* Stack size.  */
  } stack_t;
  
@@ -961,7 +986,7 @@ index 96bf9781..e6ad1b90 100644
  #if __POSIX_VISIBLE
  #define SIG_SETMASK 0	/* set mask with sigprocmask() */
  #define SIG_BLOCK 1	/* set of signals to block */
-@@ -318,20 +395,51 @@ int str2sig(const char *__restrict, int *__restrict);
+@@ -318,20 +410,51 @@ int str2sig(const char *__restrict, int *__restrict);
  #define	SIGTTOU	22	/* like TTIN for output if (tp->t_local&LTOSTOP) */
  #define	SIGIO	23	/* input/output possible signal */
  #define	SIGPOLL	SIGIO	/* System V name for SIGIO */
@@ -1013,6 +1038,26 @@ index 96bf9781..e6ad1b90 100644
  
  #elif defined(__svr4__)
  /* svr4 specifics. different signals above 15, and sigaction. */
+@@ -363,6 +486,19 @@ int str2sig(const char *__restrict, int *__restrict);
+ #define	SIGVTALRM 26	/* virtual time alarm */
+ #define	SIGPROF	27	/* profiling time alarm */
+ #define	SIGWINCH 28	/* window changed */
++#if __XSI_VISIBLE >= 4
++/* Linux kernel asm-generic signal.h defines SIGRTMIN as 32 and SIGRTMAX as
++   _NSIG, with _NSIG equal to 64:
++   https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal.h
++   signal(7) likewise documents the Linux kernel real-time signal range as
++   32 to 64:
++   https://man7.org/linux/man-pages/man7/signal.7.html */
++#define SIGRTMIN 32
++#define SIGRTMAX 64
++#else
++#define SIGRTMIN 27
++#define SIGRTMAX 31
++#endif
+ #define	SIGLOST 29	/* resource lost (eg, record-lock lost) */
+ #define	SIGUSR1 30	/* user defined signal 1 */
+ #define	SIGUSR2 31	/* user defined signal 2 */
 diff --git a/newlib/libc/include/sys/stat.h b/newlib/libc/include/sys/stat.h
 index 98f5addb..046cb91b 100644
 --- a/newlib/libc/include/sys/stat.h
