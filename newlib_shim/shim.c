@@ -238,6 +238,11 @@ int posix_fallocate(int fd, off_t offset, off_t len) {
   return -1;
 }
 
+int clearenv(void) {
+  errno = ENOSYS;
+  return -1;
+}
+
 ssize_t getdelim(char **restrict lineptr, size_t *restrict n, int delimiter,
                  FILE *restrict stream) {
   (void)lineptr;
