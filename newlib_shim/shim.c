@@ -350,6 +350,20 @@ int pclose(FILE *stream) {
   return -1;
 }
 
+char *initstate(unsigned seed, char *state, size_t size) {
+  (void)seed;
+  (void)state;
+  (void)size;
+  errno = ENOSYS;
+  return NULL;
+}
+
+char *setstate(char *state) {
+  (void)state;
+  errno = ENOSYS;
+  return NULL;
+}
+
 time_t time(time_t *timer) {
   errno = ENOSYS;
   if (timer != NULL) {
