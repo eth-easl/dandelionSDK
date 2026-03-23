@@ -174,7 +174,10 @@ int setgroups(int ngroups, const gid_t *grouplist) {
 // #if __BSD_VISIBLE || (__XSI_VISIBLE && __XSI_VISIBLE < 500)
 // void	setusershell (void);
 // #endif
-// unsigned sleep (unsigned int __seconds);
+unsigned sleep(unsigned int __seconds) {
+  *__errno() = ENOSYS;
+  return __seconds;
+}
 // #if __XSI_VISIBLE
 // void    swab (const void *__restrict, void *__restrict, ssize_t);
 // #endif
