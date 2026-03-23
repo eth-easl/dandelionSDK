@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include <spawn.h>
 #include <sys/resource.h>
 #include <sys/signal.h>
 #include <sys/stat.h>
@@ -350,6 +351,50 @@ int pclose(FILE *stream) {
   return -1;
 }
 
+int posix_spawn_file_actions_init(posix_spawn_file_actions_t *file_actions) {
+  (void)file_actions;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *file_actions,
+                                      int fildes) {
+  (void)file_actions;
+  (void)fildes;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *file_actions,
+                                     int fildes, int newfildes) {
+  (void)file_actions;
+  (void)fildes;
+  (void)newfildes;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t *file_actions) {
+  (void)file_actions;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int posix_spawnp(pid_t *restrict pid, const char *restrict file,
+                 const posix_spawn_file_actions_t *file_actions,
+                 const posix_spawnattr_t *restrict attrp,
+                 char *const argv[restrict],
+                 char *const envp[restrict]) {
+  (void)pid;
+  (void)file;
+  (void)file_actions;
+  (void)attrp;
+  (void)argv;
+  (void)envp;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
 char *initstate(unsigned seed, char *state, size_t size) {
   (void)seed;
   (void)state;
@@ -370,6 +415,23 @@ time_t time(time_t *timer) {
     *timer = (time_t)-1;
   }
   return (time_t)-1;
+}
+
+int futimens(int fd, const struct timespec times[2]) {
+  (void)fd;
+  (void)times;
+  errno = ENOSYS;
+  return -1;
+}
+
+int utimensat(int dirfd, const char *pathname, const struct timespec times[2],
+              int flags) {
+  (void)dirfd;
+  (void)pathname;
+  (void)times;
+  (void)flags;
+  errno = ENOSYS;
+  return -1;
 }
 
 pid_t waitpid(pid_t pid, int *status, int options) {
