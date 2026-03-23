@@ -337,6 +337,19 @@ int iconv_close(iconv_t cd) {
   return -1;
 }
 
+FILE *popen(const char *command, const char *type) {
+  (void)command;
+  (void)type;
+  errno = ENOSYS;
+  return NULL;
+}
+
+int pclose(FILE *stream) {
+  (void)stream;
+  errno = ENOSYS;
+  return -1;
+}
+
 time_t time(time_t *timer) {
   errno = ENOSYS;
   if (timer != NULL) {
