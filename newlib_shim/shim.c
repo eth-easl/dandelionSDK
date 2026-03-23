@@ -2,6 +2,7 @@
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <libgen.h>
 #include <sys/resource.h>
 #include <sys/signal.h>
 #include <sys/stat.h>
@@ -265,6 +266,18 @@ int grantpt(int fd) {
   (void)fd;
   errno = ENOSYS;
   return -1;
+}
+
+char *basename(char *path) {
+  (void)path;
+  errno = ENOSYS;
+  return NULL;
+}
+
+char *dirname(char *path) {
+  (void)path;
+  errno = ENOSYS;
+  return NULL;
 }
 
 int getpid() { return 1; }
