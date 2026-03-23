@@ -4,5 +4,4 @@ libc_a_SOURCES += \
     %D%/signal_dandelion.c \
     %D%/shim.c \
     %D%/time.c \
-    %D%/wait.c \
     %D%/unistd.c

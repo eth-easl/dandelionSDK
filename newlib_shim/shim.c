@@ -7,6 +7,7 @@
 #include <sys/signal.h>
 #include <sys/stat.h>
 #include <sys/unistd.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <wordexp.h>
 
@@ -286,6 +287,28 @@ char *dirname(char *path) {
 }
 
 int getpid() { return 1; }
+
+pid_t getppid(void) {
+  errno = ENOSYS;
+  return 0;
+}
+
+pid_t waitpid(pid_t pid, int *status, int options) {
+  (void)pid;
+  (void)status;
+  (void)options;
+  errno = ENOSYS;
+  return -1;
+}
+
+int waitid(idtype_t idtype, id_t id, siginfo_t *infop, int options) {
+  (void)idtype;
+  (void)id;
+  (void)infop;
+  (void)options;
+  errno = ENOSYS;
+  return -1;
+}
 
 int getpriority(int which, id_t who) {
   (void)which;
