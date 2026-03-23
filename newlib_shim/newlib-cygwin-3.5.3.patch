@@ -724,7 +724,7 @@ index 75e9e1cb..8253f4e2 100644
    int   is_initialized;  /* is this structure initialized? */
    int   init_executed;   /* has the initialization routine been run? */
 diff --git a/newlib/libc/include/sys/features.h b/newlib/libc/include/sys/features.h
-index 6a925c87..9dcfa633 100644
+index 6a925c87..4991f6f6 100644
 --- a/newlib/libc/include/sys/features.h
 +++ b/newlib/libc/include/sys/features.h
 @@ -420,7 +420,7 @@ extern "C" {
@@ -736,7 +736,17 @@ index 6a925c87..9dcfa633 100644
  
  #if __POSIX_VISIBLE >= 200809
  #define _POSIX_VERSION				200809L
-@@ -549,7 +549,7 @@ extern "C" {
+@@ -486,6 +486,9 @@ extern "C" {
+ #define _POSIX_THREADS				200809L
+ #define _POSIX_TIMEOUTS				200809L
+ #define _POSIX_TIMERS				200809L
++/* XSI pthread mutex type/attribute APIs must remain visible when
++   _XOPEN_SOURCE enables __XSI_VISIBLE, matching the RTEMS/newlib exposure. */
++#define _UNIX98_THREAD_MUTEX_ATTRIBUTES		1
+ /* #define _POSIX_TRACE				    -1 */
+ /* #define _POSIX_TRACE_EVENT_FILTER		    -1 */
+ /* #define _POSIX_TRACE_INHERIT			    -1 */
+@@ -549,7 +552,7 @@ extern "C" {
   */
  #define __STDC_ISO_10646__ 201806L
  
@@ -1059,7 +1069,7 @@ index 96bf9781..52227921 100644
  #define	SIGUSR1 30	/* user defined signal 1 */
  #define	SIGUSR2 31	/* user defined signal 2 */
 diff --git a/newlib/libc/include/sys/stat.h b/newlib/libc/include/sys/stat.h
-index 98f5addb..5521409b 100644
+index 98f5addb..18887cd9 100644
 --- a/newlib/libc/include/sys/stat.h
 +++ b/newlib/libc/include/sys/stat.h
 @@ -132,6 +132,11 @@ struct	stat
