@@ -86,3 +86,12 @@ int sigprocmask(int how, const sigset_t *restrict set,
   *__errno() = ENOSYS;
   return -1;
 }
+
+int sigaltstack(const stack_t *restrict ss, stack_t *restrict old_ss) {
+  (void)ss;
+  if (old_ss != NULL) {
+    memset(old_ss, 0, sizeof(*old_ss));
+  }
+  *__errno() = ENOSYS;
+  return -1;
+}
