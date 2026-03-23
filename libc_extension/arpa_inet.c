@@ -1,6 +1,12 @@
 #include <arpa/inet.h>
 #include <errno.h>
 
+uint32_t htonl(uint32_t hostlong) {
+  (void)hostlong;
+  errno = ENOSYS;
+  return 0;
+}
+
 in_addr_t inet_addr(const char *cp) {
   (void)cp;
   errno = ENOSYS;
