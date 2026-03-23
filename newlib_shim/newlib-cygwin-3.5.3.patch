@@ -59,7 +59,7 @@ index 4ab36b8d..0eacadd8 100644
  ## Place the libm_a objects in libc/ to keep the top dir tidy.
  stamp-libc-math-objects: libm.a
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 38618346..0f42f769 100644
+index 38618346..2fb422d5 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -430,6 +430,12 @@ case "${host}" in
@@ -70,7 +70,7 @@ index 38618346..0f42f769 100644
 +	sys_dir=dandelion
 +	have_crt0="no"
 +	have_init_fini="no"
-+	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
++	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES -fPIC"
 +	;;
    *-*-netware*)
  	signal_dir=
