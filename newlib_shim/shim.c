@@ -1,5 +1,6 @@
 #include <malloc.h>
 #include <fnmatch.h>
+#include <iconv.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -300,6 +301,30 @@ int fnmatch(const char *pattern, const char *string, int flags) {
   (void)flags;
   errno = ENOSYS;
   return FNM_NOMATCH;
+}
+
+iconv_t iconv_open(const char *tocode, const char *fromcode) {
+  (void)tocode;
+  (void)fromcode;
+  errno = ENOSYS;
+  return (iconv_t)-1;
+}
+
+size_t iconv(iconv_t cd, char **__restrict inbuf, size_t *__restrict inbytesleft,
+             char **__restrict outbuf, size_t *__restrict outbytesleft) {
+  (void)cd;
+  (void)inbuf;
+  (void)inbytesleft;
+  (void)outbuf;
+  (void)outbytesleft;
+  errno = ENOSYS;
+  return (size_t)-1;
+}
+
+int iconv_close(iconv_t cd) {
+  (void)cd;
+  errno = ENOSYS;
+  return -1;
 }
 
 pid_t waitpid(pid_t pid, int *status, int options) {
