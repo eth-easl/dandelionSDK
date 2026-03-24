@@ -1351,3 +1351,37 @@ index 9c61a436..d535417b 100644
  
 -__strong_reference(nextafterl, nexttowardl);
 +/* Dandelion provides its own nexttowardl stub in libc/shim.c. */
+diff --git a/newlib/libm/ld/s_nexttoward.c b/newlib/libm/ld/s_nexttoward.c
+index b2a50d31..6c80af33 100644
+--- a/newlib/libm/ld/s_nexttoward.c
++++ b/newlib/libm/ld/s_nexttoward.c
+@@ -29,6 +29,7 @@ __FBSDID("$FreeBSD$");
+ #error "Unsupported long double format"
+ #endif
+ 
++#ifndef __DANDELION__
+ double
+ nexttoward(double x, long double y)
+ {
+@@ -70,3 +71,4 @@ nexttoward(double x, long double y)
+ 	INSERT_WORDS(x,hx,lx);
+ 	return x;
+ }
++#endif
+diff --git a/newlib/libm/ld/s_nexttowardf.c b/newlib/libm/ld/s_nexttowardf.c
+index 9ddfff96..b42439fd 100644
+--- a/newlib/libm/ld/s_nexttowardf.c
++++ b/newlib/libm/ld/s_nexttowardf.c
+@@ -20,6 +20,7 @@ __FBSDID("$FreeBSD$");
+ 
+ #define	LDBL_INFNAN_EXP	(LDBL_MAX_EXP * 2 - 1)
+ 
++#ifndef __DANDELION__
+ float
+ nexttowardf(float x, long double y)
+ {
+@@ -57,3 +58,4 @@ nexttowardf(float x, long double y)
+ 	SET_FLOAT_WORD(x,hx);
+ 	return x;
+ }
++#endif
