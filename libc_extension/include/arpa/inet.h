@@ -21,6 +21,10 @@ struct in_addr {
 #define INET_ADDRSTRLEN 16
 #define INET6_ADDRSTRLEN 46
 
+/*
+ * Network byte order conversion functions https://man7.org/linux/man-pages/man3/htonl.3p.html
+ */
+
 uint32_t htonl(uint32_t);
 uint16_t htons(uint16_t);
 uint32_t ntohl(uint32_t);
