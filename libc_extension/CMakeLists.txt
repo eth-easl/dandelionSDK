@@ -3,15 +3,30 @@ add_library(${LIBC_EXTENSION} STATIC)
 target_sources(${LIBC_EXTENSION}
     PRIVATE
     dirent.c
+    dlfcn.c
+    if.c
+    ifaddrs.c
+    inet.c
+    mman.c
     netdb.c
+    pthread.c
+    sched.c
+    semaphore.c
     socket.c
     uio.c
     PUBLIC FILE_SET public_headers TYPE HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/
     FILES
+    include/dlfcn.h
+    include/ifaddrs.h
     include/netdb.h
+    include/semaphore.h
+    include/arpa/inet.h
+    include/net/if.h
+    include/netinet/in.h
     include/sys/cpuset.h
     include/sys/dirent.h
+    include/sys/mman.h
     include/sys/sched.h
     include/sys/socket.h
     include/sys/statvfs.h
