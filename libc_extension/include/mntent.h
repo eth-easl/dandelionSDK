@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 /* String values match Linux glibc mntent.h:
- * https://sources.debian.org/src/glibc/2.41-12/misc/mntent.h/
+ * https://codebrowser.dev/glibc/glibc/misc/mntent.h.html
  */
 #define MNTTYPE_IGNORE "ignore"
 #define MNTTYPE_NFS    "nfs"
