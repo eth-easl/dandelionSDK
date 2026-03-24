@@ -25,25 +25,25 @@ extern "C" {
 #define MAP_ANONYMOUS MAP_ANON
 
 /* Value matches Linux POSIX sys/mman.h:
- * https://man7.org/linux/man-pages/man0/sys_mman.h.0p.html
+ * https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h
  */
 #define MAP_FAILED ((void *)-1)
 
 /* Values match Linux glibc bits/mman-linux.h:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/mman-linux.h/
+ * https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h
  */
 #define MS_ASYNC       1
 #define MS_INVALIDATE  2
 #define MS_SYNC        4
 
 /* Values match Linux glibc bits/mman-linux.h:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/mman-linux.h/
+ * https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h
  */
 #define MCL_CURRENT  1
 #define MCL_FUTURE   2
 
 /* Values match Linux glibc bits/mman-linux.h:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/mman-linux.h/
+ * https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h
  */
 #define POSIX_MADV_NORMAL      0
 #define POSIX_MADV_RANDOM      1
