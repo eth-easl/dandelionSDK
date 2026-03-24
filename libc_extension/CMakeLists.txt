@@ -21,6 +21,7 @@ target_sources(${LIBC_EXTENSION}
     aio.c
     dlfcn.c
     dirent.c
+    ifaddrs.c
     mqueue.c
     nl_types.c
     poll.c
@@ -34,7 +35,6 @@ target_sources(${LIBC_EXTENSION}
     netdb.c
     pthread.c
     sched.c
-    semaphore.c
     socket.c
     crypt.c
     mntent.c
@@ -56,6 +56,7 @@ target_sources(${LIBC_EXTENSION}
     include/aio.h
     include/crypt.h
     include/dlfcn.h
+    include/ifaddrs.h
     include/mqueue.h
     include/mntent.h
     include/nl_types.h
@@ -67,10 +68,6 @@ target_sources(${LIBC_EXTENSION}
     include/netinet/in.h
     include/netinet/tcp.h
     include/netdb.h
-    include/semaphore.h
-    include/arpa/inet.h
-    include/net/if.h
-    include/netinet/in.h
     include/sys/cpuset.h
     include/sys/dirent.h
     include/sys/ipc.h
