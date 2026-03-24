@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 /* Linux glibc bits/utmpx.h sizes:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/gnu/bits/utmpx.h/
+ * https://codebrowser.dev/glibc/glibc/sysdeps/gnu/bits/utmpx.h.html
  */
 #define __UT_LINESIZE 32
 #define __UT_NAMESIZE 32
@@ -24,7 +24,7 @@ struct utmpx {
 };
 
 /* Linux glibc ut_type values:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/gnu/bits/utmpx.h/
+ * https://codebrowser.dev/glibc/glibc/sysdeps/gnu/bits/utmpx.h.html
  */
 #define EMPTY         0
 #define BOOT_TIME     2
