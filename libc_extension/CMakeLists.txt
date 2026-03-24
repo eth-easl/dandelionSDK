@@ -86,7 +86,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/uio.h
     include/sys/un.h
     ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/utsname.h
-    ${LIBC_EXTENSION_GENERATED_INCLUDEå_DIR}/sys/shm.h
+    ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/shm.h
     include/syslog.h
     include/utmpx.h
 )
