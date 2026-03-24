@@ -12,7 +12,7 @@ typedef unsigned int speed_t;
 typedef unsigned int tcflag_t;
 
 /* Linux glibc uses NCCS 32:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios-struct.h/
+ * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-struct.h.html
  */
 #define NCCS 32
 
@@ -28,7 +28,7 @@ struct termios {
 };
 
 /* Linux glibc c_cc indexes:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios-c_cc.h/
+ * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_cc.h.html
  */
 #define VINTR    0
 #define VQUIT    1
@@ -43,7 +43,7 @@ struct termios {
 #define VEOL     11
 
 /* Linux glibc input flags:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios-c_iflag.h/
+ * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_iflag.h.html
  */
 #define IGNBRK   0000001
 #define BRKINT   0000002
@@ -59,7 +59,7 @@ struct termios {
 #define IXOFF    0010000
 
 /* Linux glibc output flags:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios-c_oflag.h/
+ * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_oflag.h.html
  */
 #define OPOST    0000001
 #define ONLCR    0000004
@@ -93,8 +93,8 @@ struct termios {
 
 /* Linux glibc baud-rate macros are in bits/termios.h, and control flags are
  * in bits/termios-c_cflag.h:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios.h/
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios-c_cflag.h/
+ * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios.h.html
+ * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_cflag.h.html
  */
 #define B0       0000000
 #define B50      0000001
@@ -125,7 +125,7 @@ struct termios {
 #define CLOCAL   0004000
 
 /* Linux glibc local flags:
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios-c_lflag.h/
+ * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_lflag.h.html
  */
 #define ISIG     0000001
 #define ICANON   0000002
@@ -137,8 +137,8 @@ struct termios {
 #define TOSTOP   0000400
 #define IEXTEN   0100000
 
-/* 
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios-tcflow.h/
+/*
+ * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-tcflow.h.html
  */
 #ifndef TCSANOW
 #define TCSANOW   0
@@ -149,8 +149,8 @@ struct termios {
 #ifndef TCSAFLUSH
 #define TCSAFLUSH 2
 #endif
-/* 
- * https://sources.debian.org/src/glibc/2.41-12/sysdeps/unix/sysv/linux/bits/termios.h/
+/*
+ * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios.h.html
  */
 #define TCOOFF    0
 #define TCOON     1
