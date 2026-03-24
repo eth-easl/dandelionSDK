@@ -3,8 +3,10 @@
 # -D_GNU_SOURCE=1
 # -D__GNU__
 # -D__rtems__
+-D__unix__
 # prevent thread local storage in compilation, TODO: remove if we can provide TLS
 -D__thread=""
+-D__TM_GMTOFF=tm_gmtoff
 -D__DANDELION__
 
 # compiler flags
