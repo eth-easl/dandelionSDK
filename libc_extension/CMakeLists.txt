@@ -4,13 +4,13 @@ set(LIBC_EXTENSION_GENERATED_INCLUDE_DIR
     ${CMAKE_CURRENT_BINARY_DIR}/include)
 # Render sys/shm.h from the source template so SHMLBA tracks the configured PAGE_SIZE.
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/sys/shm.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/sys/shm_template.h
     ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/shm.h
     @ONLY
 )
 # Render sys/utsname.h from the source template so field sizes track the configured UTSNAME_FIELD_SIZE.
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/sys/utsname.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/sys/utsname_template.h
     ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/utsname.h
     @ONLY
 )
