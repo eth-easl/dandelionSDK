@@ -250,6 +250,27 @@ int clearenv(void) {
   return -1;
 }
 
+double nexttoward(double x, long double y) {
+  (void)x;
+  (void)y;
+  errno = ENOSYS;
+  return NAN;
+}
+
+float nexttowardf(float x, long double y) {
+  (void)x;
+  (void)y;
+  errno = ENOSYS;
+  return NAN;
+}
+
+long double nexttowardl(long double x, long double y) {
+  (void)x;
+  (void)y;
+  errno = ENOSYS;
+  return (long double)NAN;
+}
+
 ssize_t getdelim(char **restrict lineptr, size_t *restrict n, int delimiter,
                  FILE *restrict stream) {
   (void)lineptr;

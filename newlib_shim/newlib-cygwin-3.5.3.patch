@@ -59,7 +59,7 @@ index 4ab36b8d..0eacadd8 100644
  ## Place the libm_a objects in libc/ to keep the top dir tidy.
  stamp-libc-math-objects: libm.a
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 38618346..2fb422d5 100644
+index 38618346..0f42f769 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -430,6 +430,12 @@ case "${host}" in
@@ -1342,139 +1342,12 @@ index 24d8407d..c2298733 100644
  include %D%/a29khif/Makefile.inc
  endif
 diff --git a/newlib/libm/ld/s_nextafterl.c b/newlib/libm/ld/s_nextafterl.c
-index 9c61a436..b0d8154c 100644
+index 9c61a436..d535417b 100644
 --- a/newlib/libm/ld/s_nextafterl.c
 +++ b/newlib/libm/ld/s_nextafterl.c
-@@ -21,6 +21,7 @@ __FBSDID("$FreeBSD$");
-  */
- 
- #include <float.h>
-+#include <errno.h>
- 
- #include "fpmath.h"
- #include "math.h"
-@@ -77,4 +78,11 @@ nextafterl(long double x, long double y)
+@@ -77,4 +77,4 @@ nextafterl(long double x, long double y)
  	return ux.e;
  }
  
 -__strong_reference(nextafterl, nexttowardl);
-+long double
-+nexttowardl(long double x, long double y)
-+{
-+	(void)x;
-+	(void)y;
-+	errno = ENOSYS;
-+	return (long double)NAN;
-+}
-diff --git a/newlib/libm/ld/s_nexttoward.c b/newlib/libm/ld/s_nexttoward.c
-index b2a50d31..5e66d903 100644
---- a/newlib/libm/ld/s_nexttoward.c
-+++ b/newlib/libm/ld/s_nexttoward.c
-@@ -20,6 +20,7 @@ __FBSDID("$FreeBSD$");
-  */
- 
- #include <float.h>
-+#include <errno.h>
- 
- #include "fpmath.h"
- #include "math.h"
-@@ -32,41 +33,8 @@ __FBSDID("$FreeBSD$");
- double
- nexttoward(double x, long double y)
- {
--	union IEEEl2bits uy;
--	volatile double t;
--	int32_t hx,ix;
--	u_int32_t lx;
--
--	EXTRACT_WORDS(hx,lx,x);
--	ix = hx&0x7fffffff;		/* |x| */
--	uy.e = y;
--
--	if(((ix>=0x7ff00000)&&((ix-0x7ff00000)|lx)!=0) ||
--	    (uy.bits.exp == 0x7fff &&
--	     ((uy.bits.manh&~LDBL_NBIT)|uy.bits.manl) != 0))
--	   return x+y;	/* x or y is nan */
--	if(x==y) return (double)y;		/* x=y, return y */
--	if(x==0.0) {
--	    INSERT_WORDS(x,uy.bits.sign<<31,1);	/* return +-minsubnormal */
--	    t = x*x;
--	    if(t==x) return t; else return x;	/* raise underflow flag */
--	}
--	if(hx>0.0 ^ x < y) {			/* x -= ulp */
--	    if(lx==0) hx -= 1;
--	    lx -= 1;
--	} else {				/* x += ulp */
--	    lx += 1;
--	    if(lx==0) hx += 1;
--	}
--	ix = hx&0x7ff00000;
--	if(ix>=0x7ff00000) return x+x;	/* overflow  */
--	if(ix<0x00100000) {		/* underflow */
--	    t = x*x;
--	    if(t!=x) {		/* raise underflow flag */
--	        INSERT_WORDS(x,hx,lx);
--		return x;
--	    }
--	}
--	INSERT_WORDS(x,hx,lx);
--	return x;
-+	(void)x;
-+	(void)y;
-+	errno = ENOSYS;
-+	return NAN;
- }
-diff --git a/newlib/libm/ld/s_nexttowardf.c b/newlib/libm/ld/s_nexttowardf.c
-index 9ddfff96..5a47a065 100644
---- a/newlib/libm/ld/s_nexttowardf.c
-+++ b/newlib/libm/ld/s_nexttowardf.c
-@@ -13,6 +13,7 @@
- __FBSDID("$FreeBSD$");
- 
- #include <float.h>
-+#include <errno.h>
- 
- #include "fpmath.h"
- #include "math.h"
-@@ -23,37 +24,8 @@ __FBSDID("$FreeBSD$");
- float
- nexttowardf(float x, long double y)
- {
--	union IEEEl2bits uy;
--	volatile float t;
--	int32_t hx,ix;
--
--	GET_FLOAT_WORD(hx,x);
--	ix = hx&0x7fffffff;		/* |x| */
--	uy.e = y;
--
--	if((ix>0x7f800000) ||
--	   (uy.bits.exp == LDBL_INFNAN_EXP &&
--	    ((uy.bits.manh&~LDBL_NBIT)|uy.bits.manl) != 0))
--	   return x+y;	/* x or y is nan */
--	if(x==y) return (float)y;		/* x=y, return y */
--	if(ix==0) {				/* x == 0 */
--	    SET_FLOAT_WORD(x,(uy.bits.sign<<31)|1);/* return +-minsubnormal */
--	    t = x*x;
--	    if(t==x) return t; else return x;	/* raise underflow flag */
--	}
--	if(hx>=0 ^ x < y)			/* x -= ulp */
--	    hx -= 1;
--	else					/* x += ulp */
--	    hx += 1;
--	ix = hx&0x7f800000;
--	if(ix>=0x7f800000) return x+x;	/* overflow  */
--	if(ix<0x00800000) {		/* underflow */
--	    t = x*x;
--	    if(t!=x) {		/* raise underflow flag */
--	        SET_FLOAT_WORD(x,hx);
--		return x;
--	    }
--	}
--	SET_FLOAT_WORD(x,hx);
--	return x;
-+	(void)x;
-+	(void)y;
-+	errno = ENOSYS;
-+	return NAN;
- }
++/* Dandelion provides its own nexttowardl stub in libc/shim.c. */
