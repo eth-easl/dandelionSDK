@@ -18,7 +18,7 @@
 -nostdinc
 -isystem<CFGDIR>/include
 -isystem<CFGDIR>/include/sys
--isystem@COMPILER_RUNTIME_INCLUDE@
+-isystemCOMPILER_INCLUDES
 
 # linker flags
 -T<CFGDIR>/linker.ld
