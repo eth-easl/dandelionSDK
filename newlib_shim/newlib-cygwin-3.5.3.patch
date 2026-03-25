@@ -432,7 +432,7 @@ index 893f1083..06edbb44 100644
 +#endif
 +#endif
 diff --git a/newlib/libc/include/machine/setjmp.h b/newlib/libc/include/machine/setjmp.h
-index e3534e18..58ad8adf 100644
+index e3534e18..c7c75d39 100644
 --- a/newlib/libc/include/machine/setjmp.h
 +++ b/newlib/libc/include/machine/setjmp.h
 @@ -439,7 +439,7 @@ typedef	int jmp_buf[_JBLEN];
@@ -1119,20 +1119,134 @@ index 98f5addb..c8b4ee6a 100644
  #endif
  
 diff --git a/newlib/libc/include/sys/unistd.h b/newlib/libc/include/sys/unistd.h
-index 00901540..b66976f7 100644
+index 00901540..edf39f32 100644
 --- a/newlib/libc/include/sys/unistd.h
 +++ b/newlib/libc/include/sys/unistd.h
-@@ -530,8 +530,8 @@ int	unlinkat (int, const char *, int);
+@@ -530,60 +530,71 @@ int	unlinkat (int, const char *, int);
   *  confstr values per IEEE Std 1003.1, 2004 Edition
   */
  
 -/* Only defined on Cygwin and RTEMS for now. */
 -#if defined (__CYGWIN__) || defined(__rtems__)
-+/* Only defined on Cygwin, RTEMS, and Dandelion for now. */
-+#if defined (__CYGWIN__) || defined(__rtems__)
++/* Linux libc public _CS_* values from musl's unistd.h, which aligns with
++   glibc on the overlapping standard confstr(3) names and also provides the
++   POSIX_V7 thread flag constants used by libc-test:
++   https://git.musl-libc.org/cgit/musl/tree/include/unistd.h */
++#if defined (__CYGWIN__) || defined(__rtems__) || defined(__DANDELION__)
  #define _CS_PATH                               0
- #define _CS_POSIX_V7_ILP32_OFF32_CFLAGS        1
- #define _CS_POSIX_V6_ILP32_OFF32_CFLAGS       _CS_POSIX_V7_ILP32_OFF32_CFLAGS
+-#define _CS_POSIX_V7_ILP32_OFF32_CFLAGS        1
+-#define _CS_POSIX_V6_ILP32_OFF32_CFLAGS       _CS_POSIX_V7_ILP32_OFF32_CFLAGS
+-#define _CS_XBS5_ILP32_OFF32_CFLAGS           _CS_POSIX_V7_ILP32_OFF32_CFLAGS
+-#define _CS_POSIX_V7_ILP32_OFF32_LDFLAGS       2
+-#define _CS_POSIX_V6_ILP32_OFF32_LDFLAGS      _CS_POSIX_V7_ILP32_OFF32_LDFLAGS
+-#define _CS_XBS5_ILP32_OFF32_LDFLAGS          _CS_POSIX_V7_ILP32_OFF32_LDFLAGS
+-#define _CS_POSIX_V7_ILP32_OFF32_LIBS          3
+-#define _CS_POSIX_V6_ILP32_OFF32_LIBS         _CS_POSIX_V7_ILP32_OFF32_LIBS
+-#define _CS_XBS5_ILP32_OFF32_LIBS             _CS_POSIX_V7_ILP32_OFF32_LIBS
+-#define _CS_XBS5_ILP32_OFF32_LINTFLAGS         4
+-#define _CS_POSIX_V7_ILP32_OFFBIG_CFLAGS       5
+-#define _CS_POSIX_V6_ILP32_OFFBIG_CFLAGS      _CS_POSIX_V7_ILP32_OFFBIG_CFLAGS
+-#define _CS_XBS5_ILP32_OFFBIG_CFLAGS          _CS_POSIX_V7_ILP32_OFFBIG_CFLAGS
+-#define _CS_POSIX_V7_ILP32_OFFBIG_LDFLAGS      6
+-#define _CS_POSIX_V6_ILP32_OFFBIG_LDFLAGS     _CS_POSIX_V7_ILP32_OFFBIG_LDFLAGS
+-#define _CS_XBS5_ILP32_OFFBIG_LDFLAGS         _CS_POSIX_V7_ILP32_OFFBIG_LDFLAGS
+-#define _CS_POSIX_V7_ILP32_OFFBIG_LIBS         7
+-#define _CS_POSIX_V6_ILP32_OFFBIG_LIBS        _CS_POSIX_V7_ILP32_OFFBIG_LIBS
+-#define _CS_XBS5_ILP32_OFFBIG_LIBS            _CS_POSIX_V7_ILP32_OFFBIG_LIBS
+-#define _CS_XBS5_ILP32_OFFBIG_LINTFLAGS        8
+-#define _CS_POSIX_V7_LP64_OFF64_CFLAGS         9
+-#define _CS_POSIX_V6_LP64_OFF64_CFLAGS        _CS_POSIX_V7_LP64_OFF64_CFLAGS
+-#define _CS_XBS5_LP64_OFF64_CFLAGS            _CS_POSIX_V7_LP64_OFF64_CFLAGS
+-#define _CS_POSIX_V7_LP64_OFF64_LDFLAGS       10
+-#define _CS_POSIX_V6_LP64_OFF64_LDFLAGS       _CS_POSIX_V7_LP64_OFF64_LDFLAGS
+-#define _CS_XBS5_LP64_OFF64_LDFLAGS           _CS_POSIX_V7_LP64_OFF64_LDFLAGS
+-#define _CS_POSIX_V7_LP64_OFF64_LIBS          11
+-#define _CS_POSIX_V6_LP64_OFF64_LIBS          _CS_POSIX_V7_LP64_OFF64_LIBS
+-#define _CS_XBS5_LP64_OFF64_LIBS              _CS_POSIX_V7_LP64_OFF64_LIBS
+-#define _CS_XBS5_LP64_OFF64_LINTFLAGS         12
+-#define _CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS      13
+-#define _CS_POSIX_V6_LPBIG_OFFBIG_CFLAGS      _CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS
+-#define _CS_XBS5_LPBIG_OFFBIG_CFLAGS          _CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS
+-#define _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS     14
+-#define _CS_POSIX_V6_LPBIG_OFFBIG_LDFLAGS     _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS
+-#define _CS_XBS5_LPBIG_OFFBIG_LDFLAGS         _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS
+-#define _CS_POSIX_V7_LPBIG_OFFBIG_LIBS        15
+-#define _CS_POSIX_V6_LPBIG_OFFBIG_LIBS        _CS_POSIX_V7_LPBIG_OFFBIG_LIBS
+-#define _CS_XBS5_LPBIG_OFFBIG_LIBS            _CS_POSIX_V7_LPBIG_OFFBIG_LIBS
+-#define _CS_XBS5_LPBIG_OFFBIG_LINTFLAGS       16
+-#define _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS    17
+-#define _CS_POSIX_V6_WIDTH_RESTRICTED_ENVS    _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS
+-#define _CS_XBS5_WIDTH_RESTRICTED_ENVS        _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS
+-#define _CS_POSIX_V7_THREADS_CFLAGS           18
+-#define _CS_POSIX_V7_THREADS_LDFLAGS          19
+-#define _CS_V7_ENV                            20
+-#define _CS_V6_ENV                            _CS_V7_ENV
+-#define _CS_LFS_CFLAGS                        21
+-#define _CS_LFS_LDFLAGS                       22
+-#define _CS_LFS_LIBS                          23
+-#define _CS_LFS_LINTFLAGS                     24
++#define _CS_POSIX_V6_WIDTH_RESTRICTED_ENVS    1
++#define _CS_XBS5_WIDTH_RESTRICTED_ENVS        5
++#define _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS    5
++#define _CS_LFS_CFLAGS                        1000
++#define _CS_LFS_LDFLAGS                       1001
++#define _CS_LFS_LIBS                          1002
++#define _CS_LFS_LINTFLAGS                     1003
++#define _CS_XBS5_ILP32_OFF32_CFLAGS           1100
++#define _CS_XBS5_ILP32_OFF32_LDFLAGS          1101
++#define _CS_XBS5_ILP32_OFF32_LIBS             1102
++#define _CS_XBS5_ILP32_OFF32_LINTFLAGS        1103
++#define _CS_XBS5_ILP32_OFFBIG_CFLAGS          1104
++#define _CS_XBS5_ILP32_OFFBIG_LDFLAGS         1105
++#define _CS_XBS5_ILP32_OFFBIG_LIBS            1106
++#define _CS_XBS5_ILP32_OFFBIG_LINTFLAGS       1107
++#define _CS_XBS5_LP64_OFF64_CFLAGS            1108
++#define _CS_XBS5_LP64_OFF64_LDFLAGS           1109
++#define _CS_XBS5_LP64_OFF64_LIBS              1110
++#define _CS_XBS5_LP64_OFF64_LINTFLAGS         1111
++#define _CS_XBS5_LPBIG_OFFBIG_CFLAGS          1112
++#define _CS_XBS5_LPBIG_OFFBIG_LDFLAGS         1113
++#define _CS_XBS5_LPBIG_OFFBIG_LIBS            1114
++#define _CS_XBS5_LPBIG_OFFBIG_LINTFLAGS       1115
++#define _CS_POSIX_V6_ILP32_OFF32_CFLAGS       1116
++#define _CS_POSIX_V6_ILP32_OFF32_LDFLAGS      1117
++#define _CS_POSIX_V6_ILP32_OFF32_LIBS         1118
++#define _CS_POSIX_V6_ILP32_OFF32_LINTFLAGS    1119
++#define _CS_POSIX_V6_ILP32_OFFBIG_CFLAGS      1120
++#define _CS_POSIX_V6_ILP32_OFFBIG_LDFLAGS     1121
++#define _CS_POSIX_V6_ILP32_OFFBIG_LIBS        1122
++#define _CS_POSIX_V6_ILP32_OFFBIG_LINTFLAGS   1123
++#define _CS_POSIX_V6_LP64_OFF64_CFLAGS        1124
++#define _CS_POSIX_V6_LP64_OFF64_LDFLAGS       1125
++#define _CS_POSIX_V6_LP64_OFF64_LIBS          1126
++#define _CS_POSIX_V6_LP64_OFF64_LINTFLAGS     1127
++#define _CS_POSIX_V6_LPBIG_OFFBIG_CFLAGS      1128
++#define _CS_POSIX_V6_LPBIG_OFFBIG_LDFLAGS     1129
++#define _CS_POSIX_V6_LPBIG_OFFBIG_LIBS        1130
++#define _CS_POSIX_V6_LPBIG_OFFBIG_LINTFLAGS   1131
++#define _CS_POSIX_V7_ILP32_OFF32_CFLAGS       1132
++#define _CS_POSIX_V7_ILP32_OFF32_LDFLAGS      1133
++#define _CS_POSIX_V7_ILP32_OFF32_LIBS         1134
++#define _CS_POSIX_V7_ILP32_OFF32_LINTFLAGS    1135
++#define _CS_POSIX_V7_ILP32_OFFBIG_CFLAGS      1136
++#define _CS_POSIX_V7_ILP32_OFFBIG_LDFLAGS     1137
++#define _CS_POSIX_V7_ILP32_OFFBIG_LIBS        1138
++#define _CS_POSIX_V7_ILP32_OFFBIG_LINTFLAGS   1139
++#define _CS_POSIX_V7_LP64_OFF64_CFLAGS        1140
++#define _CS_POSIX_V7_LP64_OFF64_LDFLAGS       1141
++#define _CS_POSIX_V7_LP64_OFF64_LIBS          1142
++#define _CS_POSIX_V7_LP64_OFF64_LINTFLAGS     1143
++#define _CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS      1144
++#define _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS     1145
++#define _CS_POSIX_V7_LPBIG_OFFBIG_LIBS        1146
++#define _CS_POSIX_V7_LPBIG_OFFBIG_LINTFLAGS   1147
++#define _CS_V6_ENV                            1148
++#define _CS_V7_ENV                            1149
++#define _CS_POSIX_V7_THREADS_CFLAGS           1150
++#define _CS_POSIX_V7_THREADS_LDFLAGS          1151
+ #endif
+ 
+ #ifdef __cplusplus
 diff --git a/newlib/libc/include/sys/wait.h b/newlib/libc/include/sys/wait.h
 index d15eec9c..d888032f 100644
 --- a/newlib/libc/include/sys/wait.h
