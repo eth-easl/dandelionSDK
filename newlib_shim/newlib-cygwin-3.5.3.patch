@@ -111,10 +111,10 @@ index ad3028e4..84de9095 100644
  
  #include <sys/cdefs.h>
 diff --git a/newlib/libc/include/fcntl.h b/newlib/libc/include/fcntl.h
-index 86a91677..a599c35c 100644
+index 86a91677..a1992f10 100644
 --- a/newlib/libc/include/fcntl.h
 +++ b/newlib/libc/include/fcntl.h
-@@ -1 +1,31 @@
+@@ -1 +1,33 @@
  #include <sys/fcntl.h>
 +
 +/* Values match musl libc: https://git.musl-libc.org/cgit/musl/tree/include/fcntl.h */
@@ -128,6 +128,7 @@ index 86a91677..a599c35c 100644
 +#ifndef O_RSYNC
 +#define O_RSYNC 0
 +#endif
++/* Linux/glibc defines POSIX_FADV_* as 0..5: https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/fcntl-linux.h.html */
 +#ifndef POSIX_FADV_NORMAL
 +#define POSIX_FADV_NORMAL 0
 +#define POSIX_FADV_RANDOM 1
@@ -136,6 +137,7 @@ index 86a91677..a599c35c 100644
 +#define POSIX_FADV_DONTNEED 4
 +#define POSIX_FADV_NOREUSE 5
 +#endif
++/* Linux/glibc defines SEEK_SET=0, SEEK_CUR=1, SEEK_END=2: https://sources.debian.org/src/glibc/2.28-7/io/fcntl.h/ */
 +#ifndef SEEK_SET
 +#define SEEK_SET 0
 +#define SEEK_CUR 1
