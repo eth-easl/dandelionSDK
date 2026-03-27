@@ -219,7 +219,12 @@ int execve(const char *name, char *const argv[], char *const env[]) {
   return -1;
 }
 
-int fcntl(int fd, int op, ...) { return -1; }
+int fcntl(int fd, int op, ...) {
+  (void)fd;
+  (void)op;
+  errno = ENOSYS;
+  return -1;
+}
 
 void siglongjmp(sigjmp_buf env, int val) {
   (void)env;
@@ -653,9 +658,17 @@ int sigaction(int signum, const struct sigaction *_Nullable restrict act,
   return -1;
 }
 
-long sysconf(int name) { return -1; }
+long sysconf(int name) {
+  (void)name;
+  errno = ENOSYS;
+  return -1;
+}
 
-clock_t times(struct tms *buf) { return -1; }
+clock_t times(struct tms *buf) {
+  (void)buf;
+  errno = ENOSYS;
+  return -1;
+}
 
 int unlockpt(int fd) {
   (void)fd;
