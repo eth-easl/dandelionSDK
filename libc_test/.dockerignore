@@ -1,0 +1,14 @@
+src/*/*.o
+src/*/*.lo
+src/*/*.exe
+src/*/*.err
+src/*/*.so
+src/*/REPORT
+src/REPORT
+src/common/libtest.a
+src/common/runtest.exe
+src/common/options.h
+results_*.csv
+REPORT.*
+input_sets/
+output_sets/

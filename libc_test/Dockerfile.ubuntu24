@@ -1,0 +1,21 @@
+# syntax=docker/dockerfile:1
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      build-essential \
+      ca-certificates \
+      make \
+      file && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /work/libc-test
+COPY . .
+
+RUN cp config.mak.def config.mak
+
+# Build & run tests (output to stderr), then emit CSV on stdout.
+# Usage: docker run --rm <image> > results.csv
+CMD ["/bin/sh", "-lc", "make -j\"$(nproc)\" >&2 && ./gen_csv.sh"]

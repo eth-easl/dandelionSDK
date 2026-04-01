@@ -1,0 +1,28 @@
+# config.mak for dandelion dlibc (newlib-based)
+#
+# The dandelion clang .cfg (installed via create-compiler.sh -d) already
+# provides: --target, -isystem (SDK headers), -T (linker script),
+# -fuse-ld=lld, -static, -nostdlib, -L (SDK lib dirs), and -l flags.
+#
+# However, the .cfg flags are prepended to the command line, so the -l
+# flags appear BEFORE .o files and are effectively no-ops during linking.
+# We must repeat them here in LDLIBS so they appear AFTER .o files.
+
+CFLAGS += -pipe -std=c99 -D_POSIX_C_SOURCE=200809L -Wall -Wno-unused-function -Wno-missing-braces -Wno-unused -Wno-overflow
+CFLAGS += -Wno-unknown-pragmas -fno-builtin -frounding-math
+CFLAGS += -Wno-implicit-function-declaration -Wno-implicit-int -Wno-pointer-sign -Wno-pointer-arith
+CFLAGS += -Wno-strict-prototypes
+CFLAGS += -g
+LDFLAGS += -g
+
+# dlibc libs — must come after .o files so the linker can resolve symbols.
+# Order: newlib libc/libm → dandelion runtime → compiler builtins
+LDLIBS += -lm -lc -lg
+LDLIBS += -ldandelion_file_system -ldandelion_runtime -ldandelion_system
+DANDELION_ARCH := $(patsubst %-unknown-dandelion-clang,%,$(notdir $(CC)))
+LDLIBS += -lclang_rt.builtins-$(DANDELION_ARCH)
+
+# Use a Python-based test runner instead of the C runtest (which needs
+# fork/exec). The runner handles timeouts, per-test working dirs, and failure
+# reporting.
+RUN_TEST = python3 ./run_test_dlibc.py

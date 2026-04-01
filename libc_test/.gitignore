@@ -1,0 +1,12 @@
+*.err
+*.lo
+*.pyc
+*.o
+*.so
+*.a
+*.exe
+config.mak
+REPORT
+.dlibc-dev/
+logs/
+.DS_Store
