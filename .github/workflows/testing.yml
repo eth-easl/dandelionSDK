@@ -1,0 +1,112 @@
+name: libc-test analysis on dev/testing
+
+on:
+  push:
+    branches: [ "dev/testing" ]
+    paths-ignore:
+      - "libc_test/report/ci/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: libc-test-analysis-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-analyze:
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+
+      matrix:
+        cpu: ["aarch64"]
+        platform: ["debug"]
+        build: ["Release"]
+        include:
+          - host: "ubuntu-24.04-arm"
+            cpu: "aarch64"
+
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 120
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        path: dandelionSDK
+
+    - uses: docker/setup-buildx-action@v3
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install analysis dependencies
+      run: python -m pip install --upgrade pip nbconvert jupyter pandas tabulate
+
+    - name: Start libc-test dev container
+      working-directory: dandelionSDK/libc_test
+      run: ./dev_shell.sh --sdk .. --ensure-only
+
+    - name: Rebuild SDK and run libc-test
+      run: >
+        docker exec dlibc-dev bash -lc
+        "cd /work/libc-test &&
+        ./dev_rebuild.sh all
+        --arch ${{ matrix.cpu }}
+        --platform ${{ matrix.platform }}
+        --build-type ${{ matrix.build }}
+        --log test_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.log
+        --csv test_results.csv"
+
+    - name: Run notebook analysis
+      working-directory: dandelionSDK/libc_test/scripts
+      run: jupyter nbconvert --to notebook --execute --inplace analyze_results.ipynb
+
+    - name: Prepare uploaded results
+      run: |
+        mkdir -p uploaded-results
+        cp "dandelionSDK/libc_test/report/function_failure_summary.csv" "uploaded-results/function_failure_summary_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.csv"
+        cp "dandelionSDK/libc_test/report/function_failure_summary.md" "uploaded-results/function_failure_summary_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.md"
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: libc-test-analysis-${{ matrix.cpu }}-${{ matrix.platform }}-${{ matrix.build }}
+        path: uploaded-results/
+
+  commit-results:
+    needs: test-and-analyze
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        path: dandelionSDK
+
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: libc-test-analysis-*
+        merge-multiple: true
+        path: downloaded-results
+
+    - name: Copy results into dandelionSDK
+      run: |
+        mkdir -p dandelionSDK/libc_test/report/ci
+        cp downloaded-results/* dandelionSDK/libc_test/report/ci/
+
+    - name: Commit result updates
+      working-directory: dandelionSDK
+      run: |
+        git add libc_test/report/ci
+        if git diff --cached --quiet; then
+          echo "No result changes to commit."
+          exit 0
+        fi
+        GIT_AUTHOR_NAME="github-actions[bot]" \
+        GIT_AUTHOR_EMAIL="bot@users.noreply.github.com" \
+        GIT_COMMITTER_NAME="github-actions[bot]" \
+        GIT_COMMITTER_EMAIL="github-actions[bot]@users.noreply.github.com" \
+        git commit -m "Update libc-test analysis results [skip ci]"
+        git push origin HEAD:${GITHUB_REF_NAME}
