@@ -104,9 +104,9 @@ jobs:
           echo "No result changes to commit."
           exit 0
         fi
-        GIT_AUTHOR_NAME="github-actions[bot]" \
-        GIT_AUTHOR_EMAIL="bot@users.noreply.github.com" \
-        GIT_COMMITTER_NAME="github-actions[bot]" \
-        GIT_COMMITTER_EMAIL="github-actions[bot]@users.noreply.github.com" \
+        GIT_AUTHOR_NAME="github-actions[Lanzelot711]" \
+        GIT_AUTHOR_EMAIL="154733307+Lanzelot711@users.noreply.github.com" \
+        GIT_COMMITTER_NAME="github-actions[Lanzelot711]" \
+        GIT_COMMITTER_EMAIL="154733307+Lanzelot711@users.noreply.github.com" \
         git commit -m "Update libc-test analysis results [skip ci]"
         git push origin HEAD:${GITHUB_REF_NAME}
