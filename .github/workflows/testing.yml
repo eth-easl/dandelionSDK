@@ -3,11 +3,6 @@ name: libc-test analysis on dev/testing
 on:
   push:
     branches: [ "dev/testing" ]
-    paths-ignore:
-      - "libc_test/report/ci/**"
-
-permissions:
-  contents: write
 
 concurrency:
   group: libc-test-analysis-${{ github.ref }}
@@ -68,45 +63,11 @@ jobs:
         mkdir -p uploaded-results
         cp "dandelionSDK/libc_test/report/function_failure_summary.csv" "uploaded-results/function_failure_summary_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.csv"
         cp "dandelionSDK/libc_test/report/function_failure_summary.md" "uploaded-results/function_failure_summary_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.md"
+        cp "dandelionSDK/libc_test/report/failure_line_details.csv" "uploaded-results/failure_line_details_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.csv"
+        cp "dandelionSDK/libc_test/logs/test_results.csv" "uploaded-results/test_results_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.csv"
+        cp "dandelionSDK/libc_test/logs/test_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.log" "uploaded-results/test_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.log"
 
     - uses: actions/upload-artifact@v4
       with:
         name: libc-test-analysis-${{ matrix.cpu }}-${{ matrix.platform }}-${{ matrix.build }}
         path: uploaded-results/
-
-  commit-results:
-    needs: test-and-analyze
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        path: dandelionSDK
-
-    - uses: actions/download-artifact@v4
-      with:
-        pattern: libc-test-analysis-*
-        merge-multiple: true
-        path: downloaded-results
-
-    - name: Copy results into dandelionSDK
-      run: |
-        mkdir -p dandelionSDK/libc_test/report/ci
-        cp downloaded-results/* dandelionSDK/libc_test/report/ci/
-
-    - name: Commit result updates
-      working-directory: dandelionSDK
-      run: |
-        git add libc_test/report/ci
-        if git diff --cached --quiet; then
-          echo "No result changes to commit."
-          exit 0
-        fi
-        GIT_AUTHOR_NAME="github-actions[Lanzelot711]" \
-        GIT_AUTHOR_EMAIL="154733307+Lanzelot711@users.noreply.github.com" \
-        GIT_COMMITTER_NAME="github-actions[Lanzelot711]" \
-        GIT_COMMITTER_EMAIL="154733307+Lanzelot711@users.noreply.github.com" \
-        git commit -m "Update libc-test analysis results [skip ci]"
-        git push origin HEAD:${GITHUB_REF_NAME}
