@@ -197,6 +197,9 @@ jobs:
         mkdir -p release-assets
         cp downloaded-results/* release-assets/
         cp downloaded-packages/*.tar.gz release-assets/
+        if ! gh release view testing >/dev/null 2>&1; then
+          gh release create testing --title "testing" --notes ""
+        fi
         gh release upload testing release-assets/* --clobber
       env:
         GH_REPO: ${{ github.repository }}
