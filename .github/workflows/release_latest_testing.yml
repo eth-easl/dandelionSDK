@@ -1,4 +1,4 @@
-name: release latest with all library versions
+name: release testing with all library versions
 
 on:
   push:
@@ -198,7 +198,9 @@ jobs:
         cp downloaded-results/* release-assets/
         cp downloaded-packages/*.tar.gz release-assets/
         if ! gh release view testing >/dev/null 2>&1; then
-          gh release create testing --title "testing" --notes ""
+          gh release create testing --title "testing" --notes "" --latest=false --draft
+        else
+          gh release edit testing --title "testing" --latest=false --draft
         fi
         gh release upload testing release-assets/* --clobber
       env:
