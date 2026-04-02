@@ -2,7 +2,7 @@ name: libc-test analysis on dev/testing
 
 on:
   push:
-    branches: [ "dev/testing" ]
+    branches: [ ]
 
 concurrency:
   group: libc-test-analysis-${{ github.ref }}
