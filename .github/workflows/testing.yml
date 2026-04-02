@@ -26,13 +26,13 @@ jobs:
     timeout-minutes: 120
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         path: dandelionSDK
 
-    - uses: docker/setup-buildx-action@v3
+    - uses: docker/setup-buildx-action@v4
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v6
       with:
         python-version: "3.12"
 
@@ -67,7 +67,7 @@ jobs:
         cp "dandelionSDK/libc_test/logs/test_results.csv" "uploaded-results/test_results_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.csv"
         cp "dandelionSDK/libc_test/logs/test_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.log" "uploaded-results/test_${{ matrix.cpu }}_${{ matrix.platform }}_${{ matrix.build }}.log"
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v6
       with:
         name: libc-test-analysis-${{ matrix.cpu }}-${{ matrix.platform }}-${{ matrix.build }}
         path: uploaded-results/
