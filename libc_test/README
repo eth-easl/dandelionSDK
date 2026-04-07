@@ -111,6 +111,13 @@ from the libc-test repo root, start or reuse the Docker dev container
 and enter a shell:
 ./dev_container.sh --sdk /path/to/dandelionSDK
 
+by default this also creates and reuses `.dlibc-dev/` in the `libc_test`
+directory as a persistent host-side state directory. It is bind-mounted into
+the container to keep the SDK build cache in `.dlibc-dev/sdk-build/` and the
+installed SDK toolchain in `.dlibc-dev/dandelion_sdk/`. This can be changed
+using different flags in `dev_container.sh` to build the cache in the root
+folder instead.
+
 inside the container, rebuild and install the SDK:
 ./dev_rebuild.sh sdk --log sdk.log
 (writes to logs/sdk.log)
