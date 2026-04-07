@@ -134,6 +134,8 @@ def replay_outputs(
     copy_stdio_file(output_sets_dir / "stdio" / "stdout", dandelion_stdout)
     copy_stdio_file(output_sets_dir / "stdio" / "stderr", dandelion_stderr)
 
+    # replay the host stdout and stderr to the console
+    # this is useful for debugging the test runner itself
     replay_file(host_stdout, sys.stdout)
     replay_file(host_stderr, sys.stderr)
 
