@@ -1,13 +1,3 @@
-# config.mak for dandelion dlibc (newlib-based)
-#
-# The dandelion clang .cfg (installed via create-compiler.sh -d) already
-# provides: --target, -isystem (SDK headers), -T (linker script),
-# -fuse-ld=lld, -static, -nostdlib, -L (SDK lib dirs), and -l flags.
-#
-# However, the .cfg flags are prepended to the command line, so the -l
-# flags appear BEFORE .o files and are effectively no-ops during linking.
-# We must repeat them here in LDLIBS so they appear AFTER .o files.
-
 CFLAGS += -pipe -std=c99 -D_POSIX_C_SOURCE=200809L -Wall -Wno-unused-function -Wno-missing-braces -Wno-unused -Wno-overflow
 CFLAGS += -Wno-unknown-pragmas -fno-builtin -frounding-math
 CFLAGS += -Wno-implicit-function-declaration -Wno-implicit-int -Wno-pointer-sign -Wno-pointer-arith

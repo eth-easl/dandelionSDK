@@ -142,3 +142,26 @@ run libc-test only against the already-installed SDK:
 
 summarize passes from the generated CSV:
 awk -F, 'NR>1 {total++; if ($2=="PASS") pass++} END {print "passes=" pass "\ntotal=" total}' logs/test.csv
+
+supporting scripts:
+
+run_test_dlibc.py:
+the libc-test runtime helper for the Dandelion target. It runs each test with
+the same `runtest`-style interface as the original helper, enforces the test
+timeout, captures host stdout/stderr, copies Dandelion `output_sets` artifacts,
+and stores per-test metadata plus captured stdio under `logs/test_stdio/`.
+
+gen_csv.py:
+post-processes the libc-test build tree into a single CSV summary. It scans the
+generated `.err` files, marks tests as `PASS` or `FAIL`, distinguishes runtime
+failures from compile/link failures, and records an evidence file path for each
+row. `./dev_rebuild.sh ... --csv <file>` uses this script to write the report
+into `logs/`.
+
+scripts/analyze_results.ipynb:
+an analysis notebook for failure attribution. It loads the generated CSV plus
+captured runtime artifacts from `logs/test_stdio/`, extracts likely failing
+function names from runtime output, separates known stubbed functions from
+other failures, and writes derived reports such as
+`report/failure_line_details.csv`, `report/function_failure_summary.csv`, and
+`report/uncategorized_lines.txt`.
