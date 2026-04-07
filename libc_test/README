@@ -107,18 +107,26 @@ then the $(N).err target should depend on that file
 
 Dandelion SDK workflow:
 
-start and enter the Docker dev container from the libc-test repo root:
-./dev_shell.sh --sdk /Users/lanzelotmoll/workspace/ETH/SemesterProjekt/dandelionSDK
+from the libc-test repo root, start or reuse the Docker dev container
+and enter a shell:
+./dev_container.sh --sdk /path/to/dandelionSDK
 
-rebuild the SDK in the container:
+inside the container, rebuild and install the SDK:
 ./dev_rebuild.sh sdk --log sdk.log
 (writes to logs/sdk.log)
 
-rebuild the SDK and refresh the cached newlib patch:
+rebuild the SDK and force the cached newlib patch to be reapplied:
 ./dev_rebuild.sh sdk --refresh-newlib-patch --log sdk.log
 (writes to logs/sdk.log)
 
-rebuild the SDK and reset the cached newlib tree before reapplying patches:
+if you edited the cached newlib checkout and want to refresh the patch file
+written back to dandelionSDK/newlib_shim, run:
+./dev_update_newlib_patch.sh
+
+if you patched a new file, first add its path to the `PATCH_PATHS` list in
+`dev_update_newlib_patch.sh` so it is included in the generated patch.
+
+rebuild the SDK and reset the cached newlib tree before reapplying the patch:
 ./dev_rebuild.sh sdk --refresh-newlib-patch --reset-newlib-tree --log sdk.log
 (writes to logs/sdk.log)
 
@@ -126,10 +134,11 @@ rebuild everything in the container:
 ./dev_rebuild.sh all --log all.log --csv all.csv
 (writes to logs/all.log and logs/all.csv)
 
-run libc-test in the container:
+run libc-test only against the already-installed SDK:
 ./dev_rebuild.sh test --log test.log --csv test.csv
 (writes to logs/test.log and logs/test.csv)
 
 
 
- awk -F, 'NR>1 {total++; if ($2=="PASS") pass++} END {print "passes=" pass "\ntotal=" total}' logs/test.csv
+summarize passes from the generated CSV:
+awk -F, 'NR>1 {total++; if ($2=="PASS") pass++} END {print "passes=" pass "\ntotal=" total}' logs/test.csv

@@ -41,7 +41,7 @@ jobs:
 
     - name: Start libc-test dev container
       working-directory: dandelionSDK/libc_test
-      run: ./dev_shell.sh --sdk .. --ensure-only
+      run: ./dev_container.sh --sdk .. --ensure-only
 
     - name: Rebuild SDK and run libc-test
       run: >
