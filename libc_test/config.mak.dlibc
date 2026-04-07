@@ -4,6 +4,10 @@ CFLAGS += -Wno-implicit-function-declaration -Wno-implicit-int -Wno-pointer-sign
 CFLAGS += -Wno-strict-prototypes
 CFLAGS += -g
 LDFLAGS += -g
+LDLIBS += -lpthread -lm -lrt
+
+CFLAGS += -D_FILE_OFFSET_BITS=64
+LDLIBS += -lcrypt -ldl -lresolv -lutil -lpthread
 
 
 # Use a Python-based test runner instead of the C runtest (which needs
