@@ -40,6 +40,17 @@ run libc-test only against the already-installed SDK:
 ./dev_rebuild.sh test --log test.log --csv test.csv
 (writes to logs/test.log and logs/test.csv)
 
+adding a simple test:
+
+add a new self-contained `.c` file under `src/api/`, `src/functional/`, or
+`src/regression/` with its own `main` and return `t_status` from `main` if you
+use `t_error`. use `src/api/` for interface/header exposure checks and
+`src/functional/` or `src/regression/` for runtime behaviour tests.
+
+the framework automatically picks up the new file, builds both dynamic and
+static test binaries for it, runs them through `run_test_dlibc.py`, writes the
+captured results to `.err` files, and includes the outcome in `logs/test.csv`.
+
 
 
 summarize passes from the generated CSV:
