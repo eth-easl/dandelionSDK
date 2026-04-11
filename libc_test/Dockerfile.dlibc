@@ -20,11 +20,11 @@ RUN apt-get update && \
       gcc g++ automake curl && \
     rm -rf /var/lib/apt/lists/*
 
-# clang-19 via the LLVM APT script
+# clang-20 via the LLVM APT script
 RUN wget https://apt.llvm.org/llvm.sh -O ~/llvm.sh && \
     chmod +x ~/llvm.sh && \
-    ~/llvm.sh 19 && \
-    ln -sf /usr/bin/ld.lld-19 /usr/bin/ld.lld && \
+    ~/llvm.sh 20 && \
+    ln -sf /usr/bin/ld.lld-20 /usr/bin/ld.lld && \
     rm ~/llvm.sh
 
 # autoconf 2.69 — exact version required by newlib's configure

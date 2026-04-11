@@ -194,8 +194,8 @@ rebuild_sdk() {
 
   echo "==> Configuring dandelionSDK in $SDK_BUILD"
   run_cmd cmake -S "$SDK_SRC" -B "$SDK_BUILD" \
-    -DCMAKE_C_COMPILER=clang-19 \
-    -DCMAKE_CXX_COMPILER=clang++-19 \
+    -DCMAKE_C_COMPILER=clang-20 \
+    -DCMAKE_CXX_COMPILER=clang++-20 \
     -DDANDELION_PLATFORM="$PLATFORM" \
     -DARCHITECTURE="$ARCH" \
     -DNEWLIB=ON \
@@ -214,7 +214,7 @@ rebuild_sdk() {
   run_cmd cmake --install "$SDK_BUILD"
 
   echo "==> Creating wrapped compiler"
-  run_cmd "$SDK_INSTALL/create-compiler.sh" -c clang-19
+  run_cmd "$SDK_INSTALL/create-compiler.sh" -c clang-20
   # On the Docker workflow the copied clang wrapper can lose its execute bit
   # on the bind-mounted install dir, which later breaks libc-test with
   # "Permission denied" when invoking $SDK_CC.

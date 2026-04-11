@@ -2,9 +2,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-IMAGE_NAME="${IMAGE_NAME:-libc-test-dlibc}"
-CONTAINER_NAME="${CONTAINER_NAME:-dlibc-dev}"
-SDK_DIR_DEFAULT="${DANDELION_SDK_DIR:-$SCRIPT_DIR/../dandelionSDK}"
+IMAGE_NAME="${IMAGE_NAME:-dev_dandelion_sdk}"
+CONTAINER_NAME="${CONTAINER_NAME:-dev_dandelion_sdk_container}"
+SDK_DIR_DEFAULT="${DANDELION_SDK_DIR:-$SCRIPT_DIR/../}"
 STATE_DIR_DEFAULT="${DLIBC_DEV_STATE_DIR:-$SCRIPT_DIR/.dlibc-dev}"
 CONTAINER_ROOT_DEFAULT="${DLIBC_CONTAINER_ROOT:-/work}"
 LIBCTEST_MOUNT_DEFAULT="${LIBCTEST_MOUNT:-$CONTAINER_ROOT_DEFAULT/libc-test}"
@@ -55,7 +55,7 @@ Usage: $(basename "$0") [options]
 Start/reuse an interactive dev container for incremental dandelionSDK + libc-test work.
 
 Options:
-  --sdk DIR            Path to dandelionSDK source (default: ../dandelionSDK)
+  --sdk DIR            Path to dandelionSDK source (default: .. (parent folder))
   --state DIR          Host directory for persistent build/install state (default: .dlibc-dev)
   --libctest-mount DIR Container path for the libc-test repo (default: /work/libc-test)
   --sdk-mount DIR      Container path for the dandelionSDK repo (default: /work/dandelionSDK)
@@ -63,8 +63,8 @@ Options:
                        Container path for the SDK build dir (default: /work/sdk-build)
   --sdk-install-mount DIR
                        Container path for the SDK install dir (default: /work/dandelion_sdk)
-  --container NAME     Docker container name (default: dlibc-dev)
-  --image NAME         Docker image name (default: libc-test-dlibc)
+  --container NAME     Docker container name (default: dev_dandelion_sdk_container)
+  --image NAME         Docker image name (default: dev_dandelion_sdk)
   --rebuild-image      Force rebuild of the Docker image
   --recreate-container Remove and recreate the container before use
   --ensure-only        Ensure container is running and exit (no interactive shell)
@@ -176,8 +176,22 @@ container_running() {
   [[ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME")" == "true" ]]
 }
 
+container_image_matches() {
+  local image_id
+  local container_image_id
+
+  image_id="$(docker image inspect -f '{{.Id}}' "$IMAGE_NAME")"
+  container_image_id="$(docker inspect -f '{{.Image}}' "$CONTAINER_NAME")"
+  [[ "$image_id" == "$container_image_id" ]]
+}
+
 if container_exists && [[ "$RECREATE_CONTAINER" == true ]]; then
   echo "Removing existing container '$CONTAINER_NAME'..."
+  docker rm -f "$CONTAINER_NAME" >/dev/null
+fi
+
+if container_exists && ! container_image_matches; then
+  echo "Existing container '$CONTAINER_NAME' uses an outdated image; recreating it..."
   docker rm -f "$CONTAINER_NAME" >/dev/null
 fi
 
