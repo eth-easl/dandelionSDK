@@ -24,6 +24,8 @@ jobs:
 
     runs-on: ${{ matrix.host }}
     timeout-minutes: 120
+    env:
+      LIBC_TEST_CONTAINER: dev_dandelion_sdk_container
 
     steps:
     - uses: actions/checkout@v6
@@ -41,11 +43,11 @@ jobs:
 
     - name: Start libc-test dev container
       working-directory: dandelionSDK/libc_test
-      run: ./dev_container.sh --sdk .. --ensure-only
+      run: ./dev_container.sh --sdk .. --container "$LIBC_TEST_CONTAINER" --ensure-only
 
     - name: Rebuild SDK and run libc-test
       run: >
-        docker exec dlibc-dev bash -lc
+        docker exec "$LIBC_TEST_CONTAINER" bash -lc
         "cd /work/libc-test &&
         ./dev_rebuild.sh all
         --arch ${{ matrix.cpu }}
