@@ -129,6 +129,46 @@ To add more tools to the build environment, they can be added to the docker file
 FROM dandelion_dev_docker:latest
 ```
 
+### Running A Simple Program
+
+The debug backend expects the current working directory to contain `input_sets/` and `output_sets/`.
+If these folders are missing, the program will terminate before running user code.
+
+The following example builds and runs [`test_programs/libc/test.c`](test_programs/libc/test.c) inside the container:
+
+```bash
+docker build --build-arg TARGET_ARCH=aarch64 -t dandelion_dev_docker:aarch64 .
+
+docker run --rm -it \
+  --mount type=bind,src="$(pwd)",dst=/workspace \
+  --workdir=/workspace \
+  dandelion_dev_docker:aarch64 \
+  bash
+
+mkdir -p /tmp/dandelion-smoke
+cat > /tmp/dandelion-smoke/CMakeLists.txt <<'EOF'
+cmake_minimum_required(VERSION 3.20)
+project(dandelion_smoke C)
+add_subdirectory(/root/dandelion_sdk sdk)
+add_executable(smoke /workspace/test_programs/libc/test.c)
+target_link_libraries(smoke PRIVATE dlibc dandelion_runtime)
+EOF
+
+cmake -S /tmp/dandelion-smoke -B /tmp/dandelion-smoke/build
+cmake --build /tmp/dandelion-smoke/build -j
+
+mkdir -p /tmp/run/input_sets/stdio /tmp/run/output_sets
+printf 'abc' > /tmp/run/input_sets/stdio/stdin
+printf 'smoke arg1 arg2' > /tmp/run/input_sets/stdio/argv
+printf 'HOME=/root' > /tmp/run/input_sets/stdio/environ
+
+cd /tmp/run
+/tmp/dandelion-smoke/build/smoke
+```
+
+The program writes its regular output to stdout/stderr and uses the files in `input_sets/stdio/`
+to populate `stdin`, `argv`, and `environ`.
+
 ## Freestanding
 The GCC/Clang standard expects 4 functions to allways be provided in any environment (even freestanding), which allow the compiler to always just insert them.
 (https://gcc.gnu.org/onlinedocs/gcc/Standards.html)
