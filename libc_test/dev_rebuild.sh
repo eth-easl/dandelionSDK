@@ -13,7 +13,7 @@ Commands:
   test   Build+run libc-test only (uses already-installed SDK)
 
 Options:
-  --arch ARCH         Target architecture (default: x86_64)
+  --arch ARCH         Target architecture (default: CMake/system default)
   --platform NAME     Dandelion platform (default: debug)
   --build-type TYPE   CMake build type (default: Release)
   --jobs N            Parallel jobs (default: nproc)
@@ -44,7 +44,8 @@ if [[ $# -gt 0 ]]; then
   esac
 fi
 
-ARCH="${TARGET_ARCH:-x86_64}"
+ARCH="${TARGET_ARCH:-}"
+ARCH_EXPLICIT=false
 PLATFORM="${DANDELION_PLATFORM:-debug}"
 BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}"
 JOBS="$(nproc)"
@@ -54,10 +55,15 @@ RESET_NEWLIB_TREE=false
 LOG_FILE=""
 CSV_FILE=""
 
+if [[ -n "${TARGET_ARCH:-}" ]]; then
+  ARCH_EXPLICIT=true
+fi
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --arch)
       ARCH="$2"
+      ARCH_EXPLICIT=true
       shift 2
       ;;
     --platform)
@@ -111,7 +117,7 @@ SDK_SRC="${SDK_SRC:-$ROOT_DIR_DEFAULT/dandelionSDK}"
 SDK_BUILD="${SDK_BUILD:-$ROOT_DIR_DEFAULT/sdk-build}"
 SDK_INSTALL="${SDK_INSTALL:-$ROOT_DIR_DEFAULT/dandelion_sdk}"
 LOG_DIR="${LIBCTEST_DIR}/logs"
-SDK_CC="${SDK_INSTALL}/${ARCH}-unknown-dandelion-clang"
+SDK_CC=""
 NEWLIB_SRC_DIR="${SDK_BUILD}/newlib-cygwin/src/newlib"
 NEWLIB_BUILD_DIR="${SDK_BUILD}/newlib-cygwin/src/newlib-build"
 NEWLIB_PATCH_STAMP="${NEWLIB_BUILD_DIR}/patch_applied"
@@ -138,6 +144,51 @@ normalize_output_path() {
   local file_name
   file_name="$(basename "$1")"
   printf '%s/%s\n' "$LOG_DIR" "$file_name"
+}
+
+detect_configured_arch() {
+  local cmake_cache="$SDK_BUILD/CMakeCache.txt"
+
+  if [[ ! -f "$cmake_cache" ]]; then
+    return
+  fi
+
+  awk -F= '/^ARCHITECTURE:STRING=/{print $2; exit}' "$cmake_cache"
+}
+
+resolve_sdk_cc() {
+  local detected_arch=""
+  local matches=()
+
+  if [[ "$ARCH_EXPLICIT" == true && -n "$ARCH" ]]; then
+    SDK_CC="${SDK_INSTALL}/${ARCH}-unknown-dandelion-clang"
+    return
+  fi
+
+  detected_arch="$(detect_configured_arch)"
+  if [[ -n "$detected_arch" ]]; then
+    ARCH="$detected_arch"
+    SDK_CC="${SDK_INSTALL}/${ARCH}-unknown-dandelion-clang"
+    return
+  fi
+
+  shopt -s nullglob
+  matches=("$SDK_INSTALL"/*-unknown-dandelion-clang)
+  shopt -u nullglob
+
+  if [[ ${#matches[@]} -eq 1 ]]; then
+    SDK_CC="${matches[0]}"
+    ARCH="${SDK_CC##*/}"
+    ARCH="${ARCH%-unknown-dandelion-clang}"
+    return
+  fi
+
+  if [[ ${#matches[@]} -gt 1 ]]; then
+    echo "Multiple compiler wrappers found in $SDK_INSTALL; rerun with --arch to choose one" >&2
+    exit 1
+  fi
+
+  SDK_CC=""
 }
 
 mkdir -p "$LOG_DIR"
@@ -193,19 +244,26 @@ rebuild_sdk() {
   fi
 
   echo "==> Configuring dandelionSDK in $SDK_BUILD"
-  run_cmd cmake -S "$SDK_SRC" -B "$SDK_BUILD" \
-    -DCMAKE_C_COMPILER=clang-20 \
-    -DCMAKE_CXX_COMPILER=clang++-20 \
-    -DDANDELION_PLATFORM="$PLATFORM" \
-    -DARCHITECTURE="$ARCH" \
-    -DNEWLIB=ON \
-    -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=ON \
-    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+  cmake_args=(
+    -S "$SDK_SRC"
+    -B "$SDK_BUILD"
+    -DCMAKE_C_COMPILER=clang-20
+    -DCMAKE_CXX_COMPILER=clang++-20
+    -DDANDELION_PLATFORM="$PLATFORM"
+    -DNEWLIB=ON
+    -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=ON
+    -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
     -DCMAKE_INSTALL_PREFIX="$SDK_INSTALL"
+  )
+
+  if [[ "$ARCH_EXPLICIT" == true ]]; then
+    cmake_args+=(-DARCHITECTURE="$ARCH")
+  fi
+
+  run_cmd cmake "${cmake_args[@]}"
 
   echo "==> Building required SDK targets"
-  # Build only core SDK targets needed for install; skip sample binaries in
-  # dandelionSDK/test_programs that can fail on cross-arch Docker hosts.
+
   run_cmd cmake --build "$SDK_BUILD" \
     --target dandelion_system dandelion_runtime dandelion_file_system newlib llvmproject \
     -j"$JOBS"
@@ -215,6 +273,11 @@ rebuild_sdk() {
 
   echo "==> Creating wrapped compiler"
   run_cmd "$SDK_INSTALL/create-compiler.sh" -c clang-20
+  resolve_sdk_cc
+  if [[ -z "$SDK_CC" ]]; then
+    echo "Unable to determine compiler wrapper path in $SDK_INSTALL" >&2
+    exit 1
+  fi
   # On the Docker workflow the copied clang wrapper can lose its execute bit
   # on the bind-mounted install dir, which later breaks libc-test with
   # "Permission denied" when invoking $SDK_CC.
@@ -235,9 +298,18 @@ emit_csv() {
 }
 
 run_tests() {
+  resolve_sdk_cc
   if [[ ! -x "$SDK_CC" ]]; then
-    echo "Expected compiler wrapper not found: $SDK_CC" >&2
-    echo "Run: ./dev_rebuild.sh sdk --arch $ARCH" >&2
+    if [[ -n "$SDK_CC" ]]; then
+      echo "Expected compiler wrapper not found: $SDK_CC" >&2
+    else
+      echo "Expected compiler wrapper not found in $SDK_INSTALL" >&2
+    fi
+    if [[ -n "$ARCH" ]]; then
+      echo "Run: ./dev_rebuild.sh sdk --arch $ARCH" >&2
+    else
+      echo "Run: ./dev_rebuild.sh sdk --arch <arch>" >&2
+    fi
     exit 1
   fi
 
