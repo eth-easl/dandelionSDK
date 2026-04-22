@@ -47,9 +47,6 @@ int pthread_sigmask(int how, const sigset_t *restrict set,
                     sigset_t *restrict oldset) {
   (void)how;
   (void)set;
-  if (oldset != NULL) {
-    memset(oldset, 0, sizeof(*oldset));
-  }
   *__errno() = ENOSYS;
   return -1;
 }
@@ -62,9 +59,7 @@ int sigaddset(sigset_t *set, int signo) {
 }
 
 int sigemptyset(sigset_t *set) {
-  if (set != NULL) {
-    memset(set, 0, sizeof(*set));
-  }
+  (void)set;
   *__errno() = ENOSYS;
   return -1;
 }
@@ -80,18 +75,13 @@ int sigprocmask(int how, const sigset_t *restrict set,
                 sigset_t *restrict oldset) {
   (void)how;
   (void)set;
-  if (oldset != NULL) {
-    memset(oldset, 0, sizeof(*oldset));
-  }
   *__errno() = ENOSYS;
   return -1;
 }
 
 int sigaltstack(const stack_t *restrict ss, stack_t *restrict old_ss) {
   (void)ss;
-  if (old_ss != NULL) {
-    memset(old_ss, 0, sizeof(*old_ss));
-  }
+  (void)old_ss;
   *__errno() = ENOSYS;
   return -1;
 }
