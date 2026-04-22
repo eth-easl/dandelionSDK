@@ -120,7 +120,7 @@ To use the container use the following command:
 docker run --rm -it --mount type=bind,src=<path to your source folder>,dst=/workspace --workdir=/workspace dandelion_dev_docker:latest bash
 ``` 
 You will enter the container and your source folder will be mounted at `/workspace`.
-The default clang and clang++ are set up to compile for dandelion debug with the Dockerfile's default target architecture (`x86_64`).
+The default clang and clang++ are set up to compile for dandelion debug on the machine you are running.
 If you want a different target, you can set build, platform and architecture in the docker file.
 Files you build in the container will be visible outside, as long as they are in the workspace directory.
 
