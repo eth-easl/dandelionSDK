@@ -1,43 +1,43 @@
 
 Dandelion SDK workflow:
 
-from the libc-test repo root, start or reuse the Docker dev container
+from the dandelionSDK repo root, start or reuse the Docker dev container
 and enter a shell:
-./dev_container.sh --sdk /path/to/dandelionSDK
-(if you are in the libc-test directory, you can just use './dev_container.sh' to start the container without the sdk flag)
+./dev/dev_container.sh --sdk /path/to/dandelionSDK
+(if you are in the dandelionSDK root, you can just use './dev/dev_container.sh' to start the container without the sdk flag)
 
-by default this also creates and reuses `.dlibc-dev/` in the `libc_test`
+by default this also creates and reuses `.dlibc-dev/` in the `dev`
 directory as a persistent host-side state directory. It is bind-mounted into
 the container to keep the SDK build cache in `.dlibc-dev/sdk-build/` and the
 installed SDK toolchain in `.dlibc-dev/dandelion_sdk/`. This can be changed
-using different flags in `dev_container.sh` to build the cache in the root
+using different flags in `dev/dev_container.sh` to build the cache in the root
 folder instead.
 
 inside the container, rebuild and install the SDK:
-./dev_rebuild.sh sdk --log sdk.log
+/work/dev/dev_rebuild.sh sdk --log sdk.log
 (writes to logs/sdk.log)
 
 rebuild the SDK and force the cached newlib patch to be reapplied:
-./dev_rebuild.sh sdk --refresh-newlib-patch --log sdk.log
+/work/dev/dev_rebuild.sh sdk --refresh-newlib-patch --log sdk.log
 (writes to logs/sdk.log)
 
 if you edited the cached newlib checkout and want to refresh the patch file
 written back to dandelionSDK/newlib_shim, run:
-./dev_update_newlib_patch.sh
+/work/dev/dev_update_newlib_patch.sh
 
 if you patched a new file, first add its path to the `PATCH_PATHS` list in
-`dev_update_newlib_patch.sh` so it is included in the generated patch.
+`dev/dev_update_newlib_patch.sh` so it is included in the generated patch.
 
 rebuild the SDK and reset the cached newlib tree before reapplying the patch:
-./dev_rebuild.sh sdk --refresh-newlib-patch --reset-newlib-tree --log sdk.log
+/work/dev/dev_rebuild.sh sdk --refresh-newlib-patch --reset-newlib-tree --log sdk.log
 (writes to logs/sdk.log)
 
 rebuild everything in the container:
-./dev_rebuild.sh all --log all.log --csv all.csv
+/work/dev/dev_rebuild.sh all --log all.log --csv all.csv
 (writes to logs/all.log and logs/all.csv)
 
 run libc-test only against the already-installed SDK:
-./dev_rebuild.sh test --log test.log --csv test.csv
+/work/dev/dev_rebuild.sh test --log test.log --csv test.csv
 (writes to logs/test.log and logs/test.csv)
 
 adding a simple test:
@@ -68,7 +68,7 @@ gen_csv.py:
 post-processes the libc-test build tree into a single CSV summary. It scans the
 generated `.err` files, marks tests as `PASS` or `FAIL`, distinguishes runtime
 failures from compile/link failures, and records an evidence file path for each
-row. `./dev_rebuild.sh ... --csv <file>` uses this script to write the report
+row. `/work/dev/dev_rebuild.sh ... --csv <file>` uses this script to write the report
 into `logs/`.
 
 scripts/analyze_results.ipynb:
@@ -82,10 +82,10 @@ other failures, and writes derived reports such as
 
 Troubleshooting:
 
-if you want to reset the build cache, you can delete `.dlibc-dev/`, but if the
+if you want to reset the build cache, you can delete `../dev/.dlibc-dev/`, but if the
 dev container already exists you then need to recreate it because the old
-Docker bind mounts become stale. run `./dev_container.sh --recreate-container`
-from `libc_test/` before rebuilding again.
+Docker bind mounts become stale. run `./dev/dev_container.sh --recreate-container`
+from the dandelionSDK root before rebuilding again.
 
 # The original musl project readme:
 

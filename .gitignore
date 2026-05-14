@@ -5,3 +5,4 @@ compile_commands.json
 # rust test build folders
 */target/
 Cargo.lock
+dev/.dlibc-dev/

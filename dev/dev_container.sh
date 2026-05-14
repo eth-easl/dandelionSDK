@@ -2,12 +2,14 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+LIBCTEST_SRC_DEFAULT="$(cd "$SCRIPT_DIR/../libc_test" && pwd)"
 IMAGE_NAME="${IMAGE_NAME:-dev_dandelion_sdk}"
 CONTAINER_NAME="${CONTAINER_NAME:-dev_dandelion_sdk_container}"
 SDK_DIR_DEFAULT="${DANDELION_SDK_DIR:-$SCRIPT_DIR/../}"
 STATE_DIR_DEFAULT="${DLIBC_DEV_STATE_DIR:-$SCRIPT_DIR/.dlibc-dev}"
 CONTAINER_ROOT_DEFAULT="${DLIBC_CONTAINER_ROOT:-/work}"
 LIBCTEST_MOUNT_DEFAULT="${LIBCTEST_MOUNT:-$CONTAINER_ROOT_DEFAULT/libc-test}"
+DEV_MOUNT_DEFAULT="${DEV_MOUNT:-$CONTAINER_ROOT_DEFAULT/dev}"
 SDK_MOUNT_DEFAULT="${SDK_MOUNT:-$CONTAINER_ROOT_DEFAULT/dandelionSDK}"
 SDK_BUILD_MOUNT_DEFAULT="${SDK_BUILD_MOUNT:-$CONTAINER_ROOT_DEFAULT/sdk-build}"
 SDK_INSTALL_MOUNT_DEFAULT="${SDK_INSTALL_MOUNT:-$CONTAINER_ROOT_DEFAULT/dandelion_sdk}"
@@ -15,6 +17,7 @@ SDK_INSTALL_MOUNT_DEFAULT="${SDK_INSTALL_MOUNT:-$CONTAINER_ROOT_DEFAULT/dandelio
 SDK_DIR="$SDK_DIR_DEFAULT"
 STATE_DIR="$STATE_DIR_DEFAULT"
 LIBCTEST_MOUNT="$LIBCTEST_MOUNT_DEFAULT"
+DEV_MOUNT="$DEV_MOUNT_DEFAULT"
 SDK_MOUNT="$SDK_MOUNT_DEFAULT"
 SDK_BUILD_MOUNT="$SDK_BUILD_MOUNT_DEFAULT"
 SDK_INSTALL_MOUNT="$SDK_INSTALL_MOUNT_DEFAULT"
@@ -55,9 +58,10 @@ Usage: $(basename "$0") [options]
 Start/reuse an interactive dev container for incremental dandelionSDK + libc-test work.
 
 Options:
-  --sdk DIR            Path to dandelionSDK source (default: .. (parent folder))
-  --state DIR          Host directory for persistent build/install state (default: .dlibc-dev)
+  --sdk DIR            Path to dandelionSDK source (default: repo root)
+  --state DIR          Host directory for persistent build/install state (default: dev/.dlibc-dev)
   --libctest-mount DIR Container path for the libc-test repo (default: /work/libc-test)
+  --dev-mount DIR      Container path for the dev scripts dir (default: /work/dev)
   --sdk-mount DIR      Container path for the dandelionSDK repo (default: /work/dandelionSDK)
   --sdk-build-mount DIR
                        Container path for the SDK build dir (default: /work/sdk-build)
@@ -84,6 +88,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --libctest-mount)
       LIBCTEST_MOUNT="$2"
+      shift 2
+      ;;
+    --dev-mount)
+      DEV_MOUNT="$2"
       shift 2
       ;;
     --sdk-mount)
@@ -132,6 +140,15 @@ done
 
 require_docker
 
+if [[ ! -d "$LIBCTEST_SRC_DEFAULT" ]]; then
+  echo "Error: libc_test directory not found next to dev/: $LIBCTEST_SRC_DEFAULT" >&2
+  exit 1
+fi
+if [[ ! -f "$LIBCTEST_SRC_DEFAULT/config.mak.dlibc" ]]; then
+  echo "Error: libc_test directory does not look correct: $LIBCTEST_SRC_DEFAULT" >&2
+  echo "Expected file missing: $LIBCTEST_SRC_DEFAULT/config.mak.dlibc" >&2
+  exit 1
+fi
 if [[ ! -d "$SDK_DIR" ]]; then
   echo "Error: SDK directory not found: $SDK_DIR" >&2
   exit 1
@@ -143,10 +160,11 @@ if [[ ! -f "$SDK_DIR/CMakeLists.txt" ]]; then
 fi
 
 SCRIPT_DIR="$(abspath_existing_dir "$SCRIPT_DIR")"
+LIBCTEST_SRC_DEFAULT="$(abspath_existing_dir "$LIBCTEST_SRC_DEFAULT")"
 SDK_DIR="$(abspath_existing_dir "$SDK_DIR")"
 STATE_DIR="$(abspath_parent_child "$STATE_DIR")"
 
-for path_var in LIBCTEST_MOUNT SDK_MOUNT SDK_BUILD_MOUNT SDK_INSTALL_MOUNT; do
+for path_var in LIBCTEST_MOUNT DEV_MOUNT SDK_MOUNT SDK_BUILD_MOUNT SDK_INSTALL_MOUNT; do
   path_value="${!path_var}"
   if [[ "$path_value" != /* ]]; then
     echo "Error: $path_var must be an absolute container path: $path_value" >&2
@@ -165,7 +183,7 @@ if [[ "$REBUILD_IMAGE" == true ]] || ! image_exists; then
   docker buildx build --load \
     -f "$SCRIPT_DIR/Dockerfile.dlibc" \
     -t "$IMAGE_NAME" \
-    "$SCRIPT_DIR"
+    "$LIBCTEST_SRC_DEFAULT"
 fi
 
 container_exists() {
@@ -208,7 +226,8 @@ else
     -e SDK_BUILD="$SDK_BUILD_MOUNT" \
     -e SDK_INSTALL="$SDK_INSTALL_MOUNT" \
     -e LIBCTEST_DIR="$LIBCTEST_MOUNT" \
-    -v "$SCRIPT_DIR:$LIBCTEST_MOUNT" \
+    -v "$LIBCTEST_SRC_DEFAULT:$LIBCTEST_MOUNT" \
+    -v "$SCRIPT_DIR:$DEV_MOUNT" \
     -v "$SDK_DIR:$SDK_MOUNT" \
     -v "$STATE_DIR/sdk-build:$SDK_BUILD_MOUNT" \
     -v "$STATE_DIR/dandelion_sdk:$SDK_INSTALL_MOUNT" \
@@ -218,15 +237,16 @@ else
 fi
 
 echo "Container '$CONTAINER_NAME' is ready."
-echo "libc-test:   $SCRIPT_DIR -> $LIBCTEST_MOUNT"
+echo "libc-test:   $LIBCTEST_SRC_DEFAULT -> $LIBCTEST_MOUNT"
+echo "dev scripts: $SCRIPT_DIR -> $DEV_MOUNT"
 echo "SDK mount:   $SDK_DIR -> $SDK_MOUNT"
 echo "State mount: $STATE_DIR/sdk-build -> $SDK_BUILD_MOUNT"
 echo "State mount: $STATE_DIR/dandelion_sdk -> $SDK_INSTALL_MOUNT"
 echo "Inside container, use:"
 echo "  cd $LIBCTEST_MOUNT"
-echo "  ./dev_rebuild.sh all         # incremental SDK rebuild + libc-test run + CSV"
-echo "  ./dev_rebuild.sh sdk         # incremental SDK rebuild only"
-echo "  ./dev_rebuild.sh test        # rerun libc-test against installed SDK"
+echo "  $DEV_MOUNT/dev_rebuild.sh all         # incremental SDK rebuild + libc-test run + CSV"
+echo "  $DEV_MOUNT/dev_rebuild.sh sdk         # incremental SDK rebuild only"
+echo "  $DEV_MOUNT/dev_rebuild.sh test        # rerun libc-test against installed SDK"
 
 if [[ "$ENSURE_ONLY" == true ]]; then
   exit 0

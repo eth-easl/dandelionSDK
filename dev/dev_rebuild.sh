@@ -27,10 +27,10 @@ Options:
   -h, --help          Show help
 
 Environment defaults:
-  SDK_SRC       (default: sibling dandelionSDK dir, or dev_shell-provided mount)
-  SDK_BUILD     (default: sibling sdk-build dir, or dev_shell-provided mount)
-  SDK_INSTALL   (default: sibling dandelion_sdk dir, or dev_shell-provided mount)
-  LIBCTEST_DIR  (default: script directory, or dev_shell-provided mount)
+  SDK_SRC       (default: repo root, or dev_container-provided mount)
+  SDK_BUILD     (default: dev/.dlibc-dev/sdk-build, or dev_container-provided mount)
+  SDK_INSTALL   (default: dev/.dlibc-dev/dandelion_sdk, or dev_container-provided mount)
+  LIBCTEST_DIR  (default: sibling libc_test dir, or dev_container-provided mount)
 EOF
 }
 
@@ -111,11 +111,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-LIBCTEST_DIR="${LIBCTEST_DIR:-$SCRIPT_DIR}"
+LIBCTEST_DIR="${LIBCTEST_DIR:-$(cd "$SCRIPT_DIR/../libc_test" && pwd)}"
 ROOT_DIR_DEFAULT="$(cd "$LIBCTEST_DIR/.." && pwd)"
-SDK_SRC="${SDK_SRC:-$ROOT_DIR_DEFAULT/dandelionSDK}"
-SDK_BUILD="${SDK_BUILD:-$ROOT_DIR_DEFAULT/sdk-build}"
-SDK_INSTALL="${SDK_INSTALL:-$ROOT_DIR_DEFAULT/dandelion_sdk}"
+STATE_DIR_DEFAULT="${SCRIPT_DIR}/.dlibc-dev"
+SDK_SRC="${SDK_SRC:-$ROOT_DIR_DEFAULT}"
+SDK_BUILD="${SDK_BUILD:-$STATE_DIR_DEFAULT/sdk-build}"
+SDK_INSTALL="${SDK_INSTALL:-$STATE_DIR_DEFAULT/dandelion_sdk}"
 LOG_DIR="${LIBCTEST_DIR}/logs"
 SDK_CC=""
 NEWLIB_SRC_DIR="${SDK_BUILD}/newlib-cygwin/src/newlib"

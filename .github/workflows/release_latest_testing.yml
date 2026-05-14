@@ -145,9 +145,9 @@ jobs:
         chmod u+x "$SDK_INSTALL/${{ matrix.cpu }}-unknown-dandelion-clang"
 
     - name: Run libc-test against release SDK
-      working-directory: dandelionSDK/libc_test
+      working-directory: dandelionSDK
       run: >
-        ./dev_rebuild.sh test
+        ./dev/dev_rebuild.sh test
         --arch ${{ matrix.cpu }}
         --platform debug
         --build-type Release

@@ -2,10 +2,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-LIBCTEST_DIR="${LIBCTEST_DIR:-$SCRIPT_DIR}"
+LIBCTEST_DIR="${LIBCTEST_DIR:-$(cd "$SCRIPT_DIR/../libc_test" && pwd)}"
 ROOT_DIR_DEFAULT="$(cd "$LIBCTEST_DIR/.." && pwd)"
-SDK_SRC="${SDK_SRC:-$ROOT_DIR_DEFAULT/dandelionSDK}"
-SDK_BUILD="${SDK_BUILD:-$ROOT_DIR_DEFAULT/sdk-build}"
+STATE_DIR_DEFAULT="${SCRIPT_DIR}/.dlibc-dev"
+SDK_SRC="${SDK_SRC:-$ROOT_DIR_DEFAULT}"
+SDK_BUILD="${SDK_BUILD:-$STATE_DIR_DEFAULT/sdk-build}"
 NEWLIB_SRC_DIR="${SDK_BUILD}/newlib-cygwin/src/newlib"
 PATCH_FILE="${SDK_SRC}/newlib_shim/newlib-cygwin-3.5.3.patch"
 PATCH_PATHS=(

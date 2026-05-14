@@ -3,8 +3,8 @@
 # Base image for libc-test against dandelion dlibc using a mounted SDK source.
 #
 # Typical usage (mount-based workflow):
-#   ./dev_shell.sh --sdk ../dandelionSDK
-#   # inside container: ./dev_rebuild.sh all
+#   ./dev/dev_container.sh --sdk /path/to/dandelionSDK
+#   # inside container: /work/dev/dev_rebuild.sh all
 #
 FROM ubuntu:24.04
 
@@ -44,5 +44,5 @@ RUN make cleanall 2>/dev/null; rm -f src/*/*.o src/*/*.lo src/*/*.exe src/*/*.er
 # Dandelion debug runtime expects these directories in CWD
 RUN mkdir -p input_sets output_sets
 
-# This image is intended for mount-based use via dev_shell.sh + dev_rebuild.sh.
-CMD ["/bin/sh", "-lc", "echo 'Use ./dev_rebuild.sh all inside a dev shell container to build mounted dandelionSDK and run libc-test.' >&2 && sleep infinity"]
+# This image is intended for mount-based use via dev_container.sh + dev_rebuild.sh.
+CMD ["/bin/sh", "-lc", "echo 'Use /work/dev/dev_rebuild.sh all inside a dev shell container to build mounted dandelionSDK and run libc-test.' >&2 && sleep infinity"]
