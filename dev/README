@@ -91,6 +91,20 @@ Run libc-test only against the installed SDK:
 /work/dev/dev_rebuild.sh test --log test.log --csv test.csv
 ```
 
+Run the full libc-test suite through CTest from the configured SDK build
+directory:
+
+```bash
+cd /work/sdk-build
+ctest --output-on-failure -R '^libc_test_full$'
+```
+
+Or use the convenience build target:
+
+```bash
+cmake --build /work/sdk-build --target check-libc -j
+```
+
 Summarize pass counts from a generated CSV:
 
 ```bash

@@ -6,6 +6,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 project(dandelion-sdk)
 
 include(ExternalProject)
+include(CTest)
 
 # binary options
 option(FREESTANDING "toggles the include of memcpy, memset, memmove and memcmp" ON)
@@ -248,5 +249,34 @@ if(NEWLIB)
     add_dependencies(runtime llvmproject)
 
     add_subdirectory(test_programs)
+
+    if(BUILD_TESTING)
+        set(LIBCTEST_SHIM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libc_test")
+        set(LIBCTEST_CTEST_WORKTREE "${CMAKE_BINARY_DIR}/libc-test")
+
+        add_test(
+            NAME libc_test_full
+            COMMAND
+                "${CMAKE_CURRENT_SOURCE_DIR}/dev/dev_run_libctest_ctest.sh"
+                "${CMAKE_CURRENT_SOURCE_DIR}"
+                "${CMAKE_BINARY_DIR}"
+                "${CMAKE_INSTALL_PREFIX}"
+                "${LIBCTEST_SHIM_DIR}"
+                "${LIBCTEST_CTEST_WORKTREE}"
+        )
+        set_tests_properties(
+            libc_test_full
+            PROPERTIES
+                LABELS "libc-test"
+                TIMEOUT 1800
+        )
+
+        add_custom_target(
+            check-libc
+            COMMAND "${CMAKE_CTEST_COMMAND}" --output-on-failure -R "^libc_test_full$"
+            DEPENDS newlib llvmproject
+            USES_TERMINAL
+        )
+    endif()
 
 endif()
