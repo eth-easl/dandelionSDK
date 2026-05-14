@@ -72,7 +72,6 @@ paths = [
     "upstream-ref.txt",
     "libc-test.patch",
     ".dockerignore",
-    "Dockerfile.ubuntu24",
     "config.mak.dlibc",
     "gen_csv.py",
     "run_test_dlibc.py",
@@ -95,7 +94,6 @@ PY
 
 copy_overlay() {
   cp "$LIBCTEST_DIR/.dockerignore" "$LIBCTEST_WORKTREE/.dockerignore"
-  cp "$LIBCTEST_DIR/Dockerfile.ubuntu24" "$LIBCTEST_WORKTREE/Dockerfile.ubuntu24"
   cp "$LIBCTEST_DIR/config.mak.dlibc" "$LIBCTEST_WORKTREE/config.mak.dlibc"
   cp "$LIBCTEST_DIR/gen_csv.py" "$LIBCTEST_WORKTREE/gen_csv.py"
   cp "$LIBCTEST_DIR/run_test_dlibc.py" "$LIBCTEST_WORKTREE/run_test_dlibc.py"
