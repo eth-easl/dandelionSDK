@@ -20,7 +20,6 @@ extern "C" {
 #define AIO_NOTCANCELED 1
 #define AIO_ALLDONE 2
 
-/* POSIX list I/O operation codes and wait policy */
 #define LIO_READ 0
 #define LIO_WRITE 1
 #define LIO_NOP 2

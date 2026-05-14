@@ -15,7 +15,7 @@ struct in_addr {
   in_addr_t s_addr;
 };
 
-/* Source for constant values:
+/* 
  * POSIX netinet/in.h: https://man7.org/linux/man-pages/man0/netinet_in.h.0p.html
  */
 #define INET_ADDRSTRLEN 16

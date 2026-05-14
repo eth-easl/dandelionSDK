@@ -53,7 +53,7 @@ struct ipv6_mreq {
 extern const struct in6_addr in6addr_any;
 extern const struct in6_addr in6addr_loopback;
 
-/* Initializer values match glibc netinet/in.h:
+/* 
  * https://sources.debian.org/src/glibc/2.41-7/inet/netinet/in.h/
  */
 #define IN6ADDR_ANY_INIT { { { 0 } } }
