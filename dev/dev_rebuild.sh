@@ -30,7 +30,9 @@ Environment defaults:
   SDK_SRC       (default: repo root, or dev_container-provided mount)
   SDK_BUILD     (default: dev/.dlibc-dev/sdk-build, or dev_container-provided mount)
   SDK_INSTALL   (default: dev/.dlibc-dev/dandelion_sdk, or dev_container-provided mount)
-  LIBCTEST_DIR  (default: sibling libc_test dir, or dev_container-provided mount)
+  LIBCTEST_DIR  (default: sibling libc_test shim dir, or dev_container-provided mount)
+  LIBCTEST_WORKTREE
+                (default: SDK_BUILD/libc-test)
 EOF
 }
 
@@ -117,6 +119,7 @@ STATE_DIR_DEFAULT="${SCRIPT_DIR}/.dlibc-dev"
 SDK_SRC="${SDK_SRC:-$ROOT_DIR_DEFAULT}"
 SDK_BUILD="${SDK_BUILD:-$STATE_DIR_DEFAULT/sdk-build}"
 SDK_INSTALL="${SDK_INSTALL:-$STATE_DIR_DEFAULT/dandelion_sdk}"
+LIBCTEST_WORKTREE="${LIBCTEST_WORKTREE:-$SDK_BUILD/libc-test}"
 LOG_DIR="${LIBCTEST_DIR}/logs"
 SDK_CC=""
 NEWLIB_SRC_DIR="${SDK_BUILD}/newlib-cygwin/src/newlib"
@@ -136,6 +139,10 @@ if [[ ! -f "$SDK_SRC/CMakeLists.txt" ]]; then
 fi
 if [[ ! -d "$LIBCTEST_DIR" ]]; then
   echo "libc-test directory not found: $LIBCTEST_DIR" >&2
+  exit 1
+fi
+if [[ ! -f "$LIBCTEST_DIR/libc-test.patch" ]]; then
+  echo "libc-test shim directory is missing its patch file: $LIBCTEST_DIR/libc-test.patch" >&2
   exit 1
 fi
 
@@ -291,11 +298,15 @@ rebuild_sdk() {
 
 emit_csv() {
   if [[ -n "$CSV_FILE" ]]; then
-    python3 "$LIBCTEST_DIR/gen_csv.py" >"$CSV_FILE"
+    python3 "$LIBCTEST_WORKTREE/gen_csv.py" "$LIBCTEST_WORKTREE/src" >"$CSV_FILE"
     echo "CSV written to $CSV_FILE"
   else
-    python3 "$LIBCTEST_DIR/gen_csv.py"
+    python3 "$LIBCTEST_WORKTREE/gen_csv.py" "$LIBCTEST_WORKTREE/src"
   fi
+}
+
+prepare_libctest() {
+  run_cmd "$SCRIPT_DIR/dev_prepare_libctest.sh" --fetch-missing
 }
 
 run_tests() {
@@ -314,16 +325,19 @@ run_tests() {
     exit 1
   fi
 
-  cd "$LIBCTEST_DIR"
+  prepare_libctest
+
+  cd "$LIBCTEST_WORKTREE"
   cp config.mak.dlibc config.mak
   mkdir -p input_sets output_sets
+  mkdir -p "$LOG_DIR"
 
   if [[ "$CLEAN" == true ]]; then
     run_cmd make cleanall
   fi
 
   echo "==> Building and running libc-test"
-  if ! run_cmd make -k -j"$JOBS" CC="$SDK_CC"; then
+  if ! run_cmd env DLIBC_STDIO_ARTIFACTS="$LOG_DIR/test_stdio" make -k -j"$JOBS" CC="$SDK_CC"; then
     true
   fi
   emit_csv

@@ -226,6 +226,7 @@ else
     -e SDK_BUILD="$SDK_BUILD_MOUNT" \
     -e SDK_INSTALL="$SDK_INSTALL_MOUNT" \
     -e LIBCTEST_DIR="$LIBCTEST_MOUNT" \
+    -e LIBCTEST_WORKTREE="$SDK_BUILD_MOUNT/libc-test" \
     -v "$LIBCTEST_SRC_DEFAULT:$LIBCTEST_MOUNT" \
     -v "$SCRIPT_DIR:$DEV_MOUNT" \
     -v "$SDK_DIR:$SDK_MOUNT" \
@@ -238,6 +239,7 @@ fi
 
 echo "Container '$CONTAINER_NAME' is ready."
 echo "libc-test:   $LIBCTEST_SRC_DEFAULT -> $LIBCTEST_MOUNT"
+echo "worktree:    $SDK_BUILD_MOUNT/libc-test (generated automatically)"
 echo "dev scripts: $SCRIPT_DIR -> $DEV_MOUNT"
 echo "SDK mount:   $SDK_DIR -> $SDK_MOUNT"
 echo "State mount: $STATE_DIR/sdk-build -> $SDK_BUILD_MOUNT"
@@ -257,6 +259,7 @@ docker_exec_args=(
   -e SDK_BUILD="$SDK_BUILD_MOUNT"
   -e SDK_INSTALL="$SDK_INSTALL_MOUNT"
   -e LIBCTEST_DIR="$LIBCTEST_MOUNT"
+  -e LIBCTEST_WORKTREE="$SDK_BUILD_MOUNT/libc-test"
 )
 
 if [[ -t 0 && -t 1 ]]; then

@@ -6,3 +6,5 @@ compile_commands.json
 */target/
 Cargo.lock
 dev/.dlibc-dev/
+libc_test/logs/
+libc_test/report/

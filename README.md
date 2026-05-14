@@ -15,7 +15,7 @@ These currently include:
 A bigger selection of example functions can be found at [Function Examples](https://github.com/eth-easl/dandelionFunctionExamples)
 
 The top-level `Dockerfile` is for running the SDK.
-The build and development workflow is documented in `libc_test/README`.
+The build and development workflow is documented in `dev/README`.
 
 ## Platforms and Architectures
 
@@ -105,7 +105,8 @@ For newlib to be built correctly the autoconf version 2.69.
 This also enables the build of the in memory file system,
 which can also be built without the other newlib builds by setting `-DDANDELION_FS=ON`
 
-In libc-test/Readme.md you can find instructions on how to build the SDK with our convienience SDK build and develop workflows.
+In `dev/README` you can find instructions on how to build the SDK with
+our convenience SDK build and development workflows.
 
 ## Container to use the SDK
 We also provide a docker file to construct a build container with the correct tools set up in them.

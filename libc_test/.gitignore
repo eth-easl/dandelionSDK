@@ -1,12 +1,5 @@
-*.err
-*.lo
-*.pyc
-*.o
-*.so
-*.a
-*.exe
-config.mak
-REPORT
-.dlibc-dev/
 logs/
+report/
+input_sets/
+output_sets/
 .DS_Store
