@@ -273,7 +273,13 @@ if(NEWLIB)
 
         add_custom_target(
             check-libc
-            COMMAND "${CMAKE_CTEST_COMMAND}" --output-on-failure -R "^libc_test_full$"
+            COMMAND
+                "${CMAKE_CURRENT_SOURCE_DIR}/dev/dev_run_libctest_ctest.sh"
+                "${CMAKE_CURRENT_SOURCE_DIR}"
+                "${CMAKE_BINARY_DIR}"
+                "${CMAKE_INSTALL_PREFIX}"
+                "${LIBCTEST_SHIM_DIR}"
+                "${LIBCTEST_CTEST_WORKTREE}"
             DEPENDS newlib llvmproject
             USES_TERMINAL
         )
