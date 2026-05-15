@@ -194,9 +194,7 @@ enum __socket_type
 #define AF_MCTP		PF_MCTP
 #define AF_MAX		PF_MAX
 
-/* Values match Linux musl sys/socket.h:
- * https://git.musl-libc.org/cgit/musl/tree/include/sys/socket.h
- */
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/socket.h */
 #define SO_DEBUG        1
 #define SO_REUSEADDR    2
 #define SO_TYPE         3
@@ -270,9 +268,7 @@ enum
 #define MSG_CMSG_CLOEXEC MSG_CMSG_CLOEXEC
   };
 
-/* Values match Linux musl sys/socket.h:
- * https://git.musl-libc.org/cgit/musl/tree/include/sys/socket.h
- */
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/socket.h */
 #define CMSG_DATA(cmsg) \
   ((unsigned char *) (((struct cmsghdr *)(cmsg)) + 1))
 #define CMSG_NXTHDR(mhdr, cmsg) \
@@ -293,9 +289,7 @@ enum
 #define CMSG_LEN(len) \
   (CMSG_ALIGN (sizeof (struct cmsghdr)) + (len))
 
-/* Value matches Linux musl sys/socket.h:
- * https://git.musl-libc.org/cgit/musl/tree/include/sys/socket.h
- */
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/socket.h */
 #define SCM_RIGHTS      0x01
 
 extern int accept (int __fd, struct sockaddr *__addr, socklen_t *__addr_len);

@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-/* Values match musl libc: https://git.musl-libc.org/cgit/musl/tree/include/netinet/in.h */
+/* https://git.musl-libc.org/cgit/musl/tree/include/netinet/in.h */
 #define IPPROTO_IP 0
 #define IPPROTO_ICMP 1
 #define IPPROTO_TCP 6
@@ -13,7 +13,7 @@
 #define IPPROTO_IPV6 41
 #define IPPROTO_RAW 255
 
-/* Values match musl libc: https://git.musl-libc.org/cgit/musl/tree/include/netinet/in.h */
+/* https://git.musl-libc.org/cgit/musl/tree/include/netinet/in.h */
 #define INADDR_ANY ((in_addr_t)0)
 #define INADDR_BROADCAST ((in_addr_t)0xffffffff)
 #define INADDR_NONE ((in_addr_t)0xffffffff)
@@ -53,13 +53,11 @@ struct ipv6_mreq {
 extern const struct in6_addr in6addr_any;
 extern const struct in6_addr in6addr_loopback;
 
-/* 
- * https://sources.debian.org/src/glibc/2.41-7/inet/netinet/in.h/
- */
+/* https://sources.debian.org/src/glibc/2.41-7/inet/netinet/in.h/ */
 #define IN6ADDR_ANY_INIT { { { 0 } } }
 #define IN6ADDR_LOOPBACK_INIT { { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 } } }
 
-/* Values match musl libc: https://git.musl-libc.org/cgit/musl/tree/include/netinet/in.h */
+/* https://git.musl-libc.org/cgit/musl/tree/include/netinet/in.h */
 #define IPV6_UNICAST_HOPS 16
 #define IPV6_MULTICAST_IF 17
 #define IPV6_MULTICAST_HOPS 18

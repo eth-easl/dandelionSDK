@@ -9,9 +9,7 @@ extern "C" {
 
 struct sockaddr_un {
   sa_family_t sun_family;
-  /* Linux unix(7) documents sun_path as 108 bytes:
-   * https://man7.org/linux/man-pages/man7/unix.7.html
-   */
+  /* https://man7.org/linux/man-pages/man7/unix.7.html */
   char sun_path[108];
 };
 

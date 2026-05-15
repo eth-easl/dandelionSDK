@@ -8,9 +8,7 @@
 extern "C" {
 #endif
 
-/* Value matches Linux UAPI msg.h:
- * https://github.com/torvalds/linux/blob/master/include/uapi/linux/msg.h
- */
+/* https://github.com/torvalds/linux/blob/master/include/uapi/linux/msg.h */
 #define MSG_NOERROR 010000
 
 typedef unsigned long msgqnum_t;

@@ -5,18 +5,14 @@
 extern "C" {
 #endif
 
-/* Values match Linux glibc misc/sys/syslog.h:
- * https://codebrowser.dev/glibc/glibc/misc/sys/syslog.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/misc/sys/syslog.h.html */
 #define LOG_PID     0x01
 #define LOG_CONS    0x02
 #define LOG_ODELAY  0x04
 #define LOG_NDELAY  0x08
 #define LOG_NOWAIT  0x10
 
-/* Values match Linux glibc misc/sys/syslog.h:
- * https://codebrowser.dev/glibc/glibc/misc/sys/syslog.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/misc/sys/syslog.h.html */
 #define LOG_KERN     (0 << 3)
 #define LOG_USER     (1 << 3)
 #define LOG_MAIL     (2 << 3)
@@ -38,9 +34,7 @@ extern "C" {
 #define LOG_LOCAL6   (22 << 3)
 #define LOG_LOCAL7   (23 << 3)
 
-/* Values match Linux glibc misc/sys/syslog.h:
- * https://codebrowser.dev/glibc/glibc/misc/sys/syslog.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/misc/sys/syslog.h.html */
 #define LOG_EMERG    0
 #define LOG_ALERT    1
 #define LOG_CRIT     2

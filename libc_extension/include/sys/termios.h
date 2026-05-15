@@ -11,9 +11,7 @@ typedef unsigned char cc_t;
 typedef unsigned int speed_t;
 typedef unsigned int tcflag_t;
 
-/* 
- * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-struct.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-struct.h.html */
 #define NCCS 32
 
 struct termios {
@@ -27,9 +25,7 @@ struct termios {
   speed_t c_ospeed;
 };
 
-/* 
- * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_cc.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_cc.h.html */
 #define VINTR    0
 #define VQUIT    1
 #define VERASE   2
@@ -42,9 +38,7 @@ struct termios {
 #define VSUSP    10
 #define VEOL     11
 
-/*
- * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_iflag.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_iflag.h.html */
 #define IGNBRK   0000001
 #define BRKINT   0000002
 #define IGNPAR   0000004
@@ -58,9 +52,7 @@ struct termios {
 #define IXANY    0004000
 #define IXOFF    0010000
 
-/* 
- * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_oflag.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_oflag.h.html */
 #define OPOST    0000001
 #define ONLCR    0000004
 #define OCRNL    0000010
@@ -91,8 +83,7 @@ struct termios {
 #define VT0      0000000
 #define VT1      0040000
 
-/* 
- * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios.h.html
+/* https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios.h.html
  * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_cflag.h.html
  */
 #define B0       0000000
@@ -123,9 +114,7 @@ struct termios {
 #define HUPCL    0002000
 #define CLOCAL   0004000
 
-/* 
- * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_lflag.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-c_lflag.h.html */
 #define ISIG     0000001
 #define ICANON   0000002
 #define ECHO     0000010
@@ -136,9 +125,7 @@ struct termios {
 #define TOSTOP   0000400
 #define IEXTEN   0100000
 
-/*
- * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-tcflow.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios-tcflow.h.html */
 #ifndef TCSANOW
 #define TCSANOW   0
 #endif
@@ -148,9 +135,7 @@ struct termios {
 #ifndef TCSAFLUSH
 #define TCSAFLUSH 2
 #endif
-/*
- * https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/sysdeps/unix/sysv/linux/bits/termios.h.html */
 #define TCOOFF    0
 #define TCOON     1
 #define TCIOFF    2

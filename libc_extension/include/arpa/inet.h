@@ -15,15 +15,11 @@ struct in_addr {
   in_addr_t s_addr;
 };
 
-/* 
- * POSIX netinet/in.h: https://man7.org/linux/man-pages/man0/netinet_in.h.0p.html
- */
+/* https://man7.org/linux/man-pages/man0/netinet_in.h.0p.html */
 #define INET_ADDRSTRLEN 16
 #define INET6_ADDRSTRLEN 46
 
-/*
- * Network byte order conversion functions https://man7.org/linux/man-pages/man3/htonl.3p.html
- */
+/* https://man7.org/linux/man-pages/man3/htonl.3p.html */
 
 uint32_t htonl(uint32_t);
 uint16_t htons(uint16_t);

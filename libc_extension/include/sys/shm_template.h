@@ -10,16 +10,11 @@ extern "C" {
 
 typedef unsigned long shmatt_t;
 
-/* Values match Linux UAPI shm.h:
- * https://github.com/torvalds/linux/blob/master/include/uapi/linux/shm.h
- */
+/* https://github.com/torvalds/linux/blob/master/include/uapi/linux/shm.h */
 #define SHM_RDONLY  010000
 #define SHM_RND     020000
 
-/* Linux AMD64 defines SHMLBA as __getpagesize():
- * https://refspecs.linuxfoundation.org/LSB_2.0.1/LSB-Core-AMD64/LSB-Core-AMD64.diff.pdf
- * Dandelion SDK sets PAGE_SIZE in the top-level CMakeLists.txt defaults.
- */
+/* https://refspecs.linuxfoundation.org/LSB_2.0.1/LSB-Core-AMD64/LSB-Core-AMD64.diff.pdf */
 #define SHMLBA @PAGE_SIZE@
 
 struct shmid_ds {

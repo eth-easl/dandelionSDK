@@ -8,9 +8,7 @@
 extern "C" {
 #endif
 
-/* Linux glibc bits/utmpx.h sizes:
- * https://codebrowser.dev/glibc/glibc/sysdeps/gnu/bits/utmpx.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/sysdeps/gnu/bits/utmpx.h.html */
 #define __UT_LINESIZE 32
 #define __UT_NAMESIZE 32
 
@@ -23,9 +21,7 @@ struct utmpx {
   struct timeval ut_tv;
 };
 
-/* Linux glibc ut_type values:
- * https://codebrowser.dev/glibc/glibc/sysdeps/gnu/bits/utmpx.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/sysdeps/gnu/bits/utmpx.h.html */
 #define EMPTY         0
 #define BOOT_TIME     2
 #define NEW_TIME      3

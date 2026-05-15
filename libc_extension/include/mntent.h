@@ -7,9 +7,7 @@
 extern "C" {
 #endif
 
-/* String values match Linux glibc mntent.h:
- * https://codebrowser.dev/glibc/glibc/misc/mntent.h.html
- */
+/* https://codebrowser.dev/glibc/glibc/misc/mntent.h.html */
 #define MNTTYPE_IGNORE "ignore"
 #define MNTTYPE_NFS    "nfs"
 #define MNTTYPE_SWAP   "swap"

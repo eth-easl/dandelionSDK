@@ -7,44 +7,32 @@
 extern "C" {
 #endif
 
-/* Values match Linux musl sys/mman.h:
- * https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h
- */
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
 #define PROT_NONE   0x0
 #define PROT_READ   0x1
 #define PROT_WRITE  0x2
 #define PROT_EXEC   0x4
 
-/* Values match Linux musl sys/mman.h:
- * https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h
- */
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
 #define MAP_SHARED   0x01
 #define MAP_PRIVATE  0x02
 #define MAP_FIXED    0x10
 #define MAP_ANON     0x20
 #define MAP_ANONYMOUS MAP_ANON
 
-/* Value matches Linux POSIX sys/mman.h:
- * https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h
- */
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
 #define MAP_FAILED ((void *)-1)
 
-/* Values match Linux glibc bits/mman-linux.h:
- * https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h
- */
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
 #define MS_ASYNC       1
 #define MS_INVALIDATE  2
 #define MS_SYNC        4
 
-/* Values match Linux glibc bits/mman-linux.h:
- * https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h
- */
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
 #define MCL_CURRENT  1
 #define MCL_FUTURE   2
 
-/* Values match Linux glibc bits/mman-linux.h:
- * https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h
- */
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
 #define POSIX_MADV_NORMAL      0
 #define POSIX_MADV_RANDOM      1
 #define POSIX_MADV_SEQUENTIAL  2

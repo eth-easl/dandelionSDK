@@ -2,8 +2,8 @@
 #define _NET_IF_H_
 
 #include <sys/cdefs.h>
-// https://man7.org/linux/man-pages/man0/net_if.h.0p.html
-/* Value matches musl libc: https://git.musl-libc.org/cgit/musl/tree/include/net/if.h */
+/* https://man7.org/linux/man-pages/man0/net_if.h.0p.html */
+/* https://git.musl-libc.org/cgit/musl/tree/include/net/if.h */
 #define IF_NAMESIZE 16
 
 struct if_nameindex {

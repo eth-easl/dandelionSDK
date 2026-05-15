@@ -5,9 +5,7 @@
 extern "C" {
 #endif
 
-/*
- * https://sources.debian.org/src/musl/1.1.5-2%2Bdeb8u1/include/dlfcn.h
- */
+/* https://sources.debian.org/src/musl/1.1.5-2%2Bdeb8u1/include/dlfcn.h */
 #define RTLD_LAZY 1
 #define RTLD_NOW 2
 #define RTLD_GLOBAL 256

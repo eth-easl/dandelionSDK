@@ -68,9 +68,7 @@ struct addrinfo
   struct addrinfo *ai_next;
 };
 
-/* Values match glibc netdb.h:
- * https://sources.debian.org/src/glibc/2.43-1/resolv/netdb.h
- */
+/* https://sources.debian.org/src/glibc/2.43-1/resolv/netdb.h */
 # define AI_PASSIVE	    0x0001
 # define AI_CANONNAME	    0x0002
 # define AI_NUMERICHOST	    0x0004
@@ -79,9 +77,7 @@ struct addrinfo
 # define AI_ADDRCONFIG	    0x0020
 # define AI_NUMERICSERV	    0x0400
 
-/* Values match Linux musl netdb.h:
- * https://git.musl-libc.org/cgit/musl/tree/include/netdb.h
- */
+/* https://git.musl-libc.org/cgit/musl/tree/include/netdb.h */
  # define NI_NUMERICHOST	    0x0001
  # define NI_NUMERICSERV	    0x0002
 # define NI_NOFQDN	    0x0004
@@ -89,9 +85,7 @@ struct addrinfo
 # define NI_DGRAM	    0x0010
 # define NI_NUMERICSCOPE    0x000000100
 
-/* Values match glibc netdb.h:
- * https://sources.debian.org/src/glibc/2.43-1/resolv/netdb.h
- */
+/* https://sources.debian.org/src/glibc/2.43-1/resolv/netdb.h */
 # define EAI_BADFLAGS	    -1
 # define EAI_NONAME	    -2
 # define EAI_AGAIN	    -3

@@ -8,9 +8,7 @@
 extern "C" {
 #endif
 
-/* Values match Linux UAPI sem.h:
- * https://github.com/torvalds/linux/blob/master/include/uapi/linux/sem.h
- */
+/* https://github.com/torvalds/linux/blob/master/include/uapi/linux/sem.h */
 #define SEM_UNDO  0x1000
 #define GETNCNT   14
 #define GETPID    11

@@ -15,9 +15,7 @@ struct pollfd {
   short revents;
 };
 
-/* Values match glibc Linux bits/poll.h:
- * https://sources.debian.org/src/glibc/2.43-1/sysdeps/unix/sysv/linux/bits/poll.h
- */
+/* https://sources.debian.org/src/glibc/2.43-1/sysdeps/unix/sysv/linux/bits/poll.h */
 #define POLLIN 0x001
 #define POLLPRI 0x002
 #define POLLOUT 0x004

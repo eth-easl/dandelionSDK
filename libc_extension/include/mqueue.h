@@ -9,9 +9,7 @@
 extern "C" {
 #endif
 
-/* Types and declarations match POSIX mqueue.h:
- * https://man7.org/linux/man-pages/man0/mqueue.h.0p.html
- */
+/* https://man7.org/linux/man-pages/man0/mqueue.h.0p.html */
 
 typedef int mqd_t;
 
