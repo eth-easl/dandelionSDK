@@ -30,7 +30,7 @@ Environment defaults:
   SDK_SRC       (default: repo root, or dev_container-provided mount)
   SDK_BUILD     (default: dev/.dlibc-dev/sdk-build, or dev_container-provided mount)
   SDK_INSTALL   (default: dev/.dlibc-dev/dandelion_sdk, or dev_container-provided mount)
-  LIBCTEST_DIR  (default: sibling libc_test shim dir, or dev_container-provided mount)
+  LIBCTEST_DIR  (default: sibling libc_test shim dir)
   LIBCTEST_WORKTREE
                 (default: SDK_BUILD/libc-test)
 EOF

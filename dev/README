@@ -9,7 +9,6 @@ Inside the dev container:
 - `SDK_SRC` points at `/work/dandelionSDK`
 - `SDK_BUILD` points at `/work/sdk-build`
 - `SDK_INSTALL` points at `/work/dandelion_sdk`
-- `LIBCTEST_DIR` points at `/work/libc-test`
 
 The generated upstream libc-test checkout lives at:
 
@@ -37,58 +36,58 @@ If you are already in the `dandelionSDK` root, this also works:
 Inside the container, rebuild and install the SDK:
 
 ```bash
-/work/dev/dev_rebuild.sh sdk --log sdk.log
+./dev/dev_rebuild.sh sdk --log sdk.log
 ```
 
 Rebuild the SDK and force the cached newlib patch to be reapplied:
 
 ```bash
-/work/dev/dev_rebuild.sh sdk --refresh-newlib-patch --log sdk.log
+./dev/dev_rebuild.sh sdk --refresh-newlib-patch --log sdk.log
 ```
 
 Reset the cached newlib checkout before reapplying the patch:
 
 ```bash
-/work/dev/dev_rebuild.sh sdk --refresh-newlib-patch --reset-newlib-tree --log sdk.log
+./dev/dev_rebuild.sh sdk --refresh-newlib-patch --reset-newlib-tree --log sdk.log
 ```
 
 Prepare or refresh the generated libc-test checkout:
 
 ```bash
-/work/dev/dev_prepare_libctest.sh
+./dev/dev_prepare_libctest.sh
 ```
 
 Reset the generated libc-test checkout back to the pinned upstream revision
 before reapplying the patch and overlay files:
 
 ```bash
-/work/dev/dev_prepare_libctest.sh --reset
+./dev/dev_prepare_libctest.sh --reset
 ```
 
 If you edit the generated libc-test checkout and want to refresh the tracked
 patch file, run:
 
 ```bash
-/work/dev/dev_update_libctest_patch.sh
+./dev/dev_update_libctest_patch.sh
 ```
 
 If you edit the cached newlib checkout and want to refresh the tracked newlib
 patch file, run:
 
 ```bash
-/work/dev/dev_update_newlib_patch.sh
+./dev/dev_update_newlib_patch.sh
 ```
 
 Rebuild everything and run libc-test:
 
 ```bash
-/work/dev/dev_rebuild.sh all --log all.log --csv all.csv
+./dev/dev_rebuild.sh all --log all.log --csv all.csv
 ```
 
 Run libc-test only against the installed SDK:
 
 ```bash
-/work/dev/dev_rebuild.sh test --log test.log --csv test.csv
+./dev/dev_rebuild.sh test --log test.log --csv test.csv
 ```
 
 Run the full libc-test suite through CTest from the configured SDK build
@@ -113,9 +112,9 @@ awk -F, 'NR>1 {total++; if ($2=="PASS") pass++} END {print "passes=" pass "\ntot
 
 Generated artifacts:
 
-- libc-test logs: `/work/libc-test/logs/`
-- libc-test reports: `/work/libc-test/report/`
-- runtime stdio captures: `/work/libc-test/logs/test_stdio/`
+- libc-test logs: `/work/dandelionSDK/libc_test/logs/`
+- libc-test reports: `/work/dandelionSDK/libc_test/report/`
+- runtime stdio captures: `/work/dandelionSDK/libc_test/logs/test_stdio/`
 
 Adding a libc-test source file:
 

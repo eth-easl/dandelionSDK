@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
 #
-# Base image for libc-test against dandelion dlibc using a mounted SDK source.
+# Base image for the containerized dandelionSDK + libc-test workflow.
 #
 # Typical usage (mount-based workflow):
 #   ./dev/dev_container.sh --sdk /path/to/dandelionSDK
-#   # inside container: /work/dev/dev_rebuild.sh all
+#   # inside container: /work/dandelionSDK/dev/dev_rebuild.sh all
 #
 FROM ubuntu:24.04
 
@@ -32,17 +32,7 @@ RUN curl -sL https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz | tar xz && \
     cd autoconf-2.69 && ./configure --quiet && make -s && make install && \
     cd / && rm -rf autoconf-2.69
 
-# --- libc-test workspace ---
-WORKDIR /work/libc-test
-COPY . .
-
-RUN cp config.mak.dlibc config.mak
-
-# Remove any stale build artifacts copied from the host
-RUN make cleanall 2>/dev/null; rm -f src/*/*.o src/*/*.lo src/*/*.exe src/*/*.err src/*/REPORT src/REPORT
-
-# Dandelion debug runtime expects these directories in CWD
-RUN mkdir -p input_sets output_sets
+WORKDIR /work
 
 # This image is intended for mount-based use via dev_container.sh + dev_rebuild.sh.
-CMD ["/bin/sh", "-lc", "echo 'Use /work/dev/dev_rebuild.sh all inside a dev shell container to build mounted dandelionSDK and run libc-test.' >&2 && sleep infinity"]
+CMD ["/bin/sh", "-lc", "echo 'Use /work/dandelionSDK/dev/dev_rebuild.sh all inside a dev shell container to build mounted dandelionSDK and run libc-test.' >&2 && sleep infinity"]
