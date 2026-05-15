@@ -117,18 +117,18 @@ index 86a91677..3a1e9b77 100644
 @@ -1 +1,33 @@
  #include <sys/fcntl.h>
 +
-+/* https://git.musl-libc.org/cgit/musl/tree/include/fcntl.h */
++/* Values match musl libc: https://git.musl-libc.org/cgit/musl/tree/include/fcntl.h */
 +#ifndef O_TTY_INIT
 +#define O_TTY_INIT 0
 +#endif
-+/* https://www.gnu.org/s/gnulib/manual/html_node/fcntl_002eh.html */
++/* Gnulib documents defining these to 0 when absent as generally safe: https://www.gnu.org/s/gnulib/manual/html_node/fcntl_002eh.html */
 +#ifndef O_DSYNC
 +#define O_DSYNC 0
 +#endif
 +#ifndef O_RSYNC
 +#define O_RSYNC 0
 +#endif
-+/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/fcntl-linux.h */
++/* Linux/glibc defines POSIX_FADV_* as 0..5: https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/fcntl-linux.h */
 +#ifndef POSIX_FADV_NORMAL
 +#define POSIX_FADV_NORMAL 0
 +#define POSIX_FADV_RANDOM 1
@@ -137,7 +137,7 @@ index 86a91677..3a1e9b77 100644
 +#define POSIX_FADV_DONTNEED 4
 +#define POSIX_FADV_NOREUSE 5
 +#endif
-+/* https://github.com/bminor/glibc/blob/master/io/fcntl.h */
++/* Linux/glibc defines SEEK_SET=0, SEEK_CUR=1, SEEK_END=2: https://github.com/bminor/glibc/blob/master/io/fcntl.h */
 +#ifndef SEEK_SET
 +#define SEEK_SET 0
 +#define SEEK_CUR 1
@@ -173,7 +173,7 @@ index 7a300e69..5000fc40 100644
  #define	GLOB_MARK	0x0008	/* Append / to matching directories. */
  #define	GLOB_NOCHECK	0x0010	/* Return pattern itself if nothing matches. */
  #define	GLOB_NOSORT	0x0020	/* Don't sort. */
-+/* https://git.musl-libc.org/cgit/musl/tree/include/glob.h */
++/* Values match musl libc: https://git.musl-libc.org/cgit/musl/tree/include/glob.h */
 +#define	GLOB_NOESCAPE	0x40	/* Disable backslash escaping. */
  
  #define	GLOB_ALTDIRFUNC	0x0040	/* Use alternately specified directory funcs. */
@@ -182,7 +182,7 @@ index 7a300e69..5000fc40 100644
  /* backwards compatibility, this is the old name for this option */
  #define GLOB_MAXPATH	GLOB_LIMIT
  
-+/* https://git.musl-libc.org/cgit/musl/tree/include/glob.h */
++/* Values match musl libc: https://git.musl-libc.org/cgit/musl/tree/include/glob.h */
 +#define	GLOB_ABORTED	2	/* Unignored error. */
 +#define	GLOB_NOMATCH	3	/* No match and GLOB_NOCHECK was not set. */
  #define	GLOB_NOSPACE	(-1)	/* Malloc call failed. */
@@ -198,7 +198,9 @@ index 893f1083..06edbb44 100644
  #endif
 +
 +#if __POSIX_VISIBLE >= 2
-+/* https://man7.org/linux/man-pages/man0/limits.h.0p.html
++/* POSIX utility limit values:
++   https://man7.org/linux/man-pages/man0/limits.h.0p.html
++   Glibc exposure pattern reference:
 +   https://github.com/bminor/glibc/blob/master/posix/bits/posix2_lim.h */
 +#ifndef CHARCLASS_NAME_MAX
 +#define CHARCLASS_NAME_MAX 2048
@@ -218,7 +220,9 @@ index 893f1083..06edbb44 100644
 +#endif
 +
 +#if __POSIX_VISIBLE
-+/* https://man7.org/linux/man-pages/man0/limits.h.0p.html
++/* POSIX.1 minimum limit values:
++   https://man7.org/linux/man-pages/man0/limits.h.0p.html
++   Glibc feature-test exposure pattern reference:
 +   https://github.com/bminor/glibc/blob/master/posix/bits/posix1_lim.h */
 +#ifndef _POSIX_CLOCKRES_MIN
 +#define _POSIX_CLOCKRES_MIN 20000000
@@ -304,7 +308,9 @@ index 893f1083..06edbb44 100644
 +#ifndef _POSIX_SYMLOOP_MAX
 +#define _POSIX_SYMLOOP_MAX 8
 +#endif
-+/* https://man7.org/linux/man-pages/man0/limits.h.0p.html
++/* POSIX thread minimum limit values:
++   https://man7.org/linux/man-pages/man0/limits.h.0p.html
++   Glibc Linux definitions reference:
 +   https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/local_lim.h */
 +#ifndef _POSIX_THREAD_DESTRUCTOR_ITERATIONS
 +#define _POSIX_THREAD_DESTRUCTOR_ITERATIONS 4
@@ -327,7 +333,9 @@ index 893f1083..06edbb44 100644
 +#endif
 +
 +#if __POSIX_VISIBLE >= 2
-+/* https://man7.org/linux/man-pages/man0/limits.h.0p.html
++/* POSIX.2 minimum utility limit values:
++   https://man7.org/linux/man-pages/man0/limits.h.0p.html
++   Glibc exposure pattern reference:
 +   https://github.com/bminor/glibc/blob/master/posix/bits/posix2_lim.h */
 +#ifndef _POSIX2_BC_BASE_MAX
 +#define _POSIX2_BC_BASE_MAX 99
@@ -356,7 +364,8 @@ index 893f1083..06edbb44 100644
 +#endif
 +
 +#if __XSI_VISIBLE
-+/* https://man7.org/linux/man-pages/man0/limits.h.0p.html */
++/* X/Open minimum limits:
++   https://man7.org/linux/man-pages/man0/limits.h.0p.html */
 +#ifndef _XOPEN_IOV_MAX
 +#define _XOPEN_IOV_MAX 16
 +#endif
@@ -369,7 +378,8 @@ index 893f1083..06edbb44 100644
 +#endif
 +
 +#ifndef SSIZE_MAX
-+/* https://github.com/bminor/glibc/blob/master/posix/bits/posix1_lim.h */
++/* Source pattern for SSIZE_MAX:
++   https://github.com/bminor/glibc/blob/master/posix/bits/posix1_lim.h */
 +#if __SIZEOF_SIZE_T__ == __SIZEOF_LONG__
 +#define SSIZE_MAX LONG_MAX
 +#else
@@ -378,7 +388,8 @@ index 893f1083..06edbb44 100644
 +#endif
 +
 +#ifndef WORD_BIT
-+/* https://github.com/bminor/glibc/blob/master/include/bits/xopen_lim.h */
++/* Source pattern for XSI width limits:
++   https://github.com/bminor/glibc/blob/master/include/bits/xopen_lim.h */
 +#if __INT_MAX__ == 32767
 +#define WORD_BIT 16
 +#elif __INT_MAX__ == 2147483647
@@ -389,7 +400,8 @@ index 893f1083..06edbb44 100644
 +#endif
 +
 +#ifndef LONG_BIT
-+/* https://github.com/bminor/glibc/blob/master/include/bits/xopen_lim.h */
++/* Source pattern for XSI width limits:
++   https://github.com/bminor/glibc/blob/master/include/bits/xopen_lim.h */
 +#if __LONG_MAX__ == 2147483647
 +#define LONG_BIT 32
 +#else
@@ -398,7 +410,10 @@ index 893f1083..06edbb44 100644
 +#endif
 +
 +#if __XSI_VISIBLE
-+/* https://man7.org/linux/man-pages/man0/limits.h.0p.html
++/* XSI locale and scheduler limits:
++   POSIX minimum values:
++   https://man7.org/linux/man-pages/man0/limits.h.0p.html
++   Glibc source pattern reference:
 +   https://github.com/bminor/glibc/blob/master/include/bits/xopen_lim.h */
 +#ifndef NL_LANGMAX
 +#define NL_LANGMAX _POSIX2_LINE_MAX
@@ -581,7 +596,8 @@ index 23a9863e..e6da8a67 100644
  #define SIG_IGN ((_sig_func_ptr)1)	/* Ignore action */
  #define SIG_ERR ((_sig_func_ptr)-1)	/* Error return */
 +#if __XSI_VISIBLE >= 4
-+/* https://github.com/bminor/glibc/blob/master/signal/signal.h */
++/* glibc signal.h exposes SIG_HOLD as ((__sighandler_t) 2):
++   https://github.com/bminor/glibc/blob/master/signal/signal.h */
 +#define SIG_HOLD ((_sig_func_ptr)2)	/* Hold signal */
 +#endif
  
@@ -592,11 +608,13 @@ index 23a9863e..e6da8a67 100644
  int	raise (int);
  void	psignal (int, const char *);
 +#if __POSIX_VISIBLE >= 200809
-+/* https://man7.org/linux/man-pages/man0/signal.h.0p.html */
++/* POSIX Issue 7 declares psiginfo():
++   https://man7.org/linux/man-pages/man0/signal.h.0p.html */
 +void	psiginfo (const siginfo_t *, const char *);
 +#endif
 +#if __XSI_VISIBLE >= 4
-+/* https://github.com/bminor/glibc/blob/master/signal/signal.h */
++/* glibc signal.h exposes these XSI signal APIs:
++   https://github.com/bminor/glibc/blob/master/signal/signal.h */
 +int	sighold (int);
 +int	sigignore (int);
 +int	siginterrupt (int, int);
@@ -639,7 +657,8 @@ index fd89f5ba..c7a341c5 100644
  #define RAND_MAX __RAND_MAX
  
 -int	__locale_mb_cur_max (void);
-+/* https://github.com/bminor/glibc/blob/master/stdlib/stdlib.h */
++/* Glibc exposes MB_CUR_MAX via a size_t-returning helper:
++   https://github.com/bminor/glibc/blob/master/stdlib/stdlib.h */
 +size_t	__locale_mb_cur_max (void);
  
  #define MB_CUR_MAX __locale_mb_cur_max()
@@ -722,7 +741,9 @@ index 75e9e1cb..01b75baf 100644
  
  typedef __uint32_t pthread_key_t;        /* thread-specific data keys */
  
-+/* https://github.com/bminor/glibc/blob/master/sysdeps/nptl/pthread.h */
++/* Linux/glibc public values inferred from the zero-based enum order in
++   pthread.h:
++   https://github.com/bminor/glibc/blob/master/sysdeps/nptl/pthread.h */
 +#define PTHREAD_MUTEX_STALLED 0
 +#define PTHREAD_MUTEX_ROBUST  1
 +
@@ -762,7 +783,9 @@ index 6a925c87..a3281fad 100644
  #define _POSIX_JOB_CONTROL			     1
  #define _POSIX_MAPPED_FILES			200809L
 -/* #define _POSIX_MEMLOCK			    -1 */
-+/* https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
++/* POSIX option values in this block follow the 2008 profile already exposed
++   for Dandelion in this header:
++   https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
 +#define _POSIX_MEMLOCK			200809L
  #define _POSIX_MEMLOCK_RANGE			200809L
  #define _POSIX_MEMORY_PROTECTION		200809L
@@ -772,7 +795,9 @@ index 6a925c87..a3281fad 100644
  #define _POSIX_THREAD_ATTR_STACKSIZE		200809L
  #define _POSIX_THREAD_CPUTIME			200809L
 -/* #define _POSIX_THREAD_PRIO_INHERIT		    -1 */
-+/* https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
++/* POSIX option values in this block follow the 2008 profile already exposed
++   for Dandelion in this header:
++   https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
 +#define _POSIX_THREAD_PRIO_INHERIT		200809L
  /* #define _POSIX_THREAD_PRIO_PROTECT		    -1 */
  #define _POSIX_THREAD_PRIORITY_SCHEDULING	200809L
@@ -792,7 +817,8 @@ index 6a925c87..a3281fad 100644
  #define _XOPEN_SHM				     1
  /* #define _XOPEN_STREAMS			    -1 */
 -/* #define _XOPEN_UNIX				    -1 */
-+/* https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
++/* The Open Group Base Specs mark _XOPEN_UNIX as an XSI option indicator:
++   https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
 +#define _XOPEN_UNIX				     1
  #endif /* __XSI_VISIBLE */
  
@@ -817,12 +843,16 @@ index c0a0d201..60da83c8 100644
 +#include <sys/types.h>
  #include <sys/time.h>
  
-+/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/resource.h */
++/* Linux uses these resource-priority selector values:
++ * https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/resource.h
++ */
 +#define PRIO_PROCESS 0
 +#define PRIO_PGRP 1
 +#define PRIO_USER 2
 +
-+/* https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/resource.h */
++/* Linux UAPI uses these resource-limit values:
++ * https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/resource.h
++ */
 +#define RLIMIT_CPU 0
 +#define RLIMIT_FSIZE 1
 +#define RLIMIT_DATA 2
@@ -832,7 +862,9 @@ index c0a0d201..60da83c8 100644
 +#define RLIMIT_NOFILE 7
 +#define RLIMIT_AS 9
 +
-+/* https://man7.org/linux/man-pages/man0/sys_resource.h.0p.html
++/* POSIX requires these macros. Linux and glibc use no-limit values that map to
++ * the full-width unsigned limit; saved limits are the same when representable:
++ * https://man7.org/linux/man-pages/man0/sys_resource.h.0p.html
 + * https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/resource.h
 + */
 +#ifndef _RLIM_T_DECLARED
@@ -890,7 +922,8 @@ index 96bf9781..24a7f3d6 100644
  typedef struct {
    int          si_signo;    /* Signal number */
    int          si_code;     /* Cause of the signal */
-+  /* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/types/siginfo_t.h */
++  /* Linux/glibc siginfo_t exposes these common members:
++     https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/types/siginfo_t.h */
 +  int          si_errno;    /* Error number */
 +  pid_t        si_pid;      /* Sending process ID */
 +  uid_t        si_uid;      /* Real user ID of sending process */
@@ -899,7 +932,8 @@ index 96bf9781..24a7f3d6 100644
    union sigval si_value;    /* Signal value */
  } siginfo_t;
 +
-+/* https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/siginfo.h */
++/* Linux asm-generic siginfo codes:
++   https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/siginfo.h */
 +#define ILL_ILLOPC	1
 +#define ILL_ILLOPN	2
 +#define ILL_ILLADR	3
@@ -943,7 +977,8 @@ index 96bf9781..24a7f3d6 100644
 -#define SA_NOCLDSTOP 0x1   /* Do not generate SIGCHLD when children stop */
 -#define SA_SIGINFO   0x2   /* Invoke the signal catching function with */
 -                           /*   three arguments instead of one. */
-+/* https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal-defs.h */
++/* Linux asm-generic signal flag values:
++   https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal-defs.h */
 +#define SA_NOCLDSTOP 0x00000001
 +#define SA_NOCLDWAIT 0x00000002
 +#define SA_SIGINFO   0x00000004
@@ -974,7 +1009,8 @@ index 96bf9781..24a7f3d6 100644
 -#define SA_NOCLDSTOP 1  /* only value supported now for sa_flags */
 -
 -typedef void (*_sig_func_ptr)(int);
-+/* https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal-defs.h */
++/* Linux asm-generic signal flag values:
++   https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal-defs.h */
 +#define SA_NOCLDSTOP 0x00000001
 +#define SA_NOCLDWAIT 0x00000002
 +#define SA_SIGINFO   0x00000004
@@ -987,7 +1023,9 @@ index 96bf9781..24a7f3d6 100644
 +#define SA_RESETHAND 0x80000000
 +#endif
  
-+/* https://man7.org/linux/man-pages/man0/signal.h.0p.html
++/* POSIX signal.h permits sa_handler and sa_sigaction to overlap, and
++   signal(7) documents the SA_SIGINFO handler form:
++   https://man7.org/linux/man-pages/man0/signal.h.0p.html
 +   https://man7.org/linux/man-pages/man7/signal.7.html */
  struct sigaction 
  {
@@ -1017,7 +1055,9 @@ index 96bf9781..24a7f3d6 100644
  } stack_t;
  
 +#if __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
-+/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/x86/sys/ucontext.h */
++/* glibc ucontext.h exposes these outer type names and ucontext_t fields:
++   https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/x86/sys/ucontext.h
++   Dandelion keeps mcontext_t intentionally opaque here for compile compatibility. */
 +typedef struct __mcontext {
 +  int __mc_placeholder;
 +} mcontext_t;
@@ -1038,7 +1078,11 @@ index 96bf9781..24a7f3d6 100644
  #define	SIGUSR1 30	/* user defined signal 1 */
  #define	SIGUSR2 31	/* user defined signal 2 */
 -#define NSIG	32      /* signal 0 implied */
-+/* https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal.h
++/* Linux kernel asm-generic signal.h defines SIGRTMIN as 32 and SIGRTMAX as
++   _NSIG, with _NSIG equal to 64:
++   https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal.h
++   signal(7) likewise documents the Linux kernel real-time signal range as
++   32 to 64:
 +   https://man7.org/linux/man-pages/man7/signal.7.html */
 +#define SIGRTMIN 32
 +#define SIGRTMAX 64
@@ -1055,7 +1099,8 @@ index 98f5addb..c8b4ee6a 100644
  #define UTIME_NOW	-2L
  #define UTIME_OMIT	-1L
 +#elif defined(__DANDELION__)
-+/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/x86/bits/struct_stat.h */
++/* Linux/glibc public UTIME_* values:
++   https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/x86/bits/struct_stat.h */
 +#define UTIME_NOW	((1l << 30) - 1l)
 +#define UTIME_OMIT	((1l << 30) - 2l)
  #endif
@@ -1083,7 +1128,10 @@ index 00901540..edf39f32 100644
  
 -/* Only defined on Cygwin and RTEMS for now. */
 -#if defined (__CYGWIN__) || defined(__rtems__)
-+/* https://git.musl-libc.org/cgit/musl/tree/include/unistd.h */
++/* Linux libc public _CS_* values from musl's unistd.h, which aligns with
++   glibc on the overlapping standard confstr(3) names and also provides the
++   POSIX_V7 thread flag constants used by libc-test:
++   https://git.musl-libc.org/cgit/musl/tree/include/unistd.h */
 +#if defined (__CYGWIN__) || defined(__rtems__) || defined(__DANDELION__)
  #define _CS_PATH                               0
 -#define _CS_POSIX_V7_ILP32_OFF32_CFLAGS        1
@@ -1210,7 +1258,8 @@ index d15eec9c..d888032f 100644
 +#if __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
 +#include <signal.h>
 +
-+/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/waitflags.h
++/* Linux/glibc wait option values and WIFCONTINUED encoding:
++   https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/waitflags.h
 +   https://github.com/bminor/glibc/blob/master/bits/waitstatus.h */
 +#define WSTOPPED 2
 +#define WEXITED 4
@@ -1218,7 +1267,8 @@ index d15eec9c..d888032f 100644
 +#define WNOWAIT 0x01000000
 +#define WIFCONTINUED(w) ((w) == 0xffff)
 +
-+/* https://man7.org/linux/man-pages/man2/waitpid.2.html
++/* POSIX waitid() idtype_t values and Linux/glibc enum layout:
++   https://man7.org/linux/man-pages/man2/waitpid.2.html
 +   https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/types/idtype_t.h */
 +typedef enum {
 +  P_ALL,
@@ -1259,7 +1309,9 @@ index ed6cc70f..d486c2ed 100644
  #include <sys/_locale.h>
  #endif
  
-+/* https://www.man7.org/linux/man-pages/man3/strptime.3.html */
++/* https://www.man7.org/linux/man-pages/man3/strptime.3.html
++ * GNU extensions: expose tm_gmtoff and tm_zone as canonical field names when
++ * _GNU_SOURCE is active, matching glibc struct tm layout. */
 +#if __GNU_VISIBLE
 +# ifndef __TM_GMTOFF
 +#  define __TM_GMTOFF tm_gmtoff
