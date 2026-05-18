@@ -2,10 +2,9 @@ name: release testing with all library versions
 
 on:
   push:
-    branches: [ "dev/testing" ]
-
-permissions:
-  contents: write
+    branches: [ "main", "dev/staging" ]
+  pull_request:
+    branches: [ "main", "dev/staging" ]
 
 jobs:
   build:
@@ -33,12 +32,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y automake curl wget gpg lsb-release software-properties-common
 
-    - name: Install clang-19
+    - name: Install clang-20
       run: |
         wget https://apt.llvm.org/llvm.sh -O /tmp/llvm.sh
         chmod +x /tmp/llvm.sh
-        sudo /tmp/llvm.sh 19
-        sudo ln -sf /usr/bin/ld.lld-19 /usr/bin/ld.lld
+        sudo /tmp/llvm.sh 20
+        sudo ln -sf /usr/bin/ld.lld-20 /usr/bin/ld.lld
 
     - name: Install autoconf 2.69
       run: |
@@ -59,8 +58,8 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: >
         cmake -B ${{ steps.build.outputs.dir }}
-        -DCMAKE_CXX_COMPILER=clang++-19
-        -DCMAKE_C_COMPILER=clang-19
+        -DCMAKE_CXX_COMPILER=clang++-20
+        -DCMAKE_C_COMPILER=clang-20
         -DDANDELION_PLATFORM=${{ matrix.platform }}
         -DNEWLIB=ON
         -DCMAKE_BUILD_TYPE=${{ matrix.build }}
@@ -118,17 +117,17 @@ jobs:
           wget gpg lsb-release software-properties-common \
           gcc g++ automake curl
 
-    - name: Install clang-19
+    - name: Install clang-20
       run: |
         wget https://apt.llvm.org/llvm.sh -O /tmp/llvm.sh
         chmod +x /tmp/llvm.sh
-        sudo /tmp/llvm.sh 19
-        sudo ln -sf /usr/bin/ld.lld-19 /usr/bin/ld.lld
+        sudo /tmp/llvm.sh 20
+        sudo ln -sf /usr/bin/ld.lld-20 /usr/bin/ld.lld
 
     - name: Install analysis dependencies
       run: python -m pip install --upgrade pip nbconvert jupyter pandas tabulate
 
-    - uses: actions/download-artifact@v7
+    - uses: actions/download-artifact@v4
       with:
         name: release-package-Release-debug-${{ matrix.cpu }}
         path: downloaded-package
@@ -141,7 +140,7 @@ jobs:
 
     - name: Create compiler wrapper from release SDK
       run: |
-        "$SDK_INSTALL/create-compiler.sh" -c clang-19
+        "$SDK_INSTALL/create-compiler.sh" -c clang-20
         chmod u+x "$SDK_INSTALL/${{ matrix.cpu }}-unknown-dandelion-clang"
 
     - name: Run libc-test against release SDK
@@ -166,7 +165,7 @@ jobs:
         cp "dandelionSDK/libc_test/report/failure_line_details.csv" "uploaded-results/failure_line_details_${{ matrix.cpu }}_debug_Release.csv"
         cp "dandelionSDK/libc_test/logs/test_results.csv" "uploaded-results/test_results_${{ matrix.cpu }}_debug_Release.csv"
 
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       with:
         name: libc-test-analysis-${{ matrix.cpu }}-debug-Release
         path: uploaded-results/
@@ -176,6 +175,8 @@ jobs:
       - build
       - test-and-analyze
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/download-artifact@v7
@@ -194,18 +195,7 @@ jobs:
       shell: bash
       run: |
         mkdir -p release-assets
-        python3 - <<'PY'
-        from pathlib import Path
-        from zipfile import ZipFile, ZIP_DEFLATED
-
-        src_dir = Path("downloaded-results")
-        out_path = Path("release-assets/test_artifacts.zip")
-
-        with ZipFile(out_path, "w", compression=ZIP_DEFLATED) as archive:
-            for path in sorted(src_dir.iterdir()):
-                if path.is_file():
-                    archive.write(path, arcname=path.name)
-        PY
+        tar -czf release-assets/test_artifacts.tar.gz -C downloaded-results .
         cp downloaded-packages/*.tar.gz release-assets/
         if ! gh release view testing >/dev/null 2>&1; then
           gh release create testing --title "testing" --notes "" --latest=false --draft
