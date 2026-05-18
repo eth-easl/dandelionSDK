@@ -26,6 +26,10 @@ cp $THIS_DIR/signal_dandelion.c $1/newlib/libc/sys/dandelion/signal_dandelion.c
 cp $THIS_DIR/time.c $1/newlib/libc/sys/dandelion/time.c
 cp $THIS_DIR/unistd.c $1/newlib/libc/sys/dandelion/unistd.c
 cp $THIS_DIR/../include/dandelion/crt.h $1/newlib/libc/sys/dandelion/crt.h
+if ! test -d $1/newlib/libc/sys/dandelion/sys
+  then mkdir -p $1/newlib/libc/sys/dandelion/sys
+fi
+cp $THIS_DIR/sys/fcntl.h $1/newlib/libc/sys/dandelion/sys/fcntl.h
 cd $1
 autoreconf
 cd newlib
