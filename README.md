@@ -138,12 +138,12 @@ If these folders are missing, the program will terminate before running user cod
 The following example builds and runs [`test_programs/libc/test.c`](test_programs/libc/test.c) inside the container:
 
 ```bash
-docker build --build-arg TARGET_ARCH=aarch64 -t dandelion_dev_docker:aarch64 .
+docker build --build-arg TARGET_ARCH=aarch64 -t dandelion_docker_image .
 
 docker run --rm -it \
   --mount type=bind,src="$(pwd)",dst=/workspace \
   --workdir=/workspace \
-  dandelion_dev_docker:aarch64 \
+  dandelion_docker_image \
   bash
 
 mkdir -p /tmp/dandelion-smoke
