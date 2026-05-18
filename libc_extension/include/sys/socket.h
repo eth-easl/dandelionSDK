@@ -1,6 +1,10 @@
 #ifndef	_SYS_SOCKET_H
 #define	_SYS_SOCKET_H 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/types.h>
 #include <sys/uio.h>
 
@@ -313,5 +317,9 @@ extern int shutdown (int __fd, int __how);
 extern int socket (int __domain, int __type, int __protocol);
 extern int sockatmark (int __fd);
 extern int socketpair (int __domain, int __type, int __protocol, int __fds[2]);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _SYS_SOCKET_H
