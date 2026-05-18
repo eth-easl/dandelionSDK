@@ -54,14 +54,14 @@ Reset the cached newlib checkout before reapplying the patch:
 Prepare or refresh the generated libc-test checkout:
 
 ```bash
-./dev/dev_prepare_libctest.sh
+python3 ./dev/dev_prepare_libctest.py
 ```
 
 Reset the generated libc-test checkout back to the pinned upstream revision
 before reapplying the patch and overlay files:
 
 ```bash
-./dev/dev_prepare_libctest.sh --reset
+python3 ./dev/dev_prepare_libctest.py --reset
 ```
 
 If you edit the generated libc-test checkout and want to refresh the tracked

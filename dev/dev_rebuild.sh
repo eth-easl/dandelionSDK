@@ -306,7 +306,7 @@ emit_csv() {
 }
 
 prepare_libctest() {
-  run_cmd "$SCRIPT_DIR/dev_prepare_libctest.sh" --fetch-missing
+  run_cmd python3 "$SCRIPT_DIR/dev_prepare_libctest.py" --fetch-missing
 }
 
 run_tests() {

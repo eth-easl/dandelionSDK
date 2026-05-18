@@ -7,6 +7,8 @@ project(dandelion-sdk)
 
 include(ExternalProject)
 include(CTest)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+find_program(LIBCTEST_MAKE NAMES gmake make REQUIRED)
 
 # binary options
 option(FREESTANDING "toggles the include of memcpy, memset, memmove and memcmp" ON)
@@ -254,15 +256,32 @@ if(NEWLIB)
         set(LIBCTEST_SHIM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libc_test")
         set(LIBCTEST_CTEST_WORKTREE "${CMAKE_BINARY_DIR}/libc-test")
 
+        add_custom_target(
+            libctest-run
+            COMMAND
+                "${CMAKE_COMMAND}"
+                -DSDK_SRC="${CMAKE_CURRENT_SOURCE_DIR}"
+                -DSDK_BUILD="${CMAKE_BINARY_DIR}"
+                -DSDK_INSTALL="${CMAKE_INSTALL_PREFIX}"
+                -DLIBCTEST_DIR="${LIBCTEST_SHIM_DIR}"
+                -DLIBCTEST_WORKTREE="${LIBCTEST_CTEST_WORKTREE}"
+                -DPYTHON3_EXECUTABLE="${Python3_EXECUTABLE}"
+                -DLIBCTEST_MAKE="${LIBCTEST_MAKE}"
+                -DSDK_ARCHITECTURE="${ARCHITECTURE}"
+                -DCMAKE_BUILD_PARALLEL_LEVEL="${CMAKE_BUILD_PARALLEL_LEVEL}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/dev/run_libctest_ctest.cmake"
+            DEPENDS newlib llvmproject
+            USES_TERMINAL
+        )
+
         add_test(
             NAME libc_test_full
             COMMAND
-                "${CMAKE_CURRENT_SOURCE_DIR}/dev/dev_run_libctest_ctest.sh"
-                "${CMAKE_CURRENT_SOURCE_DIR}"
+                "${CMAKE_COMMAND}"
+                --build
                 "${CMAKE_BINARY_DIR}"
-                "${CMAKE_INSTALL_PREFIX}"
-                "${LIBCTEST_SHIM_DIR}"
-                "${LIBCTEST_CTEST_WORKTREE}"
+                --target
+                libctest-run
         )
         set_tests_properties(
             libc_test_full
@@ -271,18 +290,7 @@ if(NEWLIB)
                 TIMEOUT 1800
         )
 
-        add_custom_target(
-            check-libc
-            COMMAND
-                "${CMAKE_CURRENT_SOURCE_DIR}/dev/dev_run_libctest_ctest.sh"
-                "${CMAKE_CURRENT_SOURCE_DIR}"
-                "${CMAKE_BINARY_DIR}"
-                "${CMAKE_INSTALL_PREFIX}"
-                "${LIBCTEST_SHIM_DIR}"
-                "${LIBCTEST_CTEST_WORKTREE}"
-            DEPENDS newlib llvmproject
-            USES_TERMINAL
-        )
+        add_custom_target(check-libc DEPENDS libctest-run)
     endif()
 
 endif()
