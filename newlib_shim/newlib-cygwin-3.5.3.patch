@@ -1356,7 +1356,7 @@ index 9c61a436..d535417b 100644
  }
  
 -__strong_reference(nextafterl, nexttowardl);
-+/* Dandelion provides its own nexttowardl stub in libc/shim.c. */
++/* Dandelion provides its own nexttowardl stub in libc/sys/dandelion/math_stubs.c. */
 diff --git a/newlib/libm/ld/s_nexttoward.c b/newlib/libm/ld/s_nexttoward.c
 index b2a50d31..6c80af33 100644
 --- a/newlib/libm/ld/s_nexttoward.c
