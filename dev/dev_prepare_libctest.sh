@@ -8,7 +8,7 @@ STATE_DIR_DEFAULT="${SCRIPT_DIR}/.dlibc-dev"
 SDK_BUILD="${SDK_BUILD:-$STATE_DIR_DEFAULT/sdk-build}"
 LIBCTEST_WORKTREE="${LIBCTEST_WORKTREE:-$SDK_BUILD/libc-test}"
 UPSTREAM_URL="https://repo.or.cz/libc-test.git"
-UPSTREAM_REF_FILE="$LIBCTEST_DIR/upstream-ref.txt"
+UPSTREAM_REF="f2bac7711bec93467b73bec1465579ea0b8d5071"
 PATCH_FILE="$LIBCTEST_DIR/libc-test.patch"
 STAMP_FILE="$LIBCTEST_WORKTREE/.dandelion-prepared"
 RESET_TREE=false
@@ -50,16 +50,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ ! -f "$UPSTREAM_REF_FILE" ]]; then
-  echo "Pinned upstream ref file not found: $UPSTREAM_REF_FILE" >&2
-  exit 1
-fi
 if [[ ! -f "$PATCH_FILE" ]]; then
   echo "Patch file not found: $PATCH_FILE" >&2
   exit 1
 fi
-
-UPSTREAM_REF="$(tr -d '[:space:]' < "$UPSTREAM_REF_FILE")"
 
 overlay_state() {
   python3 - "$LIBCTEST_DIR" <<'PY'
@@ -69,7 +63,6 @@ import sys
 
 base = Path(sys.argv[1])
 paths = [
-    "upstream-ref.txt",
     "libc-test.patch",
     ".dockerignore",
     "config.mak.dlibc",

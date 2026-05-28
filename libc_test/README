@@ -3,7 +3,6 @@ libc-test support files for dandelionSDK
 
 This directory contains the tracked support files for the libc-test workflow:
 
-- `upstream-ref.txt`: pinned upstream libc-test revision
 - `libc-test.patch`: local patch applied to the generated upstream checkout
 - `config.mak.dlibc`: dandelion-specific libc-test configuration
 - `run_test_dlibc.py`: runtime helper used instead of the upstream C runtest
