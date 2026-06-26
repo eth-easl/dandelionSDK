@@ -6,6 +6,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 project(dandelion-sdk)
 
 include(ExternalProject)
+include(CTest)
 
 # binary options
 option(FREESTANDING "toggles the include of memcpy, memset, memmove and memcmp" ON)
@@ -15,6 +16,8 @@ option(NEWLIB "toggles builing of newlib on top of dandelion interface" OFF)
 set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "the architecture to build for")
 set(DANDELION_PLATFORM "debug" CACHE STRING "backend to build for")
 set(PAGE_SIZE "4096" CACHE STRING "Page size for the runtime to assume.")
+set(UTSNAME_FIELD_SIZE "65" CACHE STRING "Size of each utsname string field.")
+
 message(STATUS "Building for ${DANDELION_PLATFORM} on ${ARCHITECTURE}")
 
 # Constants
@@ -70,6 +73,7 @@ if(NEWLIB)
     string(APPEND NEWLIB_C_FLAGS " -nostdlib")
     string(APPEND NEWLIB_C_FLAGS " -fPIC")
     string(APPEND NEWLIB_C_FLAGS " -idirafter${COMPILER_RUNTIME_INCLUDE}")
+    string(APPEND NEWLIB_C_FLAGS " -D__DANDELION__")
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
       string(APPEND NEWLIB_C_FLAGS " -gdwarf-4")
     endif()
@@ -245,5 +249,40 @@ if(NEWLIB)
     add_dependencies(runtime llvmproject)
 
     add_subdirectory(test_programs)
+
+    if(BUILD_TESTING)
+        set(LIBCTEST_SHIM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libc_test")
+        set(LIBCTEST_CTEST_WORKTREE "${CMAKE_BINARY_DIR}/libc-test")
+
+        add_test(
+            NAME libc_test_full
+            COMMAND
+                "${CMAKE_CURRENT_SOURCE_DIR}/dev/dev_run_libctest_ctest.sh"
+                "${CMAKE_CURRENT_SOURCE_DIR}"
+                "${CMAKE_BINARY_DIR}"
+                "${CMAKE_INSTALL_PREFIX}"
+                "${LIBCTEST_SHIM_DIR}"
+                "${LIBCTEST_CTEST_WORKTREE}"
+        )
+        set_tests_properties(
+            libc_test_full
+            PROPERTIES
+                LABELS "libc-test"
+                TIMEOUT 1800
+        )
+
+        add_custom_target(
+            check-libc
+            COMMAND
+                "${CMAKE_CURRENT_SOURCE_DIR}/dev/dev_run_libctest_ctest.sh"
+                "${CMAKE_CURRENT_SOURCE_DIR}"
+                "${CMAKE_BINARY_DIR}"
+                "${CMAKE_INSTALL_PREFIX}"
+                "${LIBCTEST_SHIM_DIR}"
+                "${LIBCTEST_CTEST_WORKTREE}"
+            DEPENDS newlib llvmproject
+            USES_TERMINAL
+        )
+    endif()
 
 endif()

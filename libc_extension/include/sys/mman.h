@@ -1,37 +1,58 @@
-/* THIS IS A DUMMY HEADER */
-
-#ifndef	_SYS_MMAN_H
-#define	_SYS_MMAN_H	1
+#ifndef _SYS_MMAN_H
+#define _SYS_MMAN_H
 
 #include <sys/types.h>
 
-#define PROT_READ	0x1
-#define PROT_WRITE	0x2
-#define PROT_EXEC	0x4
-#define PROT_NONE	0x0
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define MAP_SHARED	0x01
-#define MAP_PRIVATE	0x02
-#define MAP_FIXED	0x10
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
+#define PROT_NONE   0x0
+#define PROT_READ   0x1
+#define PROT_WRITE  0x2
+#define PROT_EXEC   0x4
 
-#define MS_ASYNC	1
-#define MS_SYNC		4
-#define MS_INVALIDATE	2
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
+#define MAP_SHARED   0x01
+#define MAP_PRIVATE  0x02
+#define MAP_FIXED    0x10
+#define MAP_ANON     0x20
+#define MAP_ANONYMOUS MAP_ANON
 
-#define MCL_CURRENT	1
-#define MCL_FUTURE	2
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
+#define MAP_FAILED ((void *)-1)
 
-#define MAP_FAILED	((void *) -1)
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
+#define MS_ASYNC       1
+#define MS_INVALIDATE  2
+#define MS_SYNC        4
 
-extern int mlock (const void *__addr, size_t __len);
-extern int mlockall (int __flags);
-extern void *mmap (void *__addr, size_t __len, int __prot, int __flags, int __fd, __off_t __offset);
-extern int mprotect (void *__addr, size_t __len, int __prot);
-extern int msync (void *__addr, size_t __len, int __flags);
-extern int munlock (const void *__addr, size_t __len);
-extern int munlockall (void);
-extern int munmap (void *__addr, size_t __len);
-extern int shm_open (const char *__name, int __oflag, mode_t __mode);
-extern int shm_unlink (const char *__name);
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
+#define MCL_CURRENT  1
+#define MCL_FUTURE   2
 
-#endif	/* sys/mman.h */
+/* https://git.musl-libc.org/cgit/musl/tree/include/sys/mman.h */
+#define POSIX_MADV_NORMAL      0
+#define POSIX_MADV_RANDOM      1
+#define POSIX_MADV_SEQUENTIAL  2
+#define POSIX_MADV_WILLNEED    3
+#define POSIX_MADV_DONTNEED    4
+
+void *mmap(void *, size_t, int, int, int, off_t);
+int mprotect(void *, size_t, int);
+int msync(void *, size_t, int);
+int munmap(void *, size_t);
+int mlock(const void *, size_t);
+int mlockall(int);
+int munlock(const void *, size_t);
+int munlockall(void);
+int posix_madvise(void *, size_t, int);
+int shm_open(const char *, int, mode_t);
+int shm_unlink(const char *);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _SYS_MMAN_H */

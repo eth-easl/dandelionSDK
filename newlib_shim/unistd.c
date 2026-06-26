@@ -32,7 +32,12 @@ int chroot(const char *__path) {
 
 // char *  ctermid (char *__s); char *  cuserid (char *__s);
 
-// int	daemon (int nochdir, int noclose);
+int daemon(int nochdir, int noclose) {
+  (void)nochdir;
+  (void)noclose;
+  *__errno() = ENOSYS;
+  return -1;
+}
 
 // function to duplicate file descriptor to second file number
 // the filedescriptors should act as one, meaning if seek is called on one of
@@ -56,8 +61,18 @@ int euidaccess(const char *__path, int __mode) {
 // void	endusershell (void);
 
 // execve is defined in newlib
-// int     execl (const char *__path, const char *, ...);
-// int     execle (const char *__path, const char *, ...);
+int execl(const char *__path, const char *arg, ...) {
+  (void)__path;
+  (void)arg;
+  *__errno() = ENOSYS;
+  return -1;
+}
+int execle(const char *__path, const char *arg, ...) {
+  (void)__path;
+  (void)arg;
+  *__errno() = ENOSYS;
+  return -1;
+}
 // int     execlp (const char *__file, const char *, ...);
 // #if __MISC_VISIBLE
 // int     execlpe (const char *__file, const char *, ...);
@@ -174,7 +189,10 @@ int setgroups(int ngroups, const gid_t *grouplist) {
 // #if __BSD_VISIBLE || (__XSI_VISIBLE && __XSI_VISIBLE < 500)
 // void	setusershell (void);
 // #endif
-// unsigned sleep (unsigned int __seconds);
+unsigned sleep(unsigned int __seconds) {
+  *__errno() = ENOSYS;
+  return __seconds;
+}
 // #if __XSI_VISIBLE
 // void    swab (const void *__restrict, void *__restrict, ssize_t);
 // #endif
@@ -204,7 +222,10 @@ int usleep(useconds_t __useconds) { return 0; }
 // #endif
 
 // #if __BSD_VISIBLE || (__XSI_VISIBLE >= 4 && __POSIX_VISIBLE < 200809)
-// pid_t   vfork (void);
+pid_t vfork(void) {
+  *__errno() = ENOSYS;
+  return -1;
+}
 // #endif
 
 // #if __BSD_VISIBLE || __POSIX_VISIBLE < 200112
@@ -236,6 +257,14 @@ int usleep(useconds_t __useconds) { return 0; }
 
 int symlink(const char *__name1, const char *__name2) {
   *__errno() = EPERM;
+  return -1;
+}
+
+int mknod(const char *__path, mode_t __mode, dev_t __dev) {
+  (void)__path;
+  (void)__mode;
+  (void)__dev;
+  *__errno() = ENOSYS;
   return -1;
 }
 // #endif

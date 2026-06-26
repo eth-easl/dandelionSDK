@@ -1,13 +1,11 @@
 # compilation target
 --target=@TEMPLATE_TARGET@
--D_GNU_SOURCE=1
--D__GNU__
 -D__unix__
--D__dandelion__
--D__rtems__
 # prevent thread local storage in compilation, TODO: remove if we can provide TLS
 -D__thread=""
 -D__TM_GMTOFF=tm_gmtoff
+-D__DANDELION__
+-D_POSIX_C_SOURCE=200809L
 
 # compiler flags
 -fPIE

@@ -1,0 +1,16 @@
+CFLAGS += -pipe -std=c99 -Wall -Wno-unused-function -Wno-missing-braces -Wno-unused -Wno-overflow
+CFLAGS += -Wno-unknown-pragmas
+CFLAGS += -Wno-implicit-function-declaration -Wno-implicit-int -Wno-pointer-sign -Wno-pointer-arith
+CFLAGS += -Wno-strict-prototypes
+CFLAGS += -g
+LDFLAGS += -g
+LDLIBS += -lpthread -lm -lrt
+
+CFLAGS += -D_FILE_OFFSET_BITS=64
+LDLIBS += -lcrypt -ldl -lresolv -lutil -lpthread
+
+
+# Use a Python-based test runner instead of the C runtest (which needs
+# fork/exec). The runner handles timeouts, per-test working dirs, and failure
+# reporting.
+RUN_TEST = python3 ./run_test_dlibc.py

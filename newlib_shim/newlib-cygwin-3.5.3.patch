@@ -1,5 +1,5 @@
 diff --git a/config.sub b/config.sub
-index 63c1f1c8b..2971cb107 100755
+index 63c1f1c8..2971cb10 100755
 --- a/config.sub
 +++ b/config.sub
 @@ -1325,6 +1325,9 @@ case $os in
@@ -22,7 +22,7 @@ index 63c1f1c8b..2971cb107 100755
  	musl* | newlib* | uclibc*)
  		;;
 diff --git a/newlib/Makefile.am b/newlib/Makefile.am
-index 4ab36b8d8..0eacadd84 100644
+index 4ab36b8d..0eacadd8 100644
 --- a/newlib/Makefile.am
 +++ b/newlib/Makefile.am
 @@ -113,19 +113,19 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *
@@ -59,7 +59,7 @@ index 4ab36b8d8..0eacadd84 100644
  ## Place the libm_a objects in libc/ to keep the top dir tidy.
  stamp-libc-math-objects: libm.a
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 386183466..9a1f02ac2 100644
+index 38618346..0f42f769 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -430,6 +430,12 @@ case "${host}" in
@@ -75,7 +75,7 @@ index 386183466..9a1f02ac2 100644
    *-*-netware*)
  	signal_dir=
  	sys_dir=netware
-@@ -631,7 +636,7 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
+@@ -631,7 +637,7 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
  	;;
    aarch64*-*-*)
  	default_newlib_io_long_long="yes"
@@ -85,7 +85,7 @@ index 386183466..9a1f02ac2 100644
    arc*-*-*)
  	syscall_dir=syscalls
 diff --git a/newlib/libc/acinclude.m4 b/newlib/libc/acinclude.m4
-index 24148b13f..063723483 100644
+index 24148b13..06372348 100644
 --- a/newlib/libc/acinclude.m4
 +++ b/newlib/libc/acinclude.m4
 @@ -13,7 +13,7 @@ AM_CONDITIONAL(HAVE_UNIX_DIR, test x${unix_dir} != x)
@@ -97,38 +97,377 @@ index 24148b13f..063723483 100644
    epiphany
    h8300hms h8500hms
    m88kbug mmixware
-diff --git a/newlib/libc/include/sys/stat.h b/newlib/libc/include/sys/stat.h
-index 98f5addb4..046cb91bd 100644
---- a/newlib/libc/include/sys/stat.h
-+++ b/newlib/libc/include/sys/stat.h
-@@ -142,8 +142,10 @@ int	mkfifo (const char *__path, mode_t __mode );
- int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
- mode_t	umask (mode_t __mask );
+diff --git a/newlib/libc/include/complex.h b/newlib/libc/include/complex.h
+index ad3028e4..84de9095 100644
+--- a/newlib/libc/include/complex.h
++++ b/newlib/libc/include/complex.h
+@@ -9,7 +9,7 @@
+ #define	_COMPLEX_H
  
--#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
-+#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__) || defined(__DANDELION__)
- int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
+ #define complex _Complex
+-#define _Complex_I 1.0fi
++#define _Complex_I (__extension__ 1.0fi)
+ #define I _Complex_I
+ 
+ #include <sys/cdefs.h>
+diff --git a/newlib/libc/include/glob.h b/newlib/libc/include/glob.h
+index 7a300e69..c565210d 100644
+--- a/newlib/libc/include/glob.h
++++ b/newlib/libc/include/glob.h
+@@ -37,12 +37,13 @@
+ #define	_GLOB_H_
+ 
+ #include <sys/cdefs.h>
++#include <sys/types.h>
+ 
+ struct stat;
+ typedef struct {
+-	int gl_pathc;		/* Count of total paths so far. */
+-	int gl_matchc;		/* Count of paths matching pattern. */
+-	int gl_offs;		/* Reserved at beginning of gl_pathv. */
++	size_t gl_pathc;	/* Count of total paths so far. */
++	size_t gl_matchc;	/* Count of paths matching pattern. */
++	size_t gl_offs;		/* Reserved at beginning of gl_pathv. */
+ 	int gl_flags;		/* Copy of flags parameter to glob. */
+ 	char **gl_pathv;	/* List of paths matching pattern. */
+ 				/* Copy of errfunc parameter to glob. */
+@@ -66,6 +67,8 @@ typedef struct {
+ #define	GLOB_MARK	0x0008	/* Append / to matching directories. */
+ #define	GLOB_NOCHECK	0x0010	/* Return pattern itself if nothing matches. */
+ #define	GLOB_NOSORT	0x0020	/* Don't sort. */
++/* https://git.musl-libc.org/cgit/musl/tree/include/glob.h */
++#define	GLOB_NOESCAPE	0x40	/* Disable backslash escaping. */
+ 
+ #define	GLOB_ALTDIRFUNC	0x0040	/* Use alternately specified directory funcs. */
+ #define	GLOB_BRACE	0x0080	/* Expand braces ala csh. */
+@@ -78,6 +81,9 @@ typedef struct {
+ /* backwards compatibility, this is the old name for this option */
+ #define GLOB_MAXPATH	GLOB_LIMIT
+ 
++/* https://git.musl-libc.org/cgit/musl/tree/include/glob.h */
++#define	GLOB_ABORTED	2	/* Unignored error. */
++#define	GLOB_NOMATCH	3	/* No match and GLOB_NOCHECK was not set. */
+ #define	GLOB_NOSPACE	(-1)	/* Malloc call failed. */
+ #define	GLOB_ABEND	(-2)	/* Unignored error. */
+ 
+diff --git a/newlib/libc/include/limits.h b/newlib/libc/include/limits.h
+index 893f1083..910d59aa 100644
+--- a/newlib/libc/include/limits.h
++++ b/newlib/libc/include/limits.h
+@@ -145,3 +145,223 @@
+ #ifndef PATH_MAX
+ #define PATH_MAX	4096
+ #endif
++
++#if __POSIX_VISIBLE >= 2
++/* https://man7.org/linux/man-pages/man0/limits.h.0p.html
++   https://github.com/bminor/glibc/blob/master/posix/bits/posix2_lim.h */
++#ifndef CHARCLASS_NAME_MAX
++#define CHARCLASS_NAME_MAX 2048
 +#endif
-+#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
- int	mknod (const char *__path, mode_t __mode, dev_t __dev );
++#ifndef COLL_WEIGHTS_MAX
++#define COLL_WEIGHTS_MAX 255
++#endif
++#ifndef EXPR_NEST_MAX
++#define EXPR_NEST_MAX _POSIX2_EXPR_NEST_MAX
++#endif
++#ifndef LINE_MAX
++#define LINE_MAX _POSIX2_LINE_MAX
++#endif
++#ifndef RE_DUP_MAX
++#define RE_DUP_MAX 0x7fff
++#endif
++#endif
++
++#if __POSIX_VISIBLE
++/* https://man7.org/linux/man-pages/man0/limits.h.0p.html
++   https://github.com/bminor/glibc/blob/master/posix/bits/posix1_lim.h */
++#ifndef _POSIX_CLOCKRES_MIN
++#define _POSIX_CLOCKRES_MIN 20000000
++#endif
++#ifndef _POSIX_AIO_LISTIO_MAX
++#define _POSIX_AIO_LISTIO_MAX 2
++#endif
++#ifndef _POSIX_AIO_MAX
++#define _POSIX_AIO_MAX 1
++#endif
++#ifndef _POSIX_ARG_MAX
++#define _POSIX_ARG_MAX 4096
++#endif
++#ifndef _POSIX_CHILD_MAX
++#define _POSIX_CHILD_MAX 25
++#endif
++#ifndef _POSIX_DELAYTIMER_MAX
++#define _POSIX_DELAYTIMER_MAX 32
++#endif
++#ifndef _POSIX_HOST_NAME_MAX
++#define _POSIX_HOST_NAME_MAX 255
++#endif
++#ifndef _POSIX_LINK_MAX
++#define _POSIX_LINK_MAX 8
++#endif
++#ifndef _POSIX_LOGIN_NAME_MAX
++#define _POSIX_LOGIN_NAME_MAX 9
++#endif
++#ifndef _POSIX_MAX_CANON
++#define _POSIX_MAX_CANON 255
++#endif
++#ifndef _POSIX_MAX_INPUT
++#define _POSIX_MAX_INPUT 255
++#endif
++#ifndef _POSIX_MQ_OPEN_MAX
++#define _POSIX_MQ_OPEN_MAX 8
++#endif
++#ifndef _POSIX_MQ_PRIO_MAX
++#define _POSIX_MQ_PRIO_MAX 32
++#endif
++#ifndef _POSIX_NAME_MAX
++#define _POSIX_NAME_MAX 14
++#endif
++#ifndef _POSIX_NGROUPS_MAX
++#define _POSIX_NGROUPS_MAX 8
++#endif
++#ifndef _POSIX_OPEN_MAX
++#define _POSIX_OPEN_MAX 20
++#endif
++#ifndef _POSIX_PATH_MAX
++#define _POSIX_PATH_MAX 256
++#endif
++#ifndef _POSIX_PIPE_BUF
++#define _POSIX_PIPE_BUF 512
++#endif
++#ifndef _POSIX_RE_DUP_MAX
++#define _POSIX_RE_DUP_MAX 255
++#endif
++#ifndef _POSIX_RTSIG_MAX
++#define _POSIX_RTSIG_MAX 8
++#endif
++#ifndef _POSIX_SEM_NSEMS_MAX
++#define _POSIX_SEM_NSEMS_MAX 256
++#endif
++#ifndef _POSIX_SEM_VALUE_MAX
++#define _POSIX_SEM_VALUE_MAX 32767
++#endif
++#ifndef _POSIX_SIGQUEUE_MAX
++#define _POSIX_SIGQUEUE_MAX 32
++#endif
++#ifndef _POSIX_SSIZE_MAX
++#define _POSIX_SSIZE_MAX 32767
++#endif
++#ifndef _POSIX_SS_REPL_MAX
++#define _POSIX_SS_REPL_MAX 4
++#endif
++#ifndef _POSIX_STREAM_MAX
++#define _POSIX_STREAM_MAX 8
++#endif
++#ifndef _POSIX_SYMLINK_MAX
++#define _POSIX_SYMLINK_MAX 255
++#endif
++#ifndef _POSIX_SYMLOOP_MAX
++#define _POSIX_SYMLOOP_MAX 8
++#endif
++/* https://man7.org/linux/man-pages/man0/limits.h.0p.html
++   https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/local_lim.h */
++#ifndef _POSIX_THREAD_DESTRUCTOR_ITERATIONS
++#define _POSIX_THREAD_DESTRUCTOR_ITERATIONS 4
++#endif
++#ifndef _POSIX_THREAD_KEYS_MAX
++#define _POSIX_THREAD_KEYS_MAX 128
++#endif
++#ifndef _POSIX_THREAD_THREADS_MAX
++#define _POSIX_THREAD_THREADS_MAX 64
++#endif
++#ifndef _POSIX_TIMER_MAX
++#define _POSIX_TIMER_MAX 32
++#endif
++#ifndef _POSIX_TTY_NAME_MAX
++#define _POSIX_TTY_NAME_MAX 9
++#endif
++#ifndef _POSIX_TZNAME_MAX
++#define _POSIX_TZNAME_MAX 6
++#endif
++#endif
++
++#if __POSIX_VISIBLE >= 2
++/* https://man7.org/linux/man-pages/man0/limits.h.0p.html
++   https://github.com/bminor/glibc/blob/master/posix/bits/posix2_lim.h */
++#ifndef _POSIX2_BC_BASE_MAX
++#define _POSIX2_BC_BASE_MAX 99
++#endif
++#ifndef _POSIX2_BC_DIM_MAX
++#define _POSIX2_BC_DIM_MAX 2048
++#endif
++#ifndef _POSIX2_BC_SCALE_MAX
++#define _POSIX2_BC_SCALE_MAX 99
++#endif
++#ifndef _POSIX2_BC_STRING_MAX
++#define _POSIX2_BC_STRING_MAX 1000
++#endif
++#ifndef _POSIX2_CHARCLASS_NAME_MAX
++#define _POSIX2_CHARCLASS_NAME_MAX 14
++#endif
++#ifndef _POSIX2_COLL_WEIGHTS_MAX
++#define _POSIX2_COLL_WEIGHTS_MAX 2
++#endif
++#ifndef _POSIX2_EXPR_NEST_MAX
++#define _POSIX2_EXPR_NEST_MAX 32
++#endif
++#ifndef _POSIX2_LINE_MAX
++#define _POSIX2_LINE_MAX 2048
++#endif
++#endif
++
++#if __XSI_VISIBLE
++/* https://man7.org/linux/man-pages/man0/limits.h.0p.html */
++#ifndef _XOPEN_IOV_MAX
++#define _XOPEN_IOV_MAX 16
++#endif
++#ifndef _XOPEN_NAME_MAX
++#define _XOPEN_NAME_MAX 255
++#endif
++#ifndef _XOPEN_PATH_MAX
++#define _XOPEN_PATH_MAX 1024
++#endif
++#endif
++
++#ifndef SSIZE_MAX
++/* https://github.com/bminor/glibc/blob/master/posix/bits/posix1_lim.h */
++#if __SIZEOF_SIZE_T__ == __SIZEOF_LONG__
++#define SSIZE_MAX LONG_MAX
++#else
++#define SSIZE_MAX INT_MAX
++#endif
++#endif
++
++#ifndef WORD_BIT
++/* https://github.com/bminor/glibc/blob/master/include/bits/xopen_lim.h */
++#if __INT_MAX__ == 32767
++#define WORD_BIT 16
++#elif __INT_MAX__ == 2147483647
++#define WORD_BIT 32
++#else
++#define WORD_BIT 64
++#endif
++#endif
++
++#ifndef LONG_BIT
++/* https://github.com/bminor/glibc/blob/master/include/bits/xopen_lim.h */
++#if __LONG_MAX__ == 2147483647
++#define LONG_BIT 32
++#else
++#define LONG_BIT 64
++#endif
++#endif
++
++#if __XSI_VISIBLE
++/* https://man7.org/linux/man-pages/man0/limits.h.0p.html
++   https://github.com/bminor/glibc/blob/master/include/bits/xopen_lim.h */
++#ifndef NL_LANGMAX
++#define NL_LANGMAX _POSIX2_LINE_MAX
++#endif
++#ifndef NL_MSGMAX
++#define NL_MSGMAX INT_MAX
++#endif
++#ifndef NL_SETMAX
++#define NL_SETMAX INT_MAX
++#endif
++#ifndef NL_TEXTMAX
++#define NL_TEXTMAX INT_MAX
++#endif
++#ifndef NZERO
++#define NZERO 20
++#endif
++#endif
+diff --git a/newlib/libc/include/machine/setjmp.h b/newlib/libc/include/machine/setjmp.h
+index e3534e18..c7c75d39 100644
+--- a/newlib/libc/include/machine/setjmp.h
++++ b/newlib/libc/include/machine/setjmp.h
+@@ -439,7 +439,7 @@ typedef	int jmp_buf[_JBLEN];
+ 
+ _END_STD_C
+ 
+-#if (defined(__CYGWIN__) || defined(__rtems__)) && __POSIX_VISIBLE
++#if (defined(__CYGWIN__) || defined(__rtems__) || defined(__DANDELION__)) && __POSIX_VISIBLE
+ #include <signal.h>
+ 
+ #ifdef __cplusplus
+@@ -457,7 +457,7 @@ typedef int sigjmp_buf[_JBLEN+1+(sizeof (sigset_t)/sizeof (int))];
+ #define _SAVEMASK	_JBLEN
+ #define _SIGMASK	(_JBLEN+1)
+ 
+-#ifdef __CYGWIN__
++#if defined(__CYGWIN__)
+ # define _CYGWIN_WORKING_SIGSETJMP
  #endif
  
-diff --git a/newlib/libc/sys/Makefile.inc b/newlib/libc/sys/Makefile.inc
-index 24d8407d5..c22987333 100644
---- a/newlib/libc/sys/Makefile.inc
-+++ b/newlib/libc/sys/Makefile.inc
-@@ -1,3 +1,6 @@
-+if HAVE_LIBC_SYS_DANDELION_DIR
-+include %D%/dandelion/Makefile.inc
-+endif
- if HAVE_LIBC_SYS_A29KHIF_DIR
- include %D%/a29khif/Makefile.inc
- endif
+@@ -467,11 +467,14 @@ typedef int sigjmp_buf[_JBLEN+1+(sizeof (sigset_t)/sizeof (int))];
+ #define __SIGMASK_FUNC sigprocmask
+ #endif
+ 
+-#ifdef __CYGWIN__
++#if defined(__CYGWIN__) || defined(__DANDELION__)
+ /* Per POSIX, siglongjmp has to be implemented as function.  Cygwin
+    provides functions for both, siglongjmp and sigsetjmp since 2.2.0. */
+ extern void siglongjmp (sigjmp_buf, int) __attribute__ ((__noreturn__));
+ extern int sigsetjmp (sigjmp_buf, int);
++#elif defined(__rtems__)
++/* https://pubs.opengroup.org/onlinepubs/9699919799/functions/siglongjmp.html */
++extern void siglongjmp (sigjmp_buf, int) __attribute__ ((__noreturn__));
+ #endif
+ 
+ #if defined(__GNUC__)
+@@ -485,6 +488,7 @@ extern int sigsetjmp (sigjmp_buf, int);
+               setjmp (*_sjbuf)); \
+             })
+ 
++#if !defined(__rtems__) && !defined(__DANDELION__)
+ #define siglongjmp(env, val) \
+             __extension__ \
+             ({ \
+@@ -494,6 +498,7 @@ extern int sigsetjmp (sigjmp_buf, int);
+                : 0), \
+                longjmp (*_sjbuf, val)); \
+             })
++#endif /* !__rtems__ && !__DANDELION__ */
+ 
+ #else /* !__GNUC__ */
+ 
+@@ -501,9 +506,11 @@ extern int sigsetjmp (sigjmp_buf, int);
+                __SIGMASK_FUNC (SIG_SETMASK, 0, (sigset_t *) ((env) + _SIGMASK)),\
+                setjmp (env))
+ 
++#if !defined(__rtems__) && !defined(__DANDELION__)
+ #define siglongjmp(env, val) ((((env)[_SAVEMASK])?\
+                __SIGMASK_FUNC (SIG_SETMASK, (sigset_t *) ((env) + _SIGMASK), 0):0),\
+                longjmp (env, val))
++#endif /* !__rtems__ && !__DANDELION__ */
+ 
+ #endif
+ 
 diff --git a/newlib/libc/include/pthread.h b/newlib/libc/include/pthread.h
-index c99ad395d..109112630 100644
+index c99ad395..ba50c700 100644
 --- a/newlib/libc/include/pthread.h
 +++ b/newlib/libc/include/pthread.h
-@@ -235,18 +235,18 @@ int	pthread_attr_setguardsize (pthread_attr_t *__attr, size_t __guardsize);
+@@ -57,6 +57,10 @@ int	pthread_mutexattr_setpshared (pthread_mutexattr_t *__attr,
+ 
+ int pthread_mutexattr_gettype (const pthread_mutexattr_t *__attr, int *__kind);
+ int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind);
++int pthread_mutexattr_getrobust (const pthread_mutexattr_t *__attr,
++				 int *__robustness);
++int pthread_mutexattr_setrobust (pthread_mutexattr_t *__attr,
++				 int __robustness);
+ 
+ #endif
+ 
+@@ -79,6 +83,7 @@ int	pthread_mutex_destroy (pthread_mutex_t *__mutex);
+ int	pthread_mutex_lock (pthread_mutex_t *__mutex);
+ int	pthread_mutex_trylock (pthread_mutex_t *__mutex);
+ int	pthread_mutex_unlock (pthread_mutex_t *__mutex);
++int	pthread_mutex_consistent (pthread_mutex_t *__mutex);
+ 
+ #if defined(_POSIX_TIMEOUTS)
+ 
+@@ -235,18 +240,18 @@ int	pthread_attr_setguardsize (pthread_attr_t *__attr, size_t __guardsize);
   */
  #if __GNU_VISIBLE
  #if defined(__rtems__) 
@@ -159,3 +498,858 @@ index c99ad395d..109112630 100644
  #endif /* defined(__rtems__) */
  #endif /* __GNU_VISIBLE */
  
+diff --git a/newlib/libc/include/regex.h b/newlib/libc/include/regex.h
+index fa3e2687..c260aeb4 100644
+--- a/newlib/libc/include/regex.h
++++ b/newlib/libc/include/regex.h
+@@ -38,6 +38,7 @@
+ #define	_REGEX_H_
+ 
+ #include <sys/cdefs.h>
++#include <sys/types.h>
+ 
+ /* types */
+ typedef off_t regoff_t;
+diff --git a/newlib/libc/include/search.h b/newlib/libc/include/search.h
+index ed321b0f..3d0d2005 100644
+--- a/newlib/libc/include/search.h
++++ b/newlib/libc/include/search.h
+@@ -51,14 +51,18 @@ __BEGIN_DECLS
+ int	 hcreate(size_t);
+ void	 hdestroy(void);
+ ENTRY	*hsearch(ENTRY, ACTION);
++void	 insque(void *, void *);
++void	*lfind(const void *, const void *, size_t *, size_t, __compar_fn_t);
++void	*lsearch(const void *, void *, size_t *, size_t, __compar_fn_t);
+ int	 hcreate_r(size_t, struct hsearch_data *);
+ void	 hdestroy_r(struct hsearch_data *);
+ int	hsearch_r(ENTRY, ACTION, ENTRY **, struct hsearch_data *);
+ void	*tdelete(const void *__restrict, void **__restrict, __compar_fn_t);
+ void	tdestroy (void *, void (*)(void *));
+-void	*tfind(const void *, void **, __compar_fn_t);
++void	*tfind(const void *, void *const *, __compar_fn_t);
+ void	*tsearch(const void *, void **, __compar_fn_t);
+ void      twalk(const void *, void (*)(const void *, VISIT, int));
++void	 remque(void *);
+ __END_DECLS
+ 
+ #endif /* !_SEARCH_H_ */
+diff --git a/newlib/libc/include/signal.h b/newlib/libc/include/signal.h
+index 23a9863e..08f8df05 100644
+--- a/newlib/libc/include/signal.h
++++ b/newlib/libc/include/signal.h
+@@ -18,6 +18,10 @@ typedef _sig_func_ptr sighandler_t;	/* glibc naming */
+ #define SIG_DFL ((_sig_func_ptr)0)	/* Default action */
+ #define SIG_IGN ((_sig_func_ptr)1)	/* Ignore action */
+ #define SIG_ERR ((_sig_func_ptr)-1)	/* Error return */
++#if __XSI_VISIBLE >= 4
++/* https://github.com/bminor/glibc/blob/master/signal/signal.h */
++#define SIG_HOLD ((_sig_func_ptr)2)	/* Hold signal */
++#endif
+ 
+ struct _reent;
+ 
+@@ -28,6 +32,18 @@ int	_raise_r (struct _reent *, int);
+ _sig_func_ptr signal (int, _sig_func_ptr);
+ int	raise (int);
+ void	psignal (int, const char *);
++#if __POSIX_VISIBLE >= 200809
++/* https://man7.org/linux/man-pages/man0/signal.h.0p.html */
++void	psiginfo (const siginfo_t *, const char *);
++#endif
++#if __XSI_VISIBLE >= 4
++/* https://github.com/bminor/glibc/blob/master/signal/signal.h */
++int	sighold (int);
++int	sigignore (int);
++int	siginterrupt (int, int);
++int	sigrelse (int);
++_sig_func_ptr sigset (int, _sig_func_ptr);
++#endif
+ #endif
+ 
+ _END_STD_C
+diff --git a/newlib/libc/include/stdio.h b/newlib/libc/include/stdio.h
+index 77966578..248a39ff 100644
+--- a/newlib/libc/include/stdio.h
++++ b/newlib/libc/include/stdio.h
+@@ -381,8 +381,8 @@ int	dprintf (int, const char *__restrict, ...)
+                _ATTRIBUTE ((__format__ (__printf__, 2, 3)));
+ #  endif
+ FILE *	fmemopen (void *__restrict, size_t, const char *__restrict);
+-/* getdelim - see __getdelim for now */
+-/* getline - see __getline for now */
++ssize_t	getdelim (char **__restrict, size_t *__restrict, int, FILE *__restrict);
++ssize_t	getline (char **__restrict, size_t *__restrict, FILE *__restrict);
+ FILE *	open_memstream (char **, size_t *);
+ int	vdprintf (int, const char *__restrict, __VALIST)
+                _ATTRIBUTE ((__format__ (__printf__, 2, 0)));
+diff --git a/newlib/libc/include/stdlib.h b/newlib/libc/include/stdlib.h
+index fd89f5ba..c8cfc9fc 100644
+--- a/newlib/libc/include/stdlib.h
++++ b/newlib/libc/include/stdlib.h
+@@ -30,6 +30,8 @@
+ #include <sys/_locale.h>
+ #endif
+ 
++#include <sys/wait.h>
++
+ _BEGIN_STD_C
+ 
+ typedef struct 
+@@ -62,7 +64,8 @@ typedef int (*__compar_fn_t) (const void *, const void *);
+ 
+ #define RAND_MAX __RAND_MAX
+ 
+-int	__locale_mb_cur_max (void);
++/* https://github.com/bminor/glibc/blob/master/stdlib/stdlib.h */
++size_t	__locale_mb_cur_max (void);
+ 
+ #define MB_CUR_MAX __locale_mb_cur_max()
+ 
+@@ -155,6 +158,9 @@ int	rpmatch (const char *response);
+ #endif
+ #if __XSI_VISIBLE
+ void	setkey (const char *__key);
++int	grantpt (int);
++char *	ptsname (int);
++int	unlockpt (int);
+ #endif
+ void	srand (unsigned __seed);
+ double	strtod (const char *__restrict __n, char **__restrict __end_PTR);
+@@ -221,6 +227,10 @@ char *	ecvtbuf (double, int, int*, int*, char *);
+ char *	fcvtbuf (double, int, int*, int*, char *);
+ char *	ecvtf (float,int,int *,int *);
+ #endif
++
++#if __XSI_VISIBLE
++int	posix_openpt (int);
++#endif
+ #ifndef __CYGWIN__
+ char *	__itoa (int, char *, int);
+ char *	__utoa (unsigned, char *, int);
+diff --git a/newlib/libc/include/sys/_default_fcntl.h b/newlib/libc/include/sys/_default_fcntl.h
+index ce721fa2..87868abc 100644
+--- a/newlib/libc/include/sys/_default_fcntl.h
++++ b/newlib/libc/include/sys/_default_fcntl.h
+@@ -23,7 +23,7 @@ extern "C" {
+ #define	_FNONBLOCK	0x4000	/* non blocking I/O (POSIX style) */
+ #define	_FNDELAY	_FNONBLOCK	/* non blocking I/O (4.2 style) */
+ #define	_FNOCTTY	0x8000	/* don't assign a ctty on this open */
+-#if defined (__CYGWIN__)
++#if defined (__CYGWIN__) || defined (__DANDELION__)
+ #define	_FBINARY	0x10000
+ #define	_FTEXT		0x20000
+ #endif
+@@ -32,7 +32,7 @@ extern "C" {
+ #define	_FNOFOLLOW	0x100000
+ #define	_FDIRECTORY	0x200000
+ #define	_FEXECSRCH	0x400000
+-#if defined (__CYGWIN__)
++#if defined (__CYGWIN__) || defined (__DANDELION__)
+ #define	_FTMPFILE	0x800000
+ #define	_FNOATIME	0x1000000
+ #define	_FPATH		0x2000000
+@@ -71,7 +71,7 @@ extern "C" {
+ #define	O_DIRECT	_FDIRECT
+ #endif
+ 
+-#if defined (__CYGWIN__)
++#if defined (__CYGWIN__) || defined (__DANDELION__)
+ #define O_BINARY	_FBINARY
+ #define O_TEXT		_FTEXT
+ #define O_DSYNC         _FSYNC
+@@ -189,7 +189,7 @@ struct flock {
+ 	short	l_whence;	/* flag to choose starting offset */
+ 	long	l_start;	/* relative offset, in bytes */
+ 	long	l_len;		/* length, in bytes; 0 means lock to EOF */
+-	short	l_pid;		/* returned with F_GETLK */
++	int	l_pid;		/* returned with F_GETLK */
+ 	short	l_xxx;		/* reserved for future use */
+ };
+ #endif /* __CYGWIN__ */
+diff --git a/newlib/libc/include/sys/_pthreadtypes.h b/newlib/libc/include/sys/_pthreadtypes.h
+index 75e9e1cb..81352bac 100644
+--- a/newlib/libc/include/sys/_pthreadtypes.h
++++ b/newlib/libc/include/sys/_pthreadtypes.h
+@@ -85,7 +85,7 @@ typedef struct {
+                                   /*   located */
+ #endif
+ 
+-#if defined(_POSIX_THREAD_PRIO_PROTECT)
++#if defined(_POSIX_THREAD_PRIO_INHERIT) || defined(_POSIX_THREAD_PRIO_PROTECT)
+ /* Mutexes */
+ 
+ /* Values for blocking protocol. */
+@@ -189,6 +189,10 @@ typedef struct {
+ 
+ typedef __uint32_t pthread_key_t;        /* thread-specific data keys */
+ 
++/* https://github.com/bminor/glibc/blob/master/sysdeps/nptl/pthread.h */
++#define PTHREAD_MUTEX_STALLED 0
++#define PTHREAD_MUTEX_ROBUST  1
++
+ typedef struct {
+   int   is_initialized;  /* is this structure initialized? */
+   int   init_executed;   /* has the initialization routine been run? */
+diff --git a/newlib/libc/include/sys/config.h b/newlib/libc/include/sys/config.h
+index 5dcc77a8..c327cc53 100644
+--- a/newlib/libc/include/sys/config.h
++++ b/newlib/libc/include/sys/config.h
+@@ -238,8 +238,8 @@
+ #include <cygwin/config.h>
+ #endif
+ 
+-#if defined(__rtems__)
+-#define __FILENAME_MAX__ 255
++#if defined(__rtems__) || defined(__DANDELION__)
++#define __FILENAME_MAX__ 64
+ #define _READ_WRITE_RETURN_TYPE _ssize_t
+ #define __DYNAMIC_REENT__
+ #endif
+diff --git a/newlib/libc/include/sys/features.h b/newlib/libc/include/sys/features.h
+index 6a925c87..d9d0a63f 100644
+--- a/newlib/libc/include/sys/features.h
++++ b/newlib/libc/include/sys/features.h
+@@ -420,7 +420,7 @@ extern "C" {
+ # define _POSIX_VERSION 199009L
+ #endif
+ 
+-#ifdef __CYGWIN__
++#if defined(__CYGWIN__) || defined(__DANDELION__)
+ 
+ #if __POSIX_VISIBLE >= 200809
+ #define _POSIX_VERSION				200809L
+@@ -454,7 +454,8 @@ extern "C" {
+ #define _POSIX_IPV6				200809L
+ #define _POSIX_JOB_CONTROL			     1
+ #define _POSIX_MAPPED_FILES			200809L
+-/* #define _POSIX_MEMLOCK			    -1 */
++/* https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
++#define _POSIX_MEMLOCK			200809L
+ #define _POSIX_MEMLOCK_RANGE			200809L
+ #define _POSIX_MEMORY_PROTECTION		200809L
+ #define _POSIX_MESSAGE_PASSING			200809L
+@@ -477,7 +478,8 @@ extern "C" {
+ #define _POSIX_THREAD_ATTR_STACKADDR		200809L
+ #define _POSIX_THREAD_ATTR_STACKSIZE		200809L
+ #define _POSIX_THREAD_CPUTIME			200809L
+-/* #define _POSIX_THREAD_PRIO_INHERIT		    -1 */
++/* https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
++#define _POSIX_THREAD_PRIO_INHERIT		200809L
+ /* #define _POSIX_THREAD_PRIO_PROTECT		    -1 */
+ #define _POSIX_THREAD_PRIORITY_SCHEDULING	200809L
+ #define _POSIX_THREAD_PROCESS_SHARED		200809L
+@@ -486,6 +488,8 @@ extern "C" {
+ #define _POSIX_THREADS				200809L
+ #define _POSIX_TIMEOUTS				200809L
+ #define _POSIX_TIMERS				200809L
++/* https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
++#define _UNIX98_THREAD_MUTEX_ATTRIBUTES		1
+ /* #define _POSIX_TRACE				    -1 */
+ /* #define _POSIX_TRACE_EVENT_FILTER		    -1 */
+ /* #define _POSIX_TRACE_INHERIT			    -1 */
+@@ -538,7 +542,8 @@ extern "C" {
+ /* #define _XOPEN_REALTIME_THREADS		    -1 */
+ #define _XOPEN_SHM				     1
+ /* #define _XOPEN_STREAMS			    -1 */
+-/* #define _XOPEN_UNIX				    -1 */
++/* https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html */
++#define _XOPEN_UNIX				     1
+ #endif /* __XSI_VISIBLE */
+ 
+ /*
+@@ -549,7 +554,7 @@ extern "C" {
+  */
+ #define __STDC_ISO_10646__ 201806L
+ 
+-#endif /* __CYGWIN__ */
++#endif /* __CYGWIN__ || __DANDELION__ */
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/newlib/libc/include/sys/resource.h b/newlib/libc/include/sys/resource.h
+index c0a0d201..429c962f 100644
+--- a/newlib/libc/include/sys/resource.h
++++ b/newlib/libc/include/sys/resource.h
+@@ -5,20 +5,55 @@
+ extern "C" {
+ #endif
+ 
++#include <sys/types.h>
+ #include <sys/time.h>
+ 
++/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/resource.h */
++#define PRIO_PROCESS 0
++#define PRIO_PGRP 1
++#define PRIO_USER 2
++
++/* https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/resource.h */
++#define RLIMIT_CPU 0
++#define RLIMIT_FSIZE 1
++#define RLIMIT_DATA 2
++#define RLIMIT_STACK 3
++#define RLIMIT_CORE 4
++#define RLIMIT_NPROC 6
++#define RLIMIT_NOFILE 7
++#define RLIMIT_AS 9
++
++/* https://man7.org/linux/man-pages/man0/sys_resource.h.0p.html
++ * https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/resource.h
++ */
++#ifndef _RLIM_T_DECLARED
++typedef __uint64_t rlim_t;
++#define _RLIM_T_DECLARED
++#endif
++#define RLIM_INFINITY ((rlim_t) ~((rlim_t) 0))
++#define RLIM_SAVED_MAX RLIM_INFINITY
++#define RLIM_SAVED_CUR RLIM_INFINITY
++
+ #define	RUSAGE_SELF	0		/* calling process */
+ #define	RUSAGE_CHILDREN	-1		/* terminated child processes */
+ 
++struct rlimit {
++  rlim_t rlim_cur;
++  rlim_t rlim_max;
++};
++
+ struct rusage {
+   	struct timeval ru_utime;	/* user time used */
+ 	struct timeval ru_stime;	/* system time used */
+ };
+ 
++int	getpriority (int, id_t);
++int	getrlimit (int, struct rlimit*);
+ int	getrusage (int, struct rusage*);
++int	setpriority (int, id_t, int);
++int	setrlimit (int, const struct rlimit*);
+ 
+ #ifdef __cplusplus
+ }
+ #endif
+ #endif /* !_SYS_RESOURCE_H_ */
+-
+diff --git a/newlib/libc/include/sys/signal.h b/newlib/libc/include/sys/signal.h
+index 96bf9781..2f3318d8 100644
+--- a/newlib/libc/include/sys/signal.h
++++ b/newlib/libc/include/sys/signal.h
+@@ -19,11 +19,13 @@ extern "C" {
+ typedef	__sigset_t	sigset_t;
+ #endif
+ 
++typedef void (*_sig_func_ptr)(int);
++
+ #if defined(__CYGWIN__)
+ #include <cygwin/signal.h>
+ #else
+ 
+-#if defined(_POSIX_REALTIME_SIGNALS) || __POSIX_VISIBLE >= 199309
++#if defined(_POSIX_REALTIME_SIGNALS) || __POSIX_VISIBLE >= 199309 || __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
+ 
+ /* sigev_notify values
+    NOTE: P1003.1c/D10, p. 34 adds SIGEV_THREAD.  */
+@@ -69,19 +71,67 @@ struct sigevent {
+ typedef struct {
+   int          si_signo;    /* Signal number */
+   int          si_code;     /* Cause of the signal */
++  /* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/types/siginfo_t.h */
++  int          si_errno;    /* Error number */
++  pid_t        si_pid;      /* Sending process ID */
++  uid_t        si_uid;      /* Real user ID of sending process */
++  void        *si_addr;     /* Faulting instruction/memory reference */
++  int          si_status;   /* Exit value or signal */
+   union sigval si_value;    /* Signal value */
+ } siginfo_t;
++
++/* https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/siginfo.h */
++#define ILL_ILLOPC	1
++#define ILL_ILLOPN	2
++#define ILL_ILLADR	3
++#define ILL_ILLTRP	4
++#define ILL_PRVOPC	5
++#define ILL_PRVREG	6
++#define ILL_COPROC	7
++#define ILL_BADSTK	8
++
++#define FPE_INTDIV	1
++#define FPE_INTOVF	2
++#define FPE_FLTDIV	3
++#define FPE_FLTOVF	4
++#define FPE_FLTUND	5
++#define FPE_FLTRES	6
++#define FPE_FLTINV	7
++#define FPE_FLTSUB	8
++
++#define SEGV_MAPERR	1
++#define SEGV_ACCERR	2
++
++#define BUS_ADRALN	1
++#define BUS_ADRERR	2
++#define BUS_OBJERR	3
++
++#define TRAP_BRKPT	1
++#define TRAP_TRACE	2
++
++#define CLD_EXITED	1
++#define CLD_KILLED	2
++#define CLD_DUMPED	3
++#define CLD_TRAPPED	4
++#define CLD_STOPPED	5
++#define CLD_CONTINUED	6
+ #endif /* defined(_POSIX_REALTIME_SIGNALS) || __POSIX_VISIBLE >= 199309 */
+ 
+ #if defined(__rtems__)
+ 
+ /*  3.3.8 Synchronously Accept a Signal, P1003.1b-1993, p. 76 */
+ 
+-#define SA_NOCLDSTOP 0x1   /* Do not generate SIGCHLD when children stop */
+-#define SA_SIGINFO   0x2   /* Invoke the signal catching function with */
+-                           /*   three arguments instead of one. */
++/* https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal-defs.h */
++#define SA_NOCLDSTOP 0x00000001
++#define SA_NOCLDWAIT 0x00000002
++#define SA_SIGINFO   0x00000004
+ #if __BSD_VISIBLE || __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
+-#define SA_ONSTACK   0x4   /* Signal delivery will be on a separate stack. */
++#define SA_ONSTACK   0x08000000
++#endif
++#if __XSI_VISIBLE >= 4
++#define SA_RESTART   0x10000000
++#define SA_NODEFER   0x40000000
++#define SA_RESETHAND 0x80000000
+ #endif
+ 
+ /* struct sigaction notes from POSIX:
+@@ -93,8 +143,6 @@ typedef struct {
+  *      application should not use both simultaneously.
+  */
+ 
+-typedef void (*_sig_func_ptr)(int);
+-
+ struct sigaction {
+   int         sa_flags;       /* Special flags to affect behavior of signal */
+   sigset_t    sa_mask;        /* Additional set of signals to be blocked */
+@@ -115,16 +163,38 @@ struct sigaction {
+ 
+ #else /* defined(__rtems__) */
+ 
+-#define SA_NOCLDSTOP 1  /* only value supported now for sa_flags */
+-
+-typedef void (*_sig_func_ptr)(int);
++/* https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal-defs.h */
++#define SA_NOCLDSTOP 0x00000001
++#define SA_NOCLDWAIT 0x00000002
++#define SA_SIGINFO   0x00000004
++#if __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++#define SA_ONSTACK   0x08000000
++#endif
++#if __XSI_VISIBLE >= 4
++#define SA_RESTART   0x10000000
++#define SA_NODEFER   0x40000000
++#define SA_RESETHAND 0x80000000
++#endif
+ 
++/* https://man7.org/linux/man-pages/man0/signal.h.0p.html
++   https://man7.org/linux/man-pages/man7/signal.7.html */
+ struct sigaction 
+ {
+-	_sig_func_ptr sa_handler;
+-	sigset_t sa_mask;
+-	int sa_flags;
++  int         sa_flags;       /* Special flags to affect behavior of signal */
++  sigset_t    sa_mask;        /* Additional set of signals to be blocked */
++                              /*   during execution of signal-catching */
++                              /*   function. */
++  union {
++    _sig_func_ptr _handler;  /* SIG_DFL, SIG_IGN, or pointer to a function */
++#if defined(_POSIX_REALTIME_SIGNALS) || __POSIX_VISIBLE >= 199309 || __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++    void      (*_sigaction)( int, siginfo_t *, void * );
++#endif
++  } _signal_handlers;
+ };
++#define sa_handler    _signal_handlers._handler
++#if defined(_POSIX_REALTIME_SIGNALS) || __POSIX_VISIBLE >= 199309 || __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++#define sa_sigaction  _signal_handlers._sigaction
++#endif
+ #endif /* defined(__rtems__) */
+ #endif /* defined(__CYGWIN__) */
+ 
+@@ -157,6 +227,20 @@ typedef struct sigaltstack {
+   size_t    ss_size;  /* Stack size.  */
+ } stack_t;
+ 
++#if __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/x86/sys/ucontext.h */
++typedef struct __mcontext {
++  int __mc_placeholder;
++} mcontext_t;
++
++typedef struct __ucontext {
++  struct __ucontext *uc_link;
++  sigset_t uc_sigmask;
++  stack_t uc_stack;
++  mcontext_t uc_mcontext;
++} ucontext_t;
++#endif
++
+ #if __POSIX_VISIBLE
+ #define SIG_SETMASK 0	/* set mask with sigprocmask() */
+ #define SIG_BLOCK 1	/* set of signals to block */
+@@ -366,7 +450,11 @@ int str2sig(const char *__restrict, int *__restrict);
+ #define	SIGLOST 29	/* resource lost (eg, record-lock lost) */
+ #define	SIGUSR1 30	/* user defined signal 1 */
+ #define	SIGUSR2 31	/* user defined signal 2 */
+-#define NSIG	32      /* signal 0 implied */
++/* https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/signal.h
++   https://man7.org/linux/man-pages/man7/signal.7.html */
++#define SIGRTMIN 32
++#define SIGRTMAX 64
++#define NSIG	64      /* signal 0 implied */
+ #endif
+ #endif
+ 
+diff --git a/newlib/libc/include/sys/stat.h b/newlib/libc/include/sys/stat.h
+index 98f5addb..80386094 100644
+--- a/newlib/libc/include/sys/stat.h
++++ b/newlib/libc/include/sys/stat.h
+@@ -132,6 +132,10 @@ struct	stat
+ /* Special tv_nsec values for futimens(2) and utimensat(2). */
+ #define UTIME_NOW	-2L
+ #define UTIME_OMIT	-1L
++#elif defined(__DANDELION__)
++/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/x86/bits/struct_stat.h */
++#define UTIME_NOW	((1l << 30) - 1l)
++#define UTIME_OMIT	((1l << 30) - 2l)
+ #endif
+ 
+ int	chmod (const char *__path, mode_t __mode );
+@@ -142,8 +146,10 @@ int	mkfifo (const char *__path, mode_t __mode );
+ int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
+ mode_t	umask (mode_t __mask );
+ 
+-#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
++#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__) || defined(__DANDELION__)
+ int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
++#endif
++#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__) || defined(__DANDELION__)
+ int	mknod (const char *__path, mode_t __mode, dev_t __dev );
+ #endif
+ 
+diff --git a/newlib/libc/include/sys/unistd.h b/newlib/libc/include/sys/unistd.h
+index 00901540..d04f8a28 100644
+--- a/newlib/libc/include/sys/unistd.h
++++ b/newlib/libc/include/sys/unistd.h
+@@ -530,60 +530,68 @@ int	unlinkat (int, const char *, int);
+  *  confstr values per IEEE Std 1003.1, 2004 Edition
+  */
+ 
+-/* Only defined on Cygwin and RTEMS for now. */
+-#if defined (__CYGWIN__) || defined(__rtems__)
++/* https://git.musl-libc.org/cgit/musl/tree/include/unistd.h */
++#if defined (__CYGWIN__) || defined(__rtems__) || defined(__DANDELION__)
+ #define _CS_PATH                               0
+-#define _CS_POSIX_V7_ILP32_OFF32_CFLAGS        1
+-#define _CS_POSIX_V6_ILP32_OFF32_CFLAGS       _CS_POSIX_V7_ILP32_OFF32_CFLAGS
+-#define _CS_XBS5_ILP32_OFF32_CFLAGS           _CS_POSIX_V7_ILP32_OFF32_CFLAGS
+-#define _CS_POSIX_V7_ILP32_OFF32_LDFLAGS       2
+-#define _CS_POSIX_V6_ILP32_OFF32_LDFLAGS      _CS_POSIX_V7_ILP32_OFF32_LDFLAGS
+-#define _CS_XBS5_ILP32_OFF32_LDFLAGS          _CS_POSIX_V7_ILP32_OFF32_LDFLAGS
+-#define _CS_POSIX_V7_ILP32_OFF32_LIBS          3
+-#define _CS_POSIX_V6_ILP32_OFF32_LIBS         _CS_POSIX_V7_ILP32_OFF32_LIBS
+-#define _CS_XBS5_ILP32_OFF32_LIBS             _CS_POSIX_V7_ILP32_OFF32_LIBS
+-#define _CS_XBS5_ILP32_OFF32_LINTFLAGS         4
+-#define _CS_POSIX_V7_ILP32_OFFBIG_CFLAGS       5
+-#define _CS_POSIX_V6_ILP32_OFFBIG_CFLAGS      _CS_POSIX_V7_ILP32_OFFBIG_CFLAGS
+-#define _CS_XBS5_ILP32_OFFBIG_CFLAGS          _CS_POSIX_V7_ILP32_OFFBIG_CFLAGS
+-#define _CS_POSIX_V7_ILP32_OFFBIG_LDFLAGS      6
+-#define _CS_POSIX_V6_ILP32_OFFBIG_LDFLAGS     _CS_POSIX_V7_ILP32_OFFBIG_LDFLAGS
+-#define _CS_XBS5_ILP32_OFFBIG_LDFLAGS         _CS_POSIX_V7_ILP32_OFFBIG_LDFLAGS
+-#define _CS_POSIX_V7_ILP32_OFFBIG_LIBS         7
+-#define _CS_POSIX_V6_ILP32_OFFBIG_LIBS        _CS_POSIX_V7_ILP32_OFFBIG_LIBS
+-#define _CS_XBS5_ILP32_OFFBIG_LIBS            _CS_POSIX_V7_ILP32_OFFBIG_LIBS
+-#define _CS_XBS5_ILP32_OFFBIG_LINTFLAGS        8
+-#define _CS_POSIX_V7_LP64_OFF64_CFLAGS         9
+-#define _CS_POSIX_V6_LP64_OFF64_CFLAGS        _CS_POSIX_V7_LP64_OFF64_CFLAGS
+-#define _CS_XBS5_LP64_OFF64_CFLAGS            _CS_POSIX_V7_LP64_OFF64_CFLAGS
+-#define _CS_POSIX_V7_LP64_OFF64_LDFLAGS       10
+-#define _CS_POSIX_V6_LP64_OFF64_LDFLAGS       _CS_POSIX_V7_LP64_OFF64_LDFLAGS
+-#define _CS_XBS5_LP64_OFF64_LDFLAGS           _CS_POSIX_V7_LP64_OFF64_LDFLAGS
+-#define _CS_POSIX_V7_LP64_OFF64_LIBS          11
+-#define _CS_POSIX_V6_LP64_OFF64_LIBS          _CS_POSIX_V7_LP64_OFF64_LIBS
+-#define _CS_XBS5_LP64_OFF64_LIBS              _CS_POSIX_V7_LP64_OFF64_LIBS
+-#define _CS_XBS5_LP64_OFF64_LINTFLAGS         12
+-#define _CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS      13
+-#define _CS_POSIX_V6_LPBIG_OFFBIG_CFLAGS      _CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS
+-#define _CS_XBS5_LPBIG_OFFBIG_CFLAGS          _CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS
+-#define _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS     14
+-#define _CS_POSIX_V6_LPBIG_OFFBIG_LDFLAGS     _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS
+-#define _CS_XBS5_LPBIG_OFFBIG_LDFLAGS         _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS
+-#define _CS_POSIX_V7_LPBIG_OFFBIG_LIBS        15
+-#define _CS_POSIX_V6_LPBIG_OFFBIG_LIBS        _CS_POSIX_V7_LPBIG_OFFBIG_LIBS
+-#define _CS_XBS5_LPBIG_OFFBIG_LIBS            _CS_POSIX_V7_LPBIG_OFFBIG_LIBS
+-#define _CS_XBS5_LPBIG_OFFBIG_LINTFLAGS       16
+-#define _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS    17
+-#define _CS_POSIX_V6_WIDTH_RESTRICTED_ENVS    _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS
+-#define _CS_XBS5_WIDTH_RESTRICTED_ENVS        _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS
+-#define _CS_POSIX_V7_THREADS_CFLAGS           18
+-#define _CS_POSIX_V7_THREADS_LDFLAGS          19
+-#define _CS_V7_ENV                            20
+-#define _CS_V6_ENV                            _CS_V7_ENV
+-#define _CS_LFS_CFLAGS                        21
+-#define _CS_LFS_LDFLAGS                       22
+-#define _CS_LFS_LIBS                          23
+-#define _CS_LFS_LINTFLAGS                     24
++#define _CS_POSIX_V6_WIDTH_RESTRICTED_ENVS    1
++#define _CS_XBS5_WIDTH_RESTRICTED_ENVS        5
++#define _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS    5
++#define _CS_LFS_CFLAGS                        1000
++#define _CS_LFS_LDFLAGS                       1001
++#define _CS_LFS_LIBS                          1002
++#define _CS_LFS_LINTFLAGS                     1003
++#define _CS_XBS5_ILP32_OFF32_CFLAGS           1100
++#define _CS_XBS5_ILP32_OFF32_LDFLAGS          1101
++#define _CS_XBS5_ILP32_OFF32_LIBS             1102
++#define _CS_XBS5_ILP32_OFF32_LINTFLAGS        1103
++#define _CS_XBS5_ILP32_OFFBIG_CFLAGS          1104
++#define _CS_XBS5_ILP32_OFFBIG_LDFLAGS         1105
++#define _CS_XBS5_ILP32_OFFBIG_LIBS            1106
++#define _CS_XBS5_ILP32_OFFBIG_LINTFLAGS       1107
++#define _CS_XBS5_LP64_OFF64_CFLAGS            1108
++#define _CS_XBS5_LP64_OFF64_LDFLAGS           1109
++#define _CS_XBS5_LP64_OFF64_LIBS              1110
++#define _CS_XBS5_LP64_OFF64_LINTFLAGS         1111
++#define _CS_XBS5_LPBIG_OFFBIG_CFLAGS          1112
++#define _CS_XBS5_LPBIG_OFFBIG_LDFLAGS         1113
++#define _CS_XBS5_LPBIG_OFFBIG_LIBS            1114
++#define _CS_XBS5_LPBIG_OFFBIG_LINTFLAGS       1115
++#define _CS_POSIX_V6_ILP32_OFF32_CFLAGS       1116
++#define _CS_POSIX_V6_ILP32_OFF32_LDFLAGS      1117
++#define _CS_POSIX_V6_ILP32_OFF32_LIBS         1118
++#define _CS_POSIX_V6_ILP32_OFF32_LINTFLAGS    1119
++#define _CS_POSIX_V6_ILP32_OFFBIG_CFLAGS      1120
++#define _CS_POSIX_V6_ILP32_OFFBIG_LDFLAGS     1121
++#define _CS_POSIX_V6_ILP32_OFFBIG_LIBS        1122
++#define _CS_POSIX_V6_ILP32_OFFBIG_LINTFLAGS   1123
++#define _CS_POSIX_V6_LP64_OFF64_CFLAGS        1124
++#define _CS_POSIX_V6_LP64_OFF64_LDFLAGS       1125
++#define _CS_POSIX_V6_LP64_OFF64_LIBS          1126
++#define _CS_POSIX_V6_LP64_OFF64_LINTFLAGS     1127
++#define _CS_POSIX_V6_LPBIG_OFFBIG_CFLAGS      1128
++#define _CS_POSIX_V6_LPBIG_OFFBIG_LDFLAGS     1129
++#define _CS_POSIX_V6_LPBIG_OFFBIG_LIBS        1130
++#define _CS_POSIX_V6_LPBIG_OFFBIG_LINTFLAGS   1131
++#define _CS_POSIX_V7_ILP32_OFF32_CFLAGS       1132
++#define _CS_POSIX_V7_ILP32_OFF32_LDFLAGS      1133
++#define _CS_POSIX_V7_ILP32_OFF32_LIBS         1134
++#define _CS_POSIX_V7_ILP32_OFF32_LINTFLAGS    1135
++#define _CS_POSIX_V7_ILP32_OFFBIG_CFLAGS      1136
++#define _CS_POSIX_V7_ILP32_OFFBIG_LDFLAGS     1137
++#define _CS_POSIX_V7_ILP32_OFFBIG_LIBS        1138
++#define _CS_POSIX_V7_ILP32_OFFBIG_LINTFLAGS   1139
++#define _CS_POSIX_V7_LP64_OFF64_CFLAGS        1140
++#define _CS_POSIX_V7_LP64_OFF64_LDFLAGS       1141
++#define _CS_POSIX_V7_LP64_OFF64_LIBS          1142
++#define _CS_POSIX_V7_LP64_OFF64_LINTFLAGS     1143
++#define _CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS      1144
++#define _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS     1145
++#define _CS_POSIX_V7_LPBIG_OFFBIG_LIBS        1146
++#define _CS_POSIX_V7_LPBIG_OFFBIG_LINTFLAGS   1147
++#define _CS_V6_ENV                            1148
++#define _CS_V7_ENV                            1149
++#define _CS_POSIX_V7_THREADS_CFLAGS           1150
++#define _CS_POSIX_V7_THREADS_LDFLAGS          1151
+ #endif
+ 
+ #ifdef __cplusplus
+diff --git a/newlib/libc/include/sys/wait.h b/newlib/libc/include/sys/wait.h
+index d15eec9c..cc558bbf 100644
+--- a/newlib/libc/include/sys/wait.h
++++ b/newlib/libc/include/sys/wait.h
+@@ -26,9 +26,33 @@ extern "C" {
+ #define WTERMSIG(w)	((w) & 0x7f)
+ #define WSTOPSIG	WEXITSTATUS
+ 
++#if __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++#include <signal.h>
++
++/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/waitflags.h
++   https://github.com/bminor/glibc/blob/master/bits/waitstatus.h */
++#define WSTOPPED 2
++#define WEXITED 4
++#define WCONTINUED 8
++#define WNOWAIT 0x01000000
++#define WIFCONTINUED(w) ((w) == 0xffff)
++
++/* https://man7.org/linux/man-pages/man2/waitpid.2.html
++   https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/types/idtype_t.h */
++typedef enum {
++  P_ALL,
++  P_PID,
++  P_PGID
++} idtype_t;
++#endif
++
+ pid_t wait (int *);
+ pid_t waitpid (pid_t, int *, int);
+ 
++#if __XSI_VISIBLE >= 4 || __POSIX_VISIBLE >= 200809
++int waitid (idtype_t, id_t, siginfo_t *, int);
++#endif
++
+ #ifdef _LIBC
+ pid_t _wait (int *);
+ #endif
+diff --git a/newlib/libc/include/tgmath.h b/newlib/libc/include/tgmath.h
+index 97dc50ea..131e2d6d 100644
+--- a/newlib/libc/include/tgmath.h
++++ b/newlib/libc/include/tgmath.h
+@@ -162,9 +162,7 @@
+ #define	nearbyint(__x)		__tg_simple(__x, nearbyint)
+ #define	nextafter(__x, __y)	__tg_simple2(__x, __y, nextafter)
+ /* not yet implemented even for _LDBL_EQ_DBL platforms */
+-#ifdef __CYGWIN__
+ #define	nexttoward(__x, __y)	__tg_simplev(__x, nexttoward, __x, __y)
+-#endif
+ #define	remainder(__x, __y)	__tg_simple2(__x, __y, remainder)
+ #define	remquo(__x, __y, __z)	__tg_impl_simple(__x, __x, __y, remquo, remquof,	\
+ 						 remquol, __x, __y, __z)
+diff --git a/newlib/libc/include/time.h b/newlib/libc/include/time.h
+index ed6cc70f..9da512b2 100644
+--- a/newlib/libc/include/time.h
++++ b/newlib/libc/include/time.h
+@@ -32,6 +32,16 @@
+ #include <sys/_locale.h>
+ #endif
+ 
++/* https://www.man7.org/linux/man-pages/man3/strptime.3.html */
++#if __GNU_VISIBLE
++# ifndef __TM_GMTOFF
++#  define __TM_GMTOFF tm_gmtoff
++# endif
++# ifndef __TM_ZONE
++#  define __TM_ZONE   tm_zone
++# endif
++#endif
++
+ _BEGIN_STD_C
+ 
+ struct tm
+@@ -104,7 +114,7 @@ void      _tzset_r 	(struct _reent *);
+ 
+ /* getdate functions */
+ 
+-#ifdef HAVE_GETDATE
++#if defined(HAVE_GETDATE) || defined(__DANDELION__)
+ #if __XSI_VISIBLE >= 4
+ #ifndef _REENT_ONLY
+ #define getdate_err (*__getdate_err())
+@@ -122,17 +132,23 @@ struct tm *	getdate (const char *);
+      8  invalid input specification  */
+ #endif /* !_REENT_ONLY */
+ #endif /* __XSI_VISIBLE >= 4 */
++#endif /* HAVE_GETDATE || __DANDELION__ */
+ 
+ #if __GNU_VISIBLE
+ /* getdate_r returns the error code as above */
+ int		getdate_r (const char *, struct tm *);
+ #endif /* __GNU_VISIBLE */
+-#endif /* HAVE_GETDATE */
+ 
+ /* defines for the opengroup specifications Derived from Issue 1 of the SVID.  */
+ #if __SVID_VISIBLE || __XSI_VISIBLE
+ extern __IMPORT long _timezone;
+ extern __IMPORT int _daylight;
++#ifndef timezone
++#define timezone _timezone
++#endif
++#ifndef daylight
++#define daylight _daylight
++#endif
+ #endif
+ #if __POSIX_VISIBLE
+ extern __IMPORT char *_tzname[2];
+@@ -310,4 +326,3 @@ int clock_getenable_attr (clockid_t clock_id, int *attr);
+ #endif
+ 
+ #endif /* _TIME_H_ */
+-
+diff --git a/newlib/libc/locale/locale.c b/newlib/libc/locale/locale.c
+index b16ec151..62986f65 100644
+--- a/newlib/libc/locale/locale.c
++++ b/newlib/libc/locale/locale.c
+@@ -995,7 +995,7 @@ __get_locale_env (struct _reent *p, int category)
+ }
+ #endif /* _MB_CAPABLE */
+ 
+-int
++size_t
+ __locale_mb_cur_max (void)
+ {
+ #ifdef __HAVE_LOCALE_INFO__
+diff --git a/newlib/libc/search/tfind.c b/newlib/libc/search/tfind.c
+index 670f41fc..fcf85d19 100644
+--- a/newlib/libc/search/tfind.c
++++ b/newlib/libc/search/tfind.c
+@@ -26,7 +26,7 @@ __RCSID("$NetBSD: tfind.c,v 1.2 1999/09/16 11:45:37 lukem Exp $");
+ /* find a node, or return 0 */
+ void *
+ tfind (const void *vkey,		/* key to be found */
+-	void **vrootp,		/* address of the tree root */
++	void *const *vrootp,		/* address of the tree root */
+ 	int (*compar)(const void *, const void *))
+ {
+ 	node_t **rootp = (node_t **)vrootp;
+diff --git a/newlib/libc/sys/Makefile.inc b/newlib/libc/sys/Makefile.inc
+index 24d8407d..c2298733 100644
+--- a/newlib/libc/sys/Makefile.inc
++++ b/newlib/libc/sys/Makefile.inc
+@@ -1,3 +1,6 @@
++if HAVE_LIBC_SYS_DANDELION_DIR
++include %D%/dandelion/Makefile.inc
++endif
+ if HAVE_LIBC_SYS_A29KHIF_DIR
+ include %D%/a29khif/Makefile.inc
+ endif
+diff --git a/newlib/libm/ld/s_nextafterl.c b/newlib/libm/ld/s_nextafterl.c
+index 9c61a436..d535417b 100644
+--- a/newlib/libm/ld/s_nextafterl.c
++++ b/newlib/libm/ld/s_nextafterl.c
+@@ -77,4 +77,4 @@ nextafterl(long double x, long double y)
+ 	return ux.e;
+ }
+ 
+-__strong_reference(nextafterl, nexttowardl);
++/* Dandelion provides its own nexttowardl stub in libc/sys/dandelion/math_stubs.c. */
+diff --git a/newlib/libm/ld/s_nexttoward.c b/newlib/libm/ld/s_nexttoward.c
+index b2a50d31..6c80af33 100644
+--- a/newlib/libm/ld/s_nexttoward.c
++++ b/newlib/libm/ld/s_nexttoward.c
+@@ -29,6 +29,7 @@ __FBSDID("$FreeBSD$");
+ #error "Unsupported long double format"
+ #endif
+ 
++#ifndef __DANDELION__
+ double
+ nexttoward(double x, long double y)
+ {
+@@ -70,3 +71,4 @@ nexttoward(double x, long double y)
+ 	INSERT_WORDS(x,hx,lx);
+ 	return x;
+ }
++#endif
+diff --git a/newlib/libm/ld/s_nexttowardf.c b/newlib/libm/ld/s_nexttowardf.c
+index 9ddfff96..b42439fd 100644
+--- a/newlib/libm/ld/s_nexttowardf.c
++++ b/newlib/libm/ld/s_nexttowardf.c
+@@ -20,6 +20,7 @@ __FBSDID("$FreeBSD$");
+ 
+ #define	LDBL_INFNAN_EXP	(LDBL_MAX_EXP * 2 - 1)
+ 
++#ifndef __DANDELION__
+ float
+ nexttowardf(float x, long double y)
+ {
+@@ -57,3 +58,4 @@ nexttowardf(float x, long double y)
+ 	SET_FLOAT_WORD(x,hx);
+ 	return x;
+ }
++#endif

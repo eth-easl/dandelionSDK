@@ -1,0 +1,208 @@
+name: release testing with all library versions
+
+on:
+  push:
+    branches: [ "main", "dev/staging" ]
+  pull_request:
+    branches: [ "main", "dev/staging" ]
+
+jobs:
+  build:
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+
+      matrix:
+        cpu: ["x86_64", "aarch64"]
+        platform: ["debug", "mmu_linux", "kvm"]
+        build: ["Debug", "Release"]
+        include:
+          - host: "ubuntu-24.04"
+            cpu: "x86_64"
+          - host: "ubuntu-24.04-arm"
+            cpu: "aarch64"
+
+    runs-on: ${{ matrix.host }}
+
+    steps: 
+    - uses: actions/checkout@v6
+
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y automake curl wget gpg lsb-release software-properties-common
+
+    - name: Install clang-20
+      run: |
+        wget https://apt.llvm.org/llvm.sh -O /tmp/llvm.sh
+        chmod +x /tmp/llvm.sh
+        sudo /tmp/llvm.sh 20
+        sudo ln -sf /usr/bin/ld.lld-20 /usr/bin/ld.lld
+
+    - name: Install autoconf 2.69
+      run: |
+        curl -O https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+        tar xvf autoconf-2.69.tar.gz
+        mkdir bin
+        mkdir build
+        cd build
+        ../autoconf-2.69/configure
+        make && sudo make install
+
+    - name: Generate build directory name
+      id: build
+      run: echo "dir=build_${{ matrix.platform }}_${{ matrix.cpu }}" >> $GITHUB_OUTPUT
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: >
+        cmake -B ${{ steps.build.outputs.dir }}
+        -DCMAKE_CXX_COMPILER=clang++-20
+        -DCMAKE_C_COMPILER=clang-20
+        -DDANDELION_PLATFORM=${{ matrix.platform }}
+        -DNEWLIB=ON
+        -DCMAKE_BUILD_TYPE=${{ matrix.build }}
+
+    - name: Build
+      run: cmake --build ${{ steps.build.outputs.dir }}
+
+    - name: Install
+      run: cmake --install ${{ steps.build.outputs.dir }}
+
+    - name: Compress
+      shell: bash
+      working-directory: ${{ steps.build.outputs.dir }}
+      run: tar -czf "dandelion_sdk_${{matrix.build}}_${{matrix.platform}}_${{matrix.cpu}}.tar.gz" dandelion_sdk
+
+    - uses: actions/upload-artifact@v6
+      with:
+        name: release-package-${{ matrix.build }}-${{ matrix.platform }}-${{ matrix.cpu }}
+        path: ${{ steps.build.outputs.dir }}/dandelion_sdk_${{matrix.build}}_${{matrix.platform}}_${{matrix.cpu}}.tar.gz
+
+  test-and-analyze:
+    needs: build
+    strategy:
+      fail-fast: false
+
+      matrix:
+        cpu: ["x86_64", "aarch64"]
+        include:
+          - host: "ubuntu-24.04"
+            cpu: "x86_64"
+          - host: "ubuntu-24.04-arm"
+            cpu: "aarch64"
+
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 120
+    env:
+      SDK_SRC: ${{ github.workspace }}/dandelionSDK
+      SDK_INSTALL: ${{ github.workspace }}/dandelion_sdk
+      LIBCTEST_DIR: ${{ github.workspace }}/dandelionSDK/libc_test
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        path: dandelionSDK
+
+    - uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
+
+    - name: Install test dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          build-essential ca-certificates make file \
+          wget gpg lsb-release software-properties-common \
+          gcc g++ automake curl
+
+    - name: Install clang-20
+      run: |
+        wget https://apt.llvm.org/llvm.sh -O /tmp/llvm.sh
+        chmod +x /tmp/llvm.sh
+        sudo /tmp/llvm.sh 20
+        sudo ln -sf /usr/bin/ld.lld-20 /usr/bin/ld.lld
+
+    - name: Install analysis dependencies
+      run: python -m pip install --upgrade pip nbconvert jupyter pandas tabulate
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: release-package-Release-debug-${{ matrix.cpu }}
+        path: downloaded-package
+
+    - name: Unpack release SDK for libc-test
+      run: |
+        rm -rf "$SDK_INSTALL"
+        mkdir -p "$SDK_INSTALL"
+        tar -xzf "downloaded-package/dandelion_sdk_Release_debug_${{ matrix.cpu }}.tar.gz" -C "$GITHUB_WORKSPACE"
+
+    - name: Create compiler wrapper from release SDK
+      run: |
+        "$SDK_INSTALL/create-compiler.sh" -c clang-20
+        chmod u+x "$SDK_INSTALL/${{ matrix.cpu }}-unknown-dandelion-clang"
+
+    - name: Run libc-test against release SDK
+      working-directory: dandelionSDK
+      run: >
+        ./dev/dev_rebuild.sh test
+        --arch ${{ matrix.cpu }}
+        --platform debug
+        --build-type Release
+        --log test_${{ matrix.cpu }}_debug_Release.log
+        --csv test_results.csv
+
+    - name: Run notebook analysis
+      working-directory: dandelionSDK/libc_test/scripts
+      run: jupyter nbconvert --to notebook --execute --inplace analyze_results.ipynb
+
+    - name: Prepare uploaded results
+      run: |
+        mkdir -p uploaded-results
+        cp "dandelionSDK/libc_test/report/function_failure_summary.csv" "uploaded-results/function_failure_summary_${{ matrix.cpu }}_debug_Release.csv"
+        cp "dandelionSDK/libc_test/report/function_failure_summary.md" "uploaded-results/function_failure_summary_${{ matrix.cpu }}_debug_Release.md"
+        cp "dandelionSDK/libc_test/report/failure_line_details.csv" "uploaded-results/failure_line_details_${{ matrix.cpu }}_debug_Release.csv"
+        cp "dandelionSDK/libc_test/logs/test_results.csv" "uploaded-results/test_results_${{ matrix.cpu }}_debug_Release.csv"
+
+    - uses: actions/upload-artifact@v7
+      with:
+        name: libc-test-analysis-${{ matrix.cpu }}-debug-Release
+        path: uploaded-results/
+
+  publish-release:
+    needs:
+      - build
+      - test-and-analyze
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/download-artifact@v7
+      with:
+        pattern: libc-test-analysis-*-debug-Release
+        path: downloaded-results
+        merge-multiple: true
+
+    - uses: actions/download-artifact@v7
+      with:
+        pattern: release-package-*
+        path: downloaded-packages
+        merge-multiple: true
+
+    - name: Publish release assets
+      shell: bash
+      run: |
+        mkdir -p release-assets
+        tar -czf release-assets/test_artifacts.tar.gz -C downloaded-results .
+        cp downloaded-packages/*.tar.gz release-assets/
+        if ! gh release view testing >/dev/null 2>&1; then
+          gh release create testing --title "testing" --notes "" --latest=false --draft
+        else
+          gh release edit testing --title "testing" --latest=false --draft
+        fi
+        gh release upload testing release-assets/* --clobber
+      env:
+        GH_REPO: ${{ github.repository }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

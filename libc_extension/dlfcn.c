@@ -1,6 +1,27 @@
 #include <dlfcn.h>
+#include <errno.h>
 
-int dlclose (void *__handle) { return -1; }
-char *dlerror (void) { return 0; }
-void *dlopen (const char *__file, int __mode) { return 0; }
-void *dlsym (void *__restrict __handle, const char *__restrict __name) { return 0; }
+int dlclose(void *handle) {
+  (void)handle;
+  errno = ENOSYS;
+  return -1;
+}
+
+char *dlerror(void) {
+  errno = ENOSYS;
+  return "dynamic loading is not supported";
+}
+
+void *dlopen(const char *file, int mode) {
+  (void)file;
+  (void)mode;
+  errno = ENOSYS;
+  return NULL;
+}
+
+void *dlsym(void *restrict handle, const char *restrict name) {
+  (void)handle;
+  (void)name;
+  errno = ENOSYS;
+  return NULL;
+}

@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <pthread.h>
+#include <unistd.h>
 #undef errno
 extern int errno;
 
@@ -14,12 +15,44 @@ extern int errno;
 
 int pthread_mutexattr_init(pthread_mutexattr_t *attr) { return EINVAL; }
 int pthread_mutexattr_destroy(pthread_mutexattr_t *attr) { return EINVAL; }
+int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared) {
+  (void)attr;
+  (void)pshared;
+  errno = ENOSYS;
+  return ENOSYS;
+}
 int pthread_mutexattr_gettype(const pthread_mutexattr_t *restrict attr,
                               int *restrict type) {
   return EINVAL;
 }
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type) {
   return EINVAL;
+}
+int pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
+                                int *restrict robust) {
+  (void)attr;
+  (void)robust;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust) {
+  (void)attr;
+  (void)robust;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *restrict attr,
+                                  int *restrict protocol) {
+  (void)attr;
+  (void)protocol;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int protocol) {
+  (void)attr;
+  (void)protocol;
+  errno = ENOSYS;
+  return ENOSYS;
 }
 
 int pthread_mutex_init(pthread_mutex_t *restrict mutex,
@@ -60,6 +93,13 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
   // since there is only 1 thread, there is no difference
   return pthread_mutex_trylock(mutex);
 }
+int pthread_mutex_timedlock(pthread_mutex_t *restrict mutex,
+                            const struct timespec *restrict timeout) {
+  (void)mutex;
+  (void)timeout;
+  errno = ENOSYS;
+  return ENOSYS;
+}
 int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   pthread_mutex_t current = *mutex;
   // check is a valid mutex
@@ -71,6 +111,10 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
     return EPERM;
   *mutex |= LOCKED;
   return 0;
+}
+int pthread_mutex_consistent(pthread_mutex_t *mutex) {
+  errno = ENOSYS;
+  return ENOSYS;
 }
 
 int pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,
@@ -89,6 +133,29 @@ int pthread_cond_init(pthread_cond_t *restrict cond,
   return EAGAIN;
 }
 int pthread_cond_destroy(pthread_cond_t *cond) { return EINVAL; }
+int pthread_condattr_init(pthread_condattr_t *attr) {
+  (void)attr;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_condattr_destroy(pthread_condattr_t *attr) {
+  (void)attr;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_condattr_getclock(const pthread_condattr_t *restrict attr,
+                              clockid_t *restrict clock_id) {
+  (void)attr;
+  (void)clock_id;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) {
+  (void)attr;
+  (void)clock_id;
+  errno = ENOSYS;
+  return ENOSYS;
+}
 int pthread_cond_wait(pthread_cond_t *restrict cond,
                       pthread_mutex_t *restrict mutex) {
   return ENOTRECOVERABLE;
@@ -100,6 +167,26 @@ int pthread_cond_timedwait(pthread_cond_t *restrict cond,
 }
 int pthread_cond_signal(pthread_cond_t *cond) { return EINVAL; }
 int pthread_cond_broadcast(pthread_cond_t *cond) { return EINVAL; }
+
+int pthread_barrier_init(pthread_barrier_t *barrier,
+                         const pthread_barrierattr_t *attr,
+                         unsigned count) {
+  (void)barrier;
+  (void)attr;
+  (void)count;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_barrier_destroy(pthread_barrier_t *barrier) {
+  (void)barrier;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+int pthread_barrier_wait(pthread_barrier_t *barrier) {
+  (void)barrier;
+  errno = ENOSYS;
+  return ENOSYS;
+}
 
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void)) {
   if (once_control->init_executed == 0) {
@@ -117,6 +204,60 @@ int pthread_create(pthread_t *restrict thread,
 }
 int pthread_join(pthread_t thread, void **retval) { return EINVAL; }
 int pthread_detach(pthread_t thread) { return EINVAL; }
+
+int pthread_cancel(pthread_t thread) {
+  (void)thread;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int pthread_kill(pthread_t thread, int sig) {
+  (void)thread;
+  (void)sig;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int pthread_setcancelstate(int state, int *oldstate) {
+  (void)state;
+  if (oldstate != NULL) {
+    *oldstate = PTHREAD_CANCEL_ENABLE;
+  }
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int pthread_setcanceltype(int type, int *oldtype) {
+  (void)type;
+  if (oldtype != NULL) {
+    *oldtype = PTHREAD_CANCEL_DEFERRED;
+  }
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+void pthread_testcancel(void) { errno = ENOSYS; }
+
+void pthread_exit(void *value_ptr) {
+  (void)value_ptr;
+  errno = ENOSYS;
+  _exit(1);
+}
+
+void _pthread_cleanup_push(struct _pthread_cleanup_context *context,
+                           void (*routine)(void *), void *arg) {
+  (void)context;
+  (void)routine;
+  (void)arg;
+  errno = ENOSYS;
+}
+
+void _pthread_cleanup_pop(struct _pthread_cleanup_context *context,
+                          int execute) {
+  (void)context;
+  (void)execute;
+  errno = ENOSYS;
+}
 
 // TODO replace with heap
 typedef struct thread_key_struct {

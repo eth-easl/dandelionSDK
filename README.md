@@ -14,6 +14,9 @@ These currently include:
 
 A bigger selection of example functions can be found at [Function Examples](https://github.com/eth-easl/dandelionFunctionExamples)
 
+The top-level `Dockerfile` is for running the SDK.
+The build and development workflow is documented in `dev/README`.
+
 ## Platforms and Architectures
 
 We support libraries for a variety of backends in Dandelion for both `x86_64` and `aarch64`
@@ -102,7 +105,10 @@ For newlib to be built correctly the autoconf version 2.69.
 This also enables the build of the in memory file system,
 which can also be built without the other newlib builds by setting `-DDANDELION_FS=ON`
 
-## Build Container
+In `dev/README` you can find instructions on how to build the SDK with
+our convenience SDK build and development workflows.
+
+## Container to use the SDK
 We also provide a docker file to construct a build container with the correct tools set up in them.
 To create the container with docker use the following command:
 ```
@@ -123,6 +129,46 @@ To add more tools to the build environment, they can be added to the docker file
 ```
 FROM dandelion_dev_docker:latest
 ```
+
+### Running A Simple Program
+
+The debug backend expects the current working directory to contain `input_sets/` and `output_sets/`.
+If these folders are missing, the program will terminate before running user code.
+
+The following example builds and runs [`test_programs/libc/test.c`](test_programs/libc/test.c) inside the container:
+
+```bash
+docker build --build-arg TARGET_ARCH=aarch64 -t dandelion_docker_image .
+
+docker run --rm -it \
+  --mount type=bind,src="$(pwd)",dst=/workspace \
+  --workdir=/workspace \
+  dandelion_docker_image \
+  bash
+
+mkdir -p /tmp/dandelion-smoke
+cat > /tmp/dandelion-smoke/CMakeLists.txt <<'EOF'
+cmake_minimum_required(VERSION 3.20)
+project(dandelion_smoke C)
+add_subdirectory(/root/dandelion_sdk sdk)
+add_executable(smoke /workspace/test_programs/libc/test.c)
+target_link_libraries(smoke PRIVATE dlibc dandelion_runtime)
+EOF
+
+cmake -S /tmp/dandelion-smoke -B /tmp/dandelion-smoke/build
+cmake --build /tmp/dandelion-smoke/build -j
+
+mkdir -p /tmp/run/input_sets/stdio /tmp/run/output_sets
+printf 'abc' > /tmp/run/input_sets/stdio/stdin
+printf 'smoke arg1 arg2' > /tmp/run/input_sets/stdio/argv
+printf 'HOME=/root' > /tmp/run/input_sets/stdio/environ
+
+cd /tmp/run
+/tmp/dandelion-smoke/build/smoke
+```
+
+The program writes its regular output to stdout/stderr and uses the files in `input_sets/stdio/`
+to populate `stdin`, `argv`, and `environ`.
 
 ## Freestanding
 The GCC/Clang standard expects 4 functions to allways be provided in any environment (even freestanding), which allow the compiler to always just insert them.

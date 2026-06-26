@@ -1,0 +1,19 @@
+libc-test support files for dandelionSDK
+=======================================
+
+This directory contains the tracked support files for the libc-test workflow:
+
+- `libc-test.patch`: local patch applied to the generated upstream checkout
+- `config.mak.dlibc`: dandelion-specific libc-test configuration
+- `run_test_dlibc.py`: runtime helper used instead of the upstream C runtest
+- `gen_csv.py`: CSV summary generator for test results
+- `scripts/analyze_results.ipynb`: result analysis notebook
+- `scripts/stub_inventory/*.csv`: known stub inventory inputs for analysis
+
+Generated logs and reports are written under:
+
+- `logs/`
+- `report/`
+
+The development and test workflow is documented in
+[`dev/README`](../dev/README).
