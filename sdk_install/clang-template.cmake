@@ -6,6 +6,7 @@
 -D__TM_GMTOFF=tm_gmtoff
 -D__DANDELION__
 -D_POSIX_C_SOURCE=200809L
+-D_GNU_SOURCE=1
 
 # compiler flags
 -fPIE
