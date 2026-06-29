@@ -41,8 +41,8 @@ int aio_read(struct aiocb *);
 ssize_t aio_return(struct aiocb *);
 int aio_suspend(const struct aiocb *const[], int, const struct timespec *);
 int aio_write(struct aiocb *);
-int lio_listio(int, struct aiocb *restrict const[restrict], int,
-               struct sigevent *restrict);
+int lio_listio(int, struct aiocb *__restrict const[__restrict], int,
+               struct sigevent *__restrict);
 
 #ifdef __cplusplus
 }
