@@ -6,16 +6,18 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 project(dandelion-sdk)
 
 include(ExternalProject)
+include(CTest)
 
 # binary options
 option(FREESTANDING "toggles the include of memcpy, memset, memmove and memcmp" ON)
-option(DANDELION_FS "toggles include of lowes level file system provided by dandelion" OFF)
 option(NEWLIB "toggles builing of newlib on top of dandelion interface" OFF)
 
 # string options
 set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "the architecture to build for")
 set(DANDELION_PLATFORM "debug" CACHE STRING "backend to build for")
 set(PAGE_SIZE "4096" CACHE STRING "Page size for the runtime to assume.")
+set(UTSNAME_FIELD_SIZE "65" CACHE STRING "Size of each utsname string field.")
+
 message(STATUS "Building for ${DANDELION_PLATFORM} on ${ARCHITECTURE}")
 
 # Constants
@@ -46,16 +48,6 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
     add_compile_options(-gdwarf-4)
 endif()
 
-# wasm does not support newlib
-if(DANDELION_PLATFORM MATCHES "wasm")
-    set(NEWLIB OFF)
-endif()
-
-# set dependent options
-if(NEWLIB)
-    set(DANDELION_FS ON)
-endif()
-
 # if freestanding is on add the FREESTANDING definition to all compilation
 if(FREESTANDING)
 add_compile_definitions(FREESTANDING)
@@ -65,11 +57,6 @@ add_subdirectory(system)
 add_subdirectory(runtime)
 add_subdirectory(sdk_install)
 
-if(DANDELION_FS)
-    set(FILE_SYSTEM_LIB "dandelion_file_system")
-    add_subdirectory(file_system)
-endif()
-
 # set default level of parallelism
 if(NOT CMAKE_BUILD_PARALLEL_LEVEL)
     cmake_host_system_information(RESULT CMAKE_BUILD_PARALLEL_LEVEL QUERY NUMBER_OF_LOGICAL_CORES)
@@ -78,17 +65,22 @@ else()
 endif()
 
 if(NEWLIB) 
+    set(FILE_SYSTEM_LIB "dandelion_file_system")
+    add_subdirectory(file_system)
+
     set(NEWLIB_C_FLAGS "--target=${ARCHITECTURE}-none-elf")
     string(APPEND NEWLIB_C_FLAGS " -nostdinc")
     string(APPEND NEWLIB_C_FLAGS " -nostdlib")
+    string(APPEND NEWLIB_C_FLAGS " -fPIC")
     string(APPEND NEWLIB_C_FLAGS " -idirafter${COMPILER_RUNTIME_INCLUDE}")
+    string(APPEND NEWLIB_C_FLAGS " -D__DANDELION__")
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
       string(APPEND NEWLIB_C_FLAGS " -gdwarf-4")
     endif()
 
     set(NEWLIB_COMPILER ${CMAKE_BINARY_DIR}/compiler_wrapped.sh)
     configure_file(newlib_shim/compiler_wrapper_template.sh ${NEWLIB_COMPILER} 
-        FILE_PERMISSIONS OWNER_READ OWNER_EXECUTE)
+        FILE_PERMISSIONS OWNER_READ OWNER_EXECUTE @ONLY)
 
     set(NEWLIB_CONFIG_ARGS "--host=${ARCHITECTURE}-dandelion")
     list(APPEND NEWLIB_CONFIG_ARGS "--disable-newlib-reent-thread-local")
@@ -148,6 +140,11 @@ if(NEWLIB)
     )
     add_dependencies(dlibc newlib)
 
+    # Additional headers / code needed to get libc to linux compatibility
+    set(LIBC_EXTENSION "c_extension")
+    add_subdirectory(libc_extension)
+    add_dependencies(${LIBC_EXTENSION} dlibc)
+
     set(LLVM_C_FLAGS "-D_GNU_SOURCE=1")
     string(APPEND LLVM_C_FLAGS " -D_POSIX_TIMERS")
     string(APPEND LLVM_C_FLAGS " -D_POSIX_THREADS")
@@ -206,6 +203,7 @@ if(NEWLIB)
             -DCMAKE_CXX_FLAGS:STRING=${LLVM_CXX_FLAGS}
             -DLLVM_DEFAULT_TARGET_TRIPLE=${ARCHITECTURE}-none-elf
             -DLLVM_INCLUDE_TESTS=OFF
+            -DLLVM_ENABLE_PIC=ON
             -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON
             -DCOMPILER_RT_BUILD_BUILTINS=ON
             -DCOMPILER_RT_BAREMETAL_BUILD=ON
@@ -225,10 +223,10 @@ if(NEWLIB)
             -DLIBCXX_INCLUDE_BENCHMARKS=OFF
             -DLIBCXX_CXX_ABI=libcxxabi
             -DLIBCXX_ENABLE_FILESYSTEM=ON
-            -DLIBCXX_ENABLE_RANDOM_DEVICE=OFF
+            -DLIBCXX_ENABLE_RANDOM_DEVICE=ON
             -DLIBCXX_HAS_PTHREAD_API=ON
     )
-    add_dependencies(llvmproject newlib)
+    add_dependencies(llvmproject newlib ${LIBC_EXTENSION})
 
     # Create folder at configuration time to avoid issues with includes
     file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/c++/v1)
@@ -251,5 +249,40 @@ if(NEWLIB)
     add_dependencies(runtime llvmproject)
 
     add_subdirectory(test_programs)
+
+    if(BUILD_TESTING)
+        set(LIBCTEST_SHIM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libc_test")
+        set(LIBCTEST_CTEST_WORKTREE "${CMAKE_BINARY_DIR}/libc-test")
+
+        add_test(
+            NAME libc_test_full
+            COMMAND
+                "${CMAKE_CURRENT_SOURCE_DIR}/dev/dev_run_libctest_ctest.sh"
+                "${CMAKE_CURRENT_SOURCE_DIR}"
+                "${CMAKE_BINARY_DIR}"
+                "${CMAKE_INSTALL_PREFIX}"
+                "${LIBCTEST_SHIM_DIR}"
+                "${LIBCTEST_CTEST_WORKTREE}"
+        )
+        set_tests_properties(
+            libc_test_full
+            PROPERTIES
+                LABELS "libc-test"
+                TIMEOUT 1800
+        )
+
+        add_custom_target(
+            check-libc
+            COMMAND
+                "${CMAKE_CURRENT_SOURCE_DIR}/dev/dev_run_libctest_ctest.sh"
+                "${CMAKE_CURRENT_SOURCE_DIR}"
+                "${CMAKE_BINARY_DIR}"
+                "${CMAKE_INSTALL_PREFIX}"
+                "${LIBCTEST_SHIM_DIR}"
+                "${LIBCTEST_CTEST_WORKTREE}"
+            DEPENDS newlib llvmproject
+            USES_TERMINAL
+        )
+    endif()
 
 endif()

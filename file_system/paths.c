@@ -1,6 +1,8 @@
 #include "paths.h"
-#include "include/fs_interface.h"
+
 #include <dandelion/runtime.h>
+
+#include "include/fs_interface.h"
 
 Path path_from_string(const char *const str) {
   Path path = {};

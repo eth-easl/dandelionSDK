@@ -1,5 +1,6 @@
-#include "../../system.h"
 #include <stddef.h>
+
+#include "../../system.h"
 
 const void *__capability __dandelion_return_address;
 

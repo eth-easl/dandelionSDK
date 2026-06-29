@@ -1,12 +1,21 @@
+#include <errno.h>
+#include <fnmatch.h>
+#include <iconv.h>
+#include <libgen.h>
 #include <malloc.h>
+#include <pwd.h>
+#include <regex.h>
+#include <setjmp.h>
+#include <spawn.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/resource.h>
 #include <sys/signal.h>
 #include <sys/stat.h>
-#include <sys/statvfs.h>
 #include <sys/unistd.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <wordexp.h>
-
-#include <errno.h>
 #undef errno
 extern int errno;
 
@@ -100,7 +109,8 @@ extern size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset,
                              char options);
 #define USE_OFFSET 1
 #define MOVE_OFFSET 2
-_READ_WRITE_RETURN_TYPE read(int file, void *ptr, size_t len) {
+_READ_WRITE_RETURN_TYPE
+read(int file, void *ptr, size_t len) {
   return process_error(dandelion_read(file, ptr, len, 0, MOVE_OFFSET));
 }
 ssize_t pread(int file, void *ptr, size_t len, off_t offset) {
@@ -109,7 +119,8 @@ ssize_t pread(int file, void *ptr, size_t len, off_t offset) {
 
 extern size_t dandelion_write(int file, const char *ptr, size_t len,
                               int64_t offset, char options);
-_READ_WRITE_RETURN_TYPE write(int file, const void *ptr, size_t len) {
+_READ_WRITE_RETURN_TYPE
+write(int file, const void *ptr, size_t len) {
   return process_error(
       dandelion_write(file, (const char *)ptr, len, 0, MOVE_OFFSET));
 }
@@ -187,16 +198,6 @@ int lstat(const char *file, struct stat *buf) { return stat(file, buf); }
 
 mode_t umask(mode_t mask) { return 0777; }
 
-int statvfs(const char *file, struct statvfs *st) {
-  errno = ENOSYS;
-  return -1;
-}
-
-int fstatvfs(int fd, struct statvfs *buf) {
-  errno = ENOSYS;
-  return -1;
-}
-
 int posix_memalign(void **memptr, size_t alignment, size_t size) {
   void *new_allocation = memalign(alignment, size);
   if (new_allocation == NULL) {
@@ -218,16 +219,331 @@ int execve(const char *name, char *const argv[], char *const env[]) {
   return -1;
 }
 
-int fcntl(int fd, int op, ...) { return -1; }
+int fcntl(int fd, int op, ...) {
+  (void)fd;
+  (void)op;
+  errno = ENOSYS;
+  return -1;
+}
+
+void siglongjmp(sigjmp_buf env, int val) {
+  (void)env;
+  (void)val;
+  fprintf(stderr, "Error: siglongjmp called.\n");
+  exit(val);
+}
+
+int posix_fadvise(int fd, off_t offset, off_t len, int advice) {
+  (void)fd;
+  (void)offset;
+  (void)len;
+  (void)advice;
+  errno = ENOSYS;
+  return -1;
+}
+
+int posix_fallocate(int fd, off_t offset, off_t len) {
+  (void)fd;
+  (void)offset;
+  (void)len;
+  errno = ENOSYS;
+  return -1;
+}
+
+int clearenv(void) {
+  errno = ENOSYS;
+  return -1;
+}
+
+ssize_t getdelim(char **restrict lineptr, size_t *restrict n, int delimiter,
+                 FILE *restrict stream) {
+  (void)lineptr;
+  (void)n;
+  (void)delimiter;
+  (void)stream;
+  errno = ENOSYS;
+  return -1;
+}
+
+ssize_t getline(char **restrict lineptr, size_t *restrict n,
+                FILE *restrict stream) {
+  (void)lineptr;
+  (void)n;
+  (void)stream;
+  errno = ENOSYS;
+  return -1;
+}
 
 int fork() {
   errno = EAGAIN;
   return -1;
 }
 
+int grantpt(int fd) {
+  (void)fd;
+  errno = ENOSYS;
+  return -1;
+}
+
+char *basename(char *path) {
+  (void)path;
+  errno = ENOSYS;
+  return NULL;
+}
+
+char *dirname(char *path) {
+  (void)path;
+  errno = ENOSYS;
+  return NULL;
+}
+
 int getpid() { return 1; }
 
-int gettimeofday(struct timeval *p, struct timezone *z) { return -1; }
+pid_t getppid(void) {
+  errno = ENOSYS;
+  return 0;
+}
+
+gid_t getegid(void) {
+  errno = ENOSYS;
+  return 0;
+}
+
+uid_t geteuid(void) {
+  errno = ENOSYS;
+  return 0;
+}
+
+int fnmatch(const char *pattern, const char *string, int flags) {
+  (void)pattern;
+  (void)string;
+  (void)flags;
+  errno = ENOSYS;
+  return FNM_NOMATCH;
+}
+
+iconv_t iconv_open(const char *tocode, const char *fromcode) {
+  (void)tocode;
+  (void)fromcode;
+  errno = ENOSYS;
+  return (iconv_t)-1;
+}
+
+size_t iconv(iconv_t cd, char **__restrict inbuf,
+             size_t *__restrict inbytesleft, char **__restrict outbuf,
+             size_t *__restrict outbytesleft) {
+  (void)cd;
+  (void)inbuf;
+  (void)inbytesleft;
+  (void)outbuf;
+  (void)outbytesleft;
+  errno = ENOSYS;
+  return (size_t)-1;
+}
+
+int iconv_close(iconv_t cd) {
+  (void)cd;
+  errno = ENOSYS;
+  return -1;
+}
+
+FILE *popen(const char *command, const char *type) {
+  (void)command;
+  (void)type;
+  errno = ENOSYS;
+  return NULL;
+}
+
+int pclose(FILE *stream) {
+  (void)stream;
+  errno = ENOSYS;
+  return -1;
+}
+
+void flockfile(FILE *stream) {
+  (void)stream;
+  errno = ENOSYS;
+}
+
+void funlockfile(FILE *stream) {
+  (void)stream;
+  errno = ENOSYS;
+}
+
+int posix_spawn_file_actions_init(posix_spawn_file_actions_t *file_actions) {
+  (void)file_actions;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *file_actions,
+                                      int fildes) {
+  (void)file_actions;
+  (void)fildes;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *file_actions,
+                                     int fildes, int newfildes) {
+  (void)file_actions;
+  (void)fildes;
+  (void)newfildes;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t *file_actions) {
+  (void)file_actions;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int posix_spawnp(pid_t *restrict pid, const char *restrict file,
+                 const posix_spawn_file_actions_t *file_actions,
+                 const posix_spawnattr_t *restrict attrp,
+                 char *const argv[restrict], char *const envp[restrict]) {
+  (void)pid;
+  (void)file;
+  (void)file_actions;
+  (void)attrp;
+  (void)argv;
+  (void)envp;
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+char *initstate(unsigned seed, char *state, size_t size) {
+  (void)seed;
+  (void)state;
+  (void)size;
+  errno = ENOSYS;
+  return NULL;
+}
+
+char *setstate(char *state) {
+  (void)state;
+  errno = ENOSYS;
+  return NULL;
+}
+
+time_t time(time_t *timer) {
+  errno = ENOSYS;
+  if (timer != NULL) {
+    *timer = (time_t)-1;
+  }
+  return (time_t)-1;
+}
+
+int futimens(int fd, const struct timespec times[2]) {
+  (void)fd;
+  (void)times;
+  errno = ENOSYS;
+  return -1;
+}
+
+int utimensat(int dirfd, const char *pathname, const struct timespec times[2],
+              int flags) {
+  (void)dirfd;
+  (void)pathname;
+  (void)times;
+  (void)flags;
+  errno = ENOSYS;
+  return -1;
+}
+
+int getpwnam_r(const char *name, struct passwd *pwd, char *buffer,
+               size_t buflen, struct passwd **result) {
+  (void)name;
+  (void)pwd;
+  (void)buffer;
+  (void)buflen;
+  if (result != NULL) {
+    *result = NULL;
+  }
+  errno = ENOSYS;
+  return ENOSYS;
+}
+
+int regcomp(regex_t *restrict preg, const char *restrict pattern, int cflags) {
+  (void)preg;
+  (void)pattern;
+  (void)cflags;
+  errno = ENOSYS;
+  return REG_BADPAT;
+}
+
+size_t regerror(int errcode, const regex_t *restrict preg,
+                char *restrict errbuf, size_t errbuf_size) {
+  (void)errcode;
+  (void)preg;
+  if (errbuf != NULL && errbuf_size != 0) {
+    errbuf[0] = '\0';
+  }
+  errno = ENOSYS;
+  return 0;
+}
+
+int regexec(const regex_t *restrict preg, const char *restrict string,
+            size_t nmatch, regmatch_t pmatch[restrict], int eflags) {
+  (void)preg;
+  (void)string;
+  (void)nmatch;
+  (void)pmatch;
+  (void)eflags;
+  errno = ENOSYS;
+  return REG_NOMATCH;
+}
+
+void regfree(regex_t *preg) {
+  (void)preg;
+  errno = ENOSYS;
+}
+
+pid_t waitpid(pid_t pid, int *status, int options) {
+  (void)pid;
+  (void)status;
+  (void)options;
+  errno = ENOSYS;
+  return -1;
+}
+
+int waitid(idtype_t idtype, id_t id, siginfo_t *infop, int options) {
+  (void)idtype;
+  (void)id;
+  (void)infop;
+  (void)options;
+  errno = ENOSYS;
+  return -1;
+}
+
+int getpriority(int which, id_t who) {
+  (void)which;
+  (void)who;
+  errno = ENOSYS;
+  return -1;
+}
+
+int getrlimit(int resource, struct rlimit *rlim) {
+  (void)resource;
+  (void)rlim;
+  errno = ENOSYS;
+  return -1;
+}
+
+int getrusage(int who, struct rusage *usage) {
+  (void)who;
+  (void)usage;
+  errno = ENOSYS;
+  return -1;
+}
+
+int gettimeofday(struct timeval *restrict p, void *restrict tz) {
+  (void)p;
+  (void)tz;
+  errno = ENOSYS;
+  return -1;
+}
 
 int kill(int pid, int sig) {
   errno = EINVAL;
@@ -236,6 +552,33 @@ int kill(int pid, int sig) {
 
 int pipe(int pipefd[2]) {
   errno = EFAULT;
+  return -1;
+}
+
+int posix_openpt(int flags) {
+  (void)flags;
+  errno = ENOSYS;
+  return -1;
+}
+
+char *ptsname(int fd) {
+  (void)fd;
+  errno = ENOSYS;
+  return NULL;
+}
+
+int setpriority(int which, id_t who, int prio) {
+  (void)which;
+  (void)who;
+  (void)prio;
+  errno = ENOSYS;
+  return -1;
+}
+
+int setrlimit(int resource, const struct rlimit *rlim) {
+  (void)resource;
+  (void)rlim;
+  errno = ENOSYS;
   return -1;
 }
 
@@ -256,9 +599,23 @@ int sigaction(int signum, const struct sigaction *_Nullable restrict act,
   return -1;
 }
 
-long sysconf(int name) { return -1; }
+long sysconf(int name) {
+  (void)name;
+  errno = ENOSYS;
+  return -1;
+}
 
-clock_t times(struct tms *buf) { return -1; }
+clock_t times(struct tms *buf) {
+  (void)buf;
+  errno = ENOSYS;
+  return -1;
+}
+
+int unlockpt(int fd) {
+  (void)fd;
+  errno = ENOSYS;
+  return -1;
+}
 
 int wait(int *status) {
   errno = ECHILD;

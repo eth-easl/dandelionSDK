@@ -1,0 +1,142 @@
+function,file,line,source_area,stub_kind,evidence,signature
+aio_cancel,dandelionSDK/libc_extension/aio.c,7,libc_extension,explicit_errno_stub,ENOSYS,"int aio_cancel(int fd, struct aiocb *aiocbp)"
+aio_error,dandelionSDK/libc_extension/aio.c,14,libc_extension,explicit_errno_stub,ENOSYS,int aio_error(const struct aiocb *aiocbp)
+aio_fsync,dandelionSDK/libc_extension/aio.c,20,libc_extension,explicit_errno_stub,ENOSYS,"int aio_fsync(int op, struct aiocb *aiocbp)"
+aio_read,dandelionSDK/libc_extension/aio.c,27,libc_extension,explicit_errno_stub,ENOSYS,int aio_read(struct aiocb *aiocbp)
+aio_return,dandelionSDK/libc_extension/aio.c,33,libc_extension,explicit_errno_stub,ENOSYS,ssize_t aio_return(struct aiocb *aiocbp)
+aio_suspend,dandelionSDK/libc_extension/aio.c,39,libc_extension,explicit_errno_stub,ENOSYS,"int aio_suspend(const struct aiocb *const aiocb_list[], int nitems, const struct timespec *timeout)"
+aio_write,dandelionSDK/libc_extension/aio.c,48,libc_extension,explicit_errno_stub,ENOSYS,int aio_write(struct aiocb *aiocbp)
+lio_listio,dandelionSDK/libc_extension/aio.c,54,libc_extension,explicit_errno_stub,ENOSYS,"int lio_listio(int mode, struct aiocb *restrict const list[restrict], int nent, struct sigevent *restrict sig)"
+htonl,dandelionSDK/libc_extension/arpa_inet.c,4,libc_extension,explicit_errno_stub,ENOSYS,uint32_t htonl(uint32_t hostlong)
+inet_addr,dandelionSDK/libc_extension/arpa_inet.c,10,libc_extension,explicit_errno_stub,ENOSYS,in_addr_t inet_addr(const char *cp)
+inet_ntoa,dandelionSDK/libc_extension/arpa_inet.c,16,libc_extension,explicit_errno_stub,ENOSYS,char *inet_ntoa(struct in_addr in)
+inet_ntop,dandelionSDK/libc_extension/arpa_inet.c,22,libc_extension,explicit_errno_stub,ENOSYS,"const char *inet_ntop(int af, const void *restrict src, char *restrict dst, socklen_t size)"
+inet_pton,dandelionSDK/libc_extension/arpa_inet.c,32,libc_extension,explicit_errno_stub,ENOSYS,"int inet_pton(int af, const char *restrict src, void *restrict dst)"
+crypt,dandelionSDK/libc_extension/crypt.c,4,libc_extension,explicit_errno_stub,ENOSYS,"char *crypt(const char *phrase, const char *setting)"
+dlclose,dandelionSDK/libc_extension/dlfcn.c,4,libc_extension,explicit_errno_stub,ENOSYS,int dlclose(void *handle)
+dlerror,dandelionSDK/libc_extension/dlfcn.c,10,libc_extension,explicit_errno_stub,ENOSYS,char *dlerror(void)
+dlopen,dandelionSDK/libc_extension/dlfcn.c,15,libc_extension,explicit_errno_stub,ENOSYS,"void *dlopen(const char *file, int mode)"
+dlsym,dandelionSDK/libc_extension/dlfcn.c,22,libc_extension,explicit_errno_stub,ENOSYS,"void *dlsym(void *restrict handle, const char *restrict name)"
+getifaddrs,dandelionSDK/libc_extension/ifaddrs.c,4,libc_extension,explicit_errno_stub,ENOSYS,int getifaddrs (struct ifaddrs **__ifap)
+statvfs,dandelionSDK/libc_extension/include/sys/statvfs.h,31,include,explicit_errno_stub,ENOSYS,"int statvfs(const char *path, struct statvfs *buf)"
+fstatvfs,dandelionSDK/libc_extension/include/sys/statvfs.h,35,include,explicit_errno_stub,ENOSYS,"int fstatvfs(int fd, struct statvfs *buf)"
+setmntent,dandelionSDK/libc_extension/mntent.c,4,libc_extension,explicit_errno_stub,ENOSYS,"FILE *setmntent(const char *file, const char *mode)"
+getmntent,dandelionSDK/libc_extension/mntent.c,11,libc_extension,explicit_errno_stub,ENOSYS,struct mntent *getmntent(FILE *stream)
+getmntent_r,dandelionSDK/libc_extension/mntent.c,17,libc_extension,explicit_errno_stub,ENOSYS,"struct mntent *getmntent_r(FILE *stream, struct mntent *result, char *buffer, int bufsize)"
+addmntent,dandelionSDK/libc_extension/mntent.c,27,libc_extension,explicit_errno_stub,ENOSYS,"int addmntent(FILE *stream, const struct mntent *mnt)"
+endmntent,dandelionSDK/libc_extension/mntent.c,34,libc_extension,explicit_errno_stub,ENOSYS,int endmntent(FILE *stream)
+hasmntopt,dandelionSDK/libc_extension/mntent.c,40,libc_extension,explicit_errno_stub,ENOSYS,"char *hasmntopt(const struct mntent *mnt, const char *opt)"
+strfmon,dandelionSDK/libc_extension/monetary.c,4,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t strfmon(char *restrict s, size_t max, const char *restrict format, ...)"
+strfmon_l,dandelionSDK/libc_extension/monetary.c,12,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t strfmon_l(char *restrict s, size_t max, locale_t loc, const char *restrict format, ...)"
+mq_close,dandelionSDK/libc_extension/mqueue.c,5,libc_extension,explicit_errno_stub,ENOSYS,int mq_close(mqd_t mqdes)
+mq_getattr,dandelionSDK/libc_extension/mqueue.c,11,libc_extension,explicit_errno_stub,ENOSYS,"int mq_getattr(mqd_t mqdes, struct mq_attr *mqstat)"
+mq_notify,dandelionSDK/libc_extension/mqueue.c,18,libc_extension,explicit_errno_stub,ENOSYS,"int mq_notify(mqd_t mqdes, const struct sigevent *notification)"
+mq_open,dandelionSDK/libc_extension/mqueue.c,25,libc_extension,explicit_errno_stub,ENOSYS,"mqd_t mq_open(const char *name, int oflag, ...)"
+mq_receive,dandelionSDK/libc_extension/mqueue.c,36,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t mq_receive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned *msg_prio)"
+mq_send,dandelionSDK/libc_extension/mqueue.c,46,libc_extension,explicit_errno_stub,ENOSYS,"int mq_send(mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned msg_prio)"
+mq_setattr,dandelionSDK/libc_extension/mqueue.c,56,libc_extension,explicit_errno_stub,ENOSYS,"int mq_setattr(mqd_t mqdes, const struct mq_attr *restrict mqstat, struct mq_attr *restrict omqstat)"
+mq_timedreceive,dandelionSDK/libc_extension/mqueue.c,65,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t mq_timedreceive(mqd_t mqdes, char *restrict msg_ptr, size_t msg_len, unsigned *restrict msg_prio, const struct timespec *restrict abs_timeout)"
+mq_timedsend,dandelionSDK/libc_extension/mqueue.c,77,libc_extension,explicit_errno_stub,ENOSYS,"int mq_timedsend(mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned msg_prio, const struct timespec *abs_timeout)"
+mq_unlink,dandelionSDK/libc_extension/mqueue.c,88,libc_extension,explicit_errno_stub,ENOSYS,int mq_unlink(const char *name)
+if_freenameindex,dandelionSDK/libc_extension/net_if.c,4,libc_extension,explicit_errno_stub,ENOSYS,void if_freenameindex(struct if_nameindex *ptr)
+if_indextoname,dandelionSDK/libc_extension/net_if.c,9,libc_extension,explicit_errno_stub,ENOSYS,"char *if_indextoname(unsigned ifindex, char *ifname)"
+if_nameindex,dandelionSDK/libc_extension/net_if.c,16,libc_extension,explicit_errno_stub,ENOSYS,struct if_nameindex *if_nameindex(void)
+if_nametoindex,dandelionSDK/libc_extension/net_if.c,21,libc_extension,explicit_errno_stub,ENOSYS,unsigned if_nametoindex(const char *ifname)
+gethostbyaddr,dandelionSDK/libc_extension/netdb.c,14,libc_extension,explicit_errno_stub,ENOSYS,"struct hostent *gethostbyaddr (const void *__addr, __socklen_t __len, int __type)"
+gethostbyname,dandelionSDK/libc_extension/netdb.c,22,libc_extension,explicit_errno_stub,ENOSYS,struct hostent *gethostbyname (const char *__name)
+gethostent,dandelionSDK/libc_extension/netdb.c,28,libc_extension,explicit_errno_stub,ENOSYS,struct hostent *gethostent (void)
+getnetbyaddr,dandelionSDK/libc_extension/netdb.c,33,libc_extension,explicit_errno_stub,ENOSYS,"struct netent *getnetbyaddr (uint32_t __net, int __type)"
+getnetbyname,dandelionSDK/libc_extension/netdb.c,40,libc_extension,explicit_errno_stub,ENOSYS,struct netent *getnetbyname (const char *__name)
+getnetent,dandelionSDK/libc_extension/netdb.c,46,libc_extension,explicit_errno_stub,ENOSYS,struct netent *getnetent (void)
+getprotobyname,dandelionSDK/libc_extension/netdb.c,51,libc_extension,explicit_errno_stub,ENOSYS,struct protoent *getprotobyname (const char *__name)
+getprotobynumber,dandelionSDK/libc_extension/netdb.c,57,libc_extension,explicit_errno_stub,ENOSYS,struct protoent *getprotobynumber (int __proto)
+getprotoent,dandelionSDK/libc_extension/netdb.c,63,libc_extension,explicit_errno_stub,ENOSYS,struct protoent *getprotoent (void)
+getservbyname,dandelionSDK/libc_extension/netdb.c,68,libc_extension,explicit_errno_stub,ENOSYS,"struct servent *getservbyname (const char *__name, const char *__proto)"
+getservbyport,dandelionSDK/libc_extension/netdb.c,75,libc_extension,explicit_errno_stub,ENOSYS,"struct servent *getservbyport (int __port, const char *__proto)"
+getservent,dandelionSDK/libc_extension/netdb.c,82,libc_extension,explicit_errno_stub,ENOSYS,struct servent *getservent (void)
+getaddrinfo,dandelionSDK/libc_extension/netdb.c,99,libc_extension,explicit_errno_stub,ENOSYS,"int getaddrinfo(const char *__restrict __name, const char *__restrict __service, const struct addrinfo *__restrict __req, struct addrinfo **__restrict __pai)"
+getnameinfo,dandelionSDK/libc_extension/netdb.c,111,libc_extension,explicit_errno_stub,ENOSYS,"int getnameinfo(const struct sockaddr *__restrict __sa, socklen_t __salen, char *__restrict __host, socklen_t __hostlen, char *__restrict __serv, socklen_t __servlen, int __flags)"
+catclose,dandelionSDK/libc_extension/nl_types.c,4,libc_extension,explicit_errno_stub,ENOSYS,int catclose(nl_catd catd)
+catgets,dandelionSDK/libc_extension/nl_types.c,10,libc_extension,explicit_errno_stub,ENOSYS,"char *catgets(nl_catd catd, int set_id, int msg_id, const char *s)"
+catopen,dandelionSDK/libc_extension/nl_types.c,18,libc_extension,explicit_errno_stub,ENOSYS,"nl_catd catopen(const char *name, int oflag)"
+poll,dandelionSDK/libc_extension/poll.c,4,libc_extension,explicit_errno_stub,ENOSYS,"int poll(struct pollfd *fds, nfds_t nfds, int timeout)"
+pthread_rwlock_destroy,dandelionSDK/libc_extension/pthread.c,4,libc_extension,explicit_errno_stub,ENOSYS,int pthread_rwlock_destroy (pthread_rwlock_t *__rwlock)
+dn_expand,dandelionSDK/libc_extension/resolv.c,4,libc_extension,explicit_errno_stub,ENOSYS,"int dn_expand(const unsigned char *msg, const unsigned char *eomorig, const unsigned char *comp_dn, char *exp_dn, int length)"
+sched_yield,dandelionSDK/libc_extension/sched.c,4,libc_extension,explicit_errno_stub,ENOSYS,int sched_yield (void)
+sched_getcpu,dandelionSDK/libc_extension/sched.c,9,libc_extension,explicit_errno_stub,ENOTSUP,int sched_getcpu(void)
+sem_close,dandelionSDK/libc_extension/semaphore.c,5,libc_extension,explicit_errno_stub,ENOSYS,int sem_close(sem_t *sem)
+sem_destroy,dandelionSDK/libc_extension/semaphore.c,11,libc_extension,explicit_errno_stub,ENOSYS,int sem_destroy(sem_t *sem)
+sem_getvalue,dandelionSDK/libc_extension/semaphore.c,17,libc_extension,explicit_errno_stub,ENOSYS,"int sem_getvalue(sem_t *restrict sem, int *restrict sval)"
+sem_init,dandelionSDK/libc_extension/semaphore.c,24,libc_extension,explicit_errno_stub,ENOSYS,"int sem_init(sem_t *sem, int pshared, unsigned value)"
+sem_open,dandelionSDK/libc_extension/semaphore.c,32,libc_extension,explicit_errno_stub,ENOSYS,"sem_t *sem_open(const char *name, int oflag, ...)"
+sem_post,dandelionSDK/libc_extension/semaphore.c,43,libc_extension,explicit_errno_stub,ENOSYS,int sem_post(sem_t *sem)
+sem_timedwait,dandelionSDK/libc_extension/semaphore.c,49,libc_extension,explicit_errno_stub,ENOSYS,"int sem_timedwait(sem_t *restrict sem, const struct timespec *restrict abs_timeout)"
+sem_trywait,dandelionSDK/libc_extension/semaphore.c,57,libc_extension,explicit_errno_stub,ENOSYS,int sem_trywait(sem_t *sem)
+sem_unlink,dandelionSDK/libc_extension/semaphore.c,63,libc_extension,explicit_errno_stub,ENOSYS,int sem_unlink(const char *name)
+sem_wait,dandelionSDK/libc_extension/semaphore.c,69,libc_extension,explicit_errno_stub,ENOSYS,int sem_wait(sem_t *sem)
+accept,dandelionSDK/libc_extension/socket.c,4,libc_extension,explicit_errno_stub,ENOSYS,"int accept (int __fd, struct sockaddr *__addr, socklen_t *__addr_len)"
+bind,dandelionSDK/libc_extension/socket.c,10,libc_extension,explicit_errno_stub,ENOSYS,"int bind (int __fd, const struct sockaddr *__addr, socklen_t __len)"
+connect,dandelionSDK/libc_extension/socket.c,16,libc_extension,explicit_errno_stub,ENOSYS,"int connect (int __fd, const struct sockaddr *__addr, socklen_t __len)"
+getpeername,dandelionSDK/libc_extension/socket.c,22,libc_extension,explicit_errno_stub,ENOSYS,"int getpeername (int __fd, struct sockaddr *__addr, socklen_t *__len)"
+getsockname,dandelionSDK/libc_extension/socket.c,28,libc_extension,explicit_errno_stub,ENOSYS,"int getsockname (int __fd, struct sockaddr *__addr, socklen_t *__len)"
+getsockopt,dandelionSDK/libc_extension/socket.c,34,libc_extension,explicit_errno_stub,ENOSYS,"int getsockopt (int __fd, int __level, int __optname, void *__optval, socklen_t *__optlen)"
+listen,dandelionSDK/libc_extension/socket.c,40,libc_extension,explicit_errno_stub,ENOSYS,"int listen (int __fd, int __n)"
+recv,dandelionSDK/libc_extension/socket.c,46,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t recv (int __fd, void *__buf, size_t __n, int __flags)"
+recvfrom,dandelionSDK/libc_extension/socket.c,52,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t recvfrom (int __fd, void *__buf, size_t __n, int __flags, struct sockaddr *__addr, socklen_t *__addr_len)"
+recvmsg,dandelionSDK/libc_extension/socket.c,58,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t recvmsg (int __fd, struct msghdr *__message, int __flags)"
+send,dandelionSDK/libc_extension/socket.c,64,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t send (int __fd, const void *__buf, size_t __n, int __flags)"
+sendmsg,dandelionSDK/libc_extension/socket.c,70,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t sendmsg (int __fd, const struct msghdr *__message, int __flags)"
+sendto,dandelionSDK/libc_extension/socket.c,76,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t sendto (int __fd, const void *__buf, size_t __n, int __flags, const struct sockaddr *__addr, socklen_t __addr_len)"
+setsockopt,dandelionSDK/libc_extension/socket.c,82,libc_extension,explicit_errno_stub,ENOSYS,"int setsockopt (int __fd, int __level, int __optname, const void *__optval, socklen_t __optlen)"
+shutdown,dandelionSDK/libc_extension/socket.c,88,libc_extension,explicit_errno_stub,ENOSYS,"int shutdown (int __fd, int __how)"
+socket,dandelionSDK/libc_extension/socket.c,94,libc_extension,explicit_errno_stub,ENOSYS,"int socket (int __domain, int __type, int __protocol)"
+sockatmark,dandelionSDK/libc_extension/socket.c,100,libc_extension,explicit_errno_stub,ENOSYS,int sockatmark (int __fd)
+socketpair,dandelionSDK/libc_extension/socket.c,106,libc_extension,explicit_errno_stub,ENOSYS,"int socketpair (int __domain, int __type, int __protocol, int __fds[2])"
+ftok,dandelionSDK/libc_extension/sys_ipc.c,4,libc_extension,explicit_errno_stub,ENOSYS,"key_t ftok(const char *path, int id)"
+mmap,dandelionSDK/libc_extension/sys_mman.c,4,libc_extension,explicit_errno_stub,ENOSYS,"void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)"
+mprotect,dandelionSDK/libc_extension/sys_mman.c,15,libc_extension,explicit_errno_stub,ENOSYS,"int mprotect(void *addr, size_t len, int prot)"
+msync,dandelionSDK/libc_extension/sys_mman.c,23,libc_extension,explicit_errno_stub,ENOSYS,"int msync(void *addr, size_t len, int flags)"
+munmap,dandelionSDK/libc_extension/sys_mman.c,31,libc_extension,explicit_errno_stub,ENOSYS,"int munmap(void *addr, size_t len)"
+mlock,dandelionSDK/libc_extension/sys_mman.c,38,libc_extension,explicit_errno_stub,ENOSYS,"int mlock(const void *addr, size_t len)"
+mlockall,dandelionSDK/libc_extension/sys_mman.c,45,libc_extension,explicit_errno_stub,ENOSYS,int mlockall(int flags)
+munlock,dandelionSDK/libc_extension/sys_mman.c,51,libc_extension,explicit_errno_stub,ENOSYS,"int munlock(const void *addr, size_t len)"
+munlockall,dandelionSDK/libc_extension/sys_mman.c,58,libc_extension,explicit_errno_stub,ENOSYS,int munlockall(void)
+posix_madvise,dandelionSDK/libc_extension/sys_mman.c,63,libc_extension,explicit_errno_stub,ENOSYS,"int posix_madvise(void *addr, size_t len, int advice)"
+shm_open,dandelionSDK/libc_extension/sys_mman.c,71,libc_extension,explicit_errno_stub,ENOSYS,"int shm_open(const char *name, int oflag, mode_t mode)"
+shm_unlink,dandelionSDK/libc_extension/sys_mman.c,79,libc_extension,explicit_errno_stub,ENOSYS,int shm_unlink(const char *name)
+msgctl,dandelionSDK/libc_extension/sys_msg.c,4,libc_extension,explicit_errno_stub,ENOSYS,"int msgctl(int msqid, int cmd, struct msqid_ds *buf)"
+msgget,dandelionSDK/libc_extension/sys_msg.c,12,libc_extension,explicit_errno_stub,ENOSYS,"int msgget(key_t key, int msgflg)"
+msgrcv,dandelionSDK/libc_extension/sys_msg.c,19,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg)"
+msgsnd,dandelionSDK/libc_extension/sys_msg.c,29,libc_extension,explicit_errno_stub,ENOSYS,"int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg)"
+semctl,dandelionSDK/libc_extension/sys_sem.c,5,libc_extension,explicit_errno_stub,ENOSYS,"int semctl(int semid, int semnum, int cmd, ...)"
+semget,dandelionSDK/libc_extension/sys_sem.c,17,libc_extension,explicit_errno_stub,ENOSYS,"int semget(key_t key, int nsems, int semflg)"
+semop,dandelionSDK/libc_extension/sys_sem.c,25,libc_extension,explicit_errno_stub,ENOSYS,"int semop(int semid, struct sembuf *sops, size_t nsops)"
+shmat,dandelionSDK/libc_extension/sys_shm.c,4,libc_extension,explicit_errno_stub,ENOSYS,"void *shmat(int shmid, const void *shmaddr, int shmflg)"
+shmctl,dandelionSDK/libc_extension/sys_shm.c,12,libc_extension,explicit_errno_stub,ENOSYS,"int shmctl(int shmid, int cmd, struct shmid_ds *buf)"
+shmdt,dandelionSDK/libc_extension/sys_shm.c,20,libc_extension,explicit_errno_stub,ENOSYS,int shmdt(const void *shmaddr)
+shmget,dandelionSDK/libc_extension/sys_shm.c,26,libc_extension,explicit_errno_stub,ENOSYS,"int shmget(key_t key, size_t size, int shmflg)"
+syscall,dandelionSDK/libc_extension/sys_syscall.c,3,libc_extension,explicit_errno_stub,ENOSYS,"long syscall(long number, ...)"
+cfgetispeed,dandelionSDK/libc_extension/sys_termios.c,4,libc_extension,explicit_errno_stub,ENOSYS,speed_t cfgetispeed(const struct termios *termios_p)
+cfgetospeed,dandelionSDK/libc_extension/sys_termios.c,10,libc_extension,explicit_errno_stub,ENOSYS,speed_t cfgetospeed(const struct termios *termios_p)
+cfsetispeed,dandelionSDK/libc_extension/sys_termios.c,16,libc_extension,explicit_errno_stub,ENOSYS,"int cfsetispeed(struct termios *termios_p, speed_t speed)"
+cfsetospeed,dandelionSDK/libc_extension/sys_termios.c,23,libc_extension,explicit_errno_stub,ENOSYS,"int cfsetospeed(struct termios *termios_p, speed_t speed)"
+tcdrain,dandelionSDK/libc_extension/sys_termios.c,30,libc_extension,explicit_errno_stub,ENOSYS,int tcdrain(int fd)
+tcflow,dandelionSDK/libc_extension/sys_termios.c,36,libc_extension,explicit_errno_stub,ENOSYS,"int tcflow(int fd, int action)"
+tcflush,dandelionSDK/libc_extension/sys_termios.c,43,libc_extension,explicit_errno_stub,ENOSYS,"int tcflush(int fd, int queue_selector)"
+tcgetattr,dandelionSDK/libc_extension/sys_termios.c,50,libc_extension,explicit_errno_stub,ENOSYS,"int tcgetattr(int fd, struct termios *termios_p)"
+tcgetsid,dandelionSDK/libc_extension/sys_termios.c,57,libc_extension,explicit_errno_stub,ENOSYS,pid_t tcgetsid(int fd)
+tcsendbreak,dandelionSDK/libc_extension/sys_termios.c,63,libc_extension,explicit_errno_stub,ENOSYS,"int tcsendbreak(int fd, int duration)"
+tcsetattr,dandelionSDK/libc_extension/sys_termios.c,70,libc_extension,explicit_errno_stub,ENOSYS,"int tcsetattr(int fd, int optional_actions, const struct termios *termios_p)"
+uname,dandelionSDK/libc_extension/sys_utsname.c,4,libc_extension,explicit_errno_stub,ENOSYS,int uname(struct utsname *buf)
+closelog,dandelionSDK/libc_extension/syslog.c,4,libc_extension,explicit_errno_stub,ENOSYS,void closelog(void)
+openlog,dandelionSDK/libc_extension/syslog.c,8,libc_extension,explicit_errno_stub,ENOSYS,"void openlog(const char *ident, int option, int facility)"
+setlogmask,dandelionSDK/libc_extension/syslog.c,15,libc_extension,explicit_errno_stub,ENOSYS,int setlogmask(int maskpri)
+syslog,dandelionSDK/libc_extension/syslog.c,21,libc_extension,explicit_errno_stub,ENOSYS,"void syslog(int priority, const char *format, ...)"
+readv,dandelionSDK/libc_extension/uio.c,4,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t readv (int __fd, const struct iovec *__iovec, int __count)"
+writev,dandelionSDK/libc_extension/uio.c,12,libc_extension,explicit_errno_stub,ENOSYS,"ssize_t writev (int __fd, const struct iovec *__iovec, int __count)"
+endutxent,dandelionSDK/libc_extension/utmpx.c,4,libc_extension,explicit_errno_stub,ENOSYS,void endutxent(void)
+getutxent,dandelionSDK/libc_extension/utmpx.c,6,libc_extension,explicit_errno_stub,ENOSYS,struct utmpx *getutxent(void)
+getutxid,dandelionSDK/libc_extension/utmpx.c,11,libc_extension,explicit_errno_stub,ENOSYS,struct utmpx *getutxid(const struct utmpx *id)
+getutxline,dandelionSDK/libc_extension/utmpx.c,17,libc_extension,explicit_errno_stub,ENOSYS,struct utmpx *getutxline(const struct utmpx *line)
+pututxline,dandelionSDK/libc_extension/utmpx.c,23,libc_extension,explicit_errno_stub,ENOSYS,struct utmpx *pututxline(const struct utmpx *utmpx)
+setutxent,dandelionSDK/libc_extension/utmpx.c,29,libc_extension,explicit_errno_stub,ENOSYS,void setutxent(void)

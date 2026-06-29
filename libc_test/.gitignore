@@ -1,0 +1,5 @@
+logs/
+report/
+input_sets/
+output_sets/
+.DS_Store

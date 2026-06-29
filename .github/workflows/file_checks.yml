@@ -2,10 +2,10 @@ name: Format checks
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev/staging" ]
 
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "dev/staging" ]
 
 jobs:
   build:
@@ -17,4 +17,4 @@ jobs:
     - name: C format check
       run: find . -iname '*.h' -o -iname '*.c' | clang-format --dry-run -Werror --files=/dev/stdin --style=LLVM 
     # if fails run the following to automatically correct it
-    # find ./file_system/ ./newlib_shim/ ./runtime/ ./sdk_install/ ./system/ ./test_programs/ -iname '*.h' -o -iname '*.c' | clang-format -Werror --files=/dev/stdin --style=LLVM -i 
+    # find ./libc_extension/ ./file_system/ ./newlib_shim/ ./runtime/ ./sdk_install/ ./system/ ./test_programs/ -iname '*.h' -o -iname '*.c' | clang-format -Werror --files=/dev/stdin --style=LLVM -i 

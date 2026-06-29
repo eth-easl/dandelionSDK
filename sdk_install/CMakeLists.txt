@@ -1,13 +1,8 @@
 # actions to make the SDK build possible for outside sources
 
-if(DANDELION_PLATFORM MATCHES "wasm")
-    set(DANDELION_TARGET "wasm32-unknown-dandelion")
-    set(TEMPLATE_TARGET "wasm32-unknown-unknown")
-else()
-    set(DANDELION_TARGET "${ARCHITECTURE}-unknown-dandelion")
-    set(TEMPLATE_TARGET "${ARCHITECTURE}-unknown-elf")
-    set(BUILTIN_LIB "\"\${CMAKE_CURRENT_SOURCE_DIR}/lib/generic/libclang_rt.builtins-${ARCHITECTURE}.a\"")
-endif()
+set(DANDELION_TARGET "${ARCHITECTURE}-unknown-dandelion")
+set(TEMPLATE_TARGET "${ARCHITECTURE}-unknown-elf")
+set(BUILTIN_LIB "\"\${CMAKE_CURRENT_SOURCE_DIR}/lib/generic/libclang_rt.builtins-${ARCHITECTURE}.a\"")
 
 # Configure CMakeLists containing runtime, dlibc and dlibcxx
 configure_file(CMakeTemplate.txt ${CMAKE_INSTALL_PREFIX}/CMakeLists.txt

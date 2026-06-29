@@ -1,0 +1,138 @@
+Dandelion SDK dev workflow
+==========================
+
+This directory contains the container-based development workflow for building
+the SDK and running libc-test.
+
+Inside the dev container:
+
+- `SDK_SRC` points at `/work/dandelionSDK`
+- `SDK_BUILD` points at `/work/sdk-build`
+- `SDK_INSTALL` points at `/work/dandelion_sdk`
+
+The generated upstream libc-test checkout lives at:
+
+- `/work/sdk-build/libc-test`
+
+On the host, the persistent state directory is:
+
+- `dev/.dlibc-dev/`
+
+That state directory is bind-mounted into the container so the SDK build cache,
+installed toolchain, and generated libc-test checkout persist across runs.
+
+Start or reuse the dev container from the repository root:
+
+```bash
+./dev/dev_container.sh --sdk /path/to/dandelionSDK
+```
+
+If you are already in the `dandelionSDK` root, this also works:
+
+```bash
+./dev/dev_container.sh
+```
+
+Inside the container, rebuild and install the SDK:
+
+```bash
+./dev/dev_rebuild.sh sdk --log sdk.log
+```
+
+Rebuild the SDK and force the cached newlib patch to be reapplied:
+
+```bash
+./dev/dev_rebuild.sh sdk --refresh-newlib-patch --log sdk.log
+```
+
+Reset the cached newlib checkout before reapplying the patch:
+
+```bash
+./dev/dev_rebuild.sh sdk --refresh-newlib-patch --reset-newlib-tree --log sdk.log
+```
+
+Prepare or refresh the generated libc-test checkout:
+
+```bash
+./dev/dev_prepare_libctest.sh
+```
+
+Reset the generated libc-test checkout back to the pinned upstream revision
+before reapplying the patch and overlay files:
+
+```bash
+./dev/dev_prepare_libctest.sh --reset
+```
+
+If you edit the generated libc-test checkout and want to refresh the tracked
+patch file, run:
+
+```bash
+./dev/dev_update_libctest_patch.sh
+```
+
+If you edit the cached newlib checkout and want to refresh the tracked newlib
+patch file, run:
+
+```bash
+./dev/dev_update_newlib_patch.sh
+```
+
+Rebuild everything and run libc-test:
+
+```bash
+./dev/dev_rebuild.sh all --log all.log --csv all.csv
+```
+
+Run libc-test only against the installed SDK:
+
+```bash
+./dev/dev_rebuild.sh test --log test.log --csv test.csv
+```
+
+Run the full libc-test suite through CTest from the configured SDK build
+directory:
+
+```bash
+cd /work/sdk-build
+ctest --output-on-failure -R '^libc_test_full$'
+```
+
+Or use the convenience build target:
+
+```bash
+cmake --build /work/sdk-build --target check-libc -j
+```
+
+Summarize pass counts from a generated CSV:
+
+```bash
+awk -F, 'NR>1 {total++; if ($2=="PASS") pass++} END {print "passes=" pass "\ntotal=" total}' logs/test.csv
+```
+
+Generated artifacts:
+
+- libc-test logs: `/work/dandelionSDK/libc_test/logs/`
+- libc-test reports: `/work/dandelionSDK/libc_test/report/`
+- runtime stdio captures: `/work/dandelionSDK/libc_test/logs/test_stdio/`
+
+Adding a libc-test source file:
+
+Add a new self-contained `.c` file under one of these directories in the
+generated checkout:
+
+- `/work/sdk-build/libc-test/src/api/`
+- `/work/sdk-build/libc-test/src/functional/`
+- `/work/sdk-build/libc-test/src/regression/`
+
+Use `src/api/` for interface/header exposure checks and `src/functional/` or
+`src/regression/` for runtime behavior tests.
+
+Troubleshooting:
+
+If you delete `dev/.dlibc-dev/` on the host, recreate the dev container too so
+the bind mounts are refreshed:
+
+```bash
+./dev/dev_container.sh --recreate-container
+```

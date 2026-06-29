@@ -1,10 +1,10 @@
 #ifndef _DANDELION_FS_INTERFACE_H
 #define _DANDELION_FS_INTERFACE_H
 
-#include "../file_system.h"
-
 #include <stddef.h>
 #include <stdint.h>
+
+#include "../file_system.h"
 
 #define EPERM 1
 #define ENOENT 2

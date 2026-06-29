@@ -1,9 +1,9 @@
-#include "../../system.h"
-#include "dandelion/system/system.h"
-
-#include "syscall.h"
 #include <stddef.h>
 #include <stdint.h>
+
+#include "../../system.h"
+#include "dandelion/system/system.h"
+#include "syscall.h"
 
 #define sysdata __dandelion_system_data
 
@@ -119,7 +119,6 @@ static void *debug_alloc(size_t size) {
 }
 
 void __dandelion_platform_init(void) {
-
   size_t alloc_size = 1ull << 31;
   void *heap_ptr = vm_alloc(alloc_size);
   void *heap_end = (void *)((char *)heap_ptr + alloc_size);
@@ -154,7 +153,8 @@ void __dandelion_platform_init(void) {
 
   while ((dirent_read = __syscall(SYS_getdents64, in_sets_fd, &dirent_buffer,
                                   DIRENT_BUF_SIZE)) > 0) {
-    // have read one or more entries, need to process them before reading again
+    // have read one or more entries, need to process them before reading
+    // again
     for (long dirent_offset = 0; dirent_offset < dirent_read;
          dirent_offset +=
          ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {
@@ -186,6 +186,7 @@ void __dandelion_platform_init(void) {
   sysdata.input_bufs = heap_ptr;
 
   for (size_t input_set = 0; input_set < input_set_index; input_set++) {
+    input_sets[input_set].offset = total_buffers;
     write_all(1, "\t", 1);
     write_all(1, input_sets[input_set].ident, input_sets[input_set].ident_len);
     write_all(1, "\n", 1);
@@ -250,8 +251,6 @@ void __dandelion_platform_init(void) {
     }
     if (set_dirent_read < 0)
       print_and_exit("getdents failed\n", -dirent_read);
-
-    input_sets[input_set].offset = total_buffers;
   }
 
   // set up sentinel set
@@ -328,16 +327,21 @@ void __dandelion_platform_exit(void) {
   char exit_message[] = "Exiting with code ";
   size_t message_len = my_strlen(exit_message);
   write_all(1, exit_message, message_len);
-  char exit_code_string[11] = "          \n";
+  char exit_code_string[12] = " 0000000000\n";
   // convert int to string
   int exit_code = sysdata.exit_code;
+  // remove sign
+  if (exit_code < 0) {
+    exit_code_string[0] = '-';
+    exit_code *= -1;
+  }
   for (size_t index = 0; index < 10; index++) {
-    exit_code_string[9 - index] = '0' + (exit_code % 10);
+    exit_code_string[10 - index] = '0' + (exit_code % 10);
     exit_code = exit_code / 10;
     if (exit_code == 0)
       break;
   }
-  write_all(1, exit_code_string, 11);
+  write_all(1, exit_code_string, 12);
   __syscall(SYS_exit_group, sysdata.exit_code);
   __builtin_unreachable();
 }

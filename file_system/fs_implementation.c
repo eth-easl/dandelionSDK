@@ -1,14 +1,13 @@
+#include <dandelion/runtime.h>
+#include <dandelion/system/system.h>
+#include <stddef.h>
+
 #include "file_system.h"
 #include "include/fs_interface.h"
 #include "paths.h"
 
-#include <dandelion/runtime.h>
-#include <dandelion/system/system.h>
-
-#include <stddef.h>
-
-extern D_File *fs_root;
-extern OpenFile *open_files;
+extern D_File fs_root;
+extern OpenFile open_files[];
 
 // Allocate new filesystem chunk, return NULL if ENOMEM;
 // round up allocation to next multiple of FS_CHUNK_SIZE
@@ -72,7 +71,7 @@ int dandelion_link(const char *old, const char *new_name) {
   Path new_path = path_from_string(new_name);
   Path new_file_name = get_file(new_path);
   Path new_file_dir = get_directories(new_path);
-  D_File *new_dir = create_directories(fs_root, new_file_dir, 0);
+  D_File *new_dir = create_directories(&fs_root, new_file_dir, 0);
   if (new_dir == NULL) {
     return -ENOTDIR;
   }
@@ -128,7 +127,7 @@ int dandelion_open(const char *name, int flags, uint32_t mode) {
     if (file_name.length >= FS_NAME_LENGTH) {
       return -EINVAL;
     }
-    D_File *parent = create_directories(fs_root, dir_path, 0);
+    D_File *parent = create_directories(&fs_root, dir_path, 0);
     if (parent == NULL) {
       return -ENOTDIR;
     }
@@ -157,7 +156,6 @@ int dandelion_open(const char *name, int flags, uint32_t mode) {
   if (open_error < 0)
     return open_error;
 
-  current->open_descripotors += 1;
   return file_descriptor;
 }
 
@@ -303,8 +301,8 @@ int64_t dandelion_lseek(int file, int64_t offset, int whence) {
       to_advance = current->used;
     }
     // either advancing inside chunk is enough or there is no next chunk to
-    // advance to. That means we can take the smaller and advance by that much
-    // in any case.
+    // advance to. That means we can take the smaller and advance by that
+    // much in any case.
     to_advance = to_advance >= offset ? offset : to_advance;
     chunk_offset += to_advance;
     total_offset += to_advance;
@@ -344,7 +342,11 @@ size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset,
   if (open_file->file == NULL || open_file->open_flags & O_WRONLY) {
     return -EBADF;
   }
-  if (open_file->file->type != FILE) {
+
+  if (open_file->file->type == DEVICE) {
+    size_t result = open_file->file->device->read(ptr, len, offset, options);
+    return result;
+  } else if (open_file->file->type != FILE) {
     return -EINVAL;
   }
   // if len is 0, it is supposed to only check for these errors and return
@@ -372,7 +374,8 @@ size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset,
       }
     }
   } else {
-    // check if current chunk is set, and if not if the file has data to be read
+    // check if current chunk is set, and if not if the file has data to be
+    // read
     if (open_file->current_chunk == NULL) {
       // set to file chunk if there is one
       open_file->offset = 0;
@@ -398,8 +401,8 @@ size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset,
       // read everythin in chunk and go to next
       memcpy(ptr + read_bytes, current->data + chunk_offset, readable);
       read_bytes += readable;
-      // advance to next chunk if there is one, otherwise stay at this, so we
-      // can see new appended chunks in the future
+      // advance to next chunk if there is one, otherwise stay at this, so
+      // we can see new appended chunks in the future
       if (current->next != NULL) {
         current = current->next;
         chunk_offset = 0;
@@ -424,7 +427,10 @@ size_t dandelion_write(int file, char *ptr, size_t len, int64_t offset,
   if (open_file->file == NULL || open_file->open_flags & O_RDONLY) {
     return -EBADF;
   }
-  if (open_file->file->type != FILE) {
+
+  if (open_file->file->type == DEVICE) {
+    return open_file->file->device->write(ptr, len, offset, options);
+  } else if (open_file->file->type != FILE) {
     return -EINVAL;
   }
 
@@ -442,8 +448,9 @@ size_t dandelion_write(int file, char *ptr, size_t len, int64_t offset,
       current = d_file->content;
       // know that the file content is not NULL
       while (offset > 0) {
-        // if offset is within the current capacity make sure it is marked used
-        // to at least the point in offset and set the writer there
+        // if offset is within the current capacity make sure it is
+        // marked used to at least the point in offset and set the writer
+        // there
         if (offset < current->capacity) {
           chunk_offset = offset;
           current->used = offset > current->used ? offset : current->used;
@@ -463,8 +470,8 @@ size_t dandelion_write(int file, char *ptr, size_t len, int64_t offset,
         current = current->next;
       }
     } else {
-      // if have no chunck already check if file has a chunck and write to that
-      // otherwise allocate one
+      // if have no chunck already check if file has a chunck and write to
+      // that otherwise allocate one
       current = open_file->current_chunk;
       if (current == NULL) {
         if (d_file->content == NULL) {
@@ -554,7 +561,7 @@ static inline int __dandelion_truncate(D_File *file, int64_t length) {
   if (length < 0)
     return -EINVAL;
   if (file->type != FILE)
-    return -EISDIR;
+    return -EBADF;
   int64_t remaining_size = length;
   FileChunk *current = file->content;
   // go to length, and cut off left over after that if there is any
@@ -623,7 +630,7 @@ int dandelion_opendir(const char *name, DIR *dir) {
 }
 
 int dandelion_closedir(DIR *dir) {
-  dir->dir -= 1;
+  dir->dir->open_descripotors -= 1;
   int err = free_data(dir->dir);
   return err;
 }

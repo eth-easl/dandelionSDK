@@ -17,14 +17,14 @@ RUN apt-get install -y gcc g++ # clang uses gcc to interface with the linker
 # download initial clang
 RUN wget https://apt.llvm.org/llvm.sh -O ~/llvm.sh
 RUN chmod +x ~/llvm.sh
-RUN ~/llvm.sh
-RUN ln -s /usr/bin/ld.lld-19 /usr/bin/ld.lld
+RUN ~/llvm.sh 20
+RUN ln -s /usr/bin/ld.lld-20 /usr/bin/ld.lld
 RUN rm -r /usr/include/*
 
 # download and set up dandelionSDK
 RUN wget https://github.com/eth-easl/dandelionSDK/releases/download/${VERSION}/dandelion_sdk_${BUILD}_${PLATFORM}_${TARGET_ARCH}.tar.gz -O ~/dandelionSDK.tar.gz
 RUN tar -xzf ~/dandelionSDK.tar.gz -C ~/
-RUN ~/dandelion_sdk/create-compiler.sh -d -c clang-19
+RUN ~/dandelion_sdk/create-compiler.sh -d -c clang-20
 
 ENV CC="clang"
 ENV CXX="clang++"
