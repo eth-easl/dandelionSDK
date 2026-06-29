@@ -95,11 +95,9 @@ int execv(const char *__path, char *const __argv[]) {
 
 // int fchown (int __fildes, uid_t __owner, gid_t __group);
 // #if __ATFILE_VISIBLE
-// int	fchownat (int __dirfd, const char *__path, uid_t __owner, gid_t __group,
-// int __flags);
-// #endif
-// int	fexecve (int __fd, char * const __argv[], char * const __envp[]);
-// long    fpathconf (int __fd, int __name);
+// int	fchownat (int __dirfd, const char *__path, uid_t __owner, gid_t
+// __group, int __flags); #endif int	fexecve (int __fd, char * const
+// __argv[], char * const __envp[]); long    fpathconf (int __fd, int __name);
 
 int fsync(int __fd) { return 0; }
 int fdatasync(int __fd) { return 0; }

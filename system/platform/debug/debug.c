@@ -1,9 +1,9 @@
-#include "../../system.h"
-#include "dandelion/system/system.h"
-
-#include "syscall.h"
 #include <stddef.h>
 #include <stdint.h>
+
+#include "../../system.h"
+#include "dandelion/system/system.h"
+#include "syscall.h"
 
 #define sysdata __dandelion_system_data
 
@@ -119,7 +119,6 @@ static void *debug_alloc(size_t size) {
 }
 
 void __dandelion_platform_init(void) {
-
   size_t alloc_size = 1ull << 31;
   void *heap_ptr = vm_alloc(alloc_size);
   void *heap_end = (void *)((char *)heap_ptr + alloc_size);
@@ -154,7 +153,8 @@ void __dandelion_platform_init(void) {
 
   while ((dirent_read = __syscall(SYS_getdents64, in_sets_fd, &dirent_buffer,
                                   DIRENT_BUF_SIZE)) > 0) {
-    // have read one or more entries, need to process them before reading again
+    // have read one or more entries, need to process them before reading
+    // again
     for (long dirent_offset = 0; dirent_offset < dirent_read;
          dirent_offset +=
          ((linux_dirent *)&dirent_buffer[dirent_offset])->d_reclen) {

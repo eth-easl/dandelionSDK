@@ -1,5 +1,5 @@
-#include <math.h>
 #include <errno.h>
+#include <math.h>
 
 // defined by newlib, but not always avaliable in headers
 #undef errno

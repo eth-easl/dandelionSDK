@@ -1,11 +1,11 @@
 #include "file_system.h"
-#include "devices.h"
-#include "include/fs_interface.h"
 
 #include <stdint.h>
 
 #include "dandelion/runtime.h"
 #include "dandelion/system/system.h"
+#include "devices.h"
+#include "include/fs_interface.h"
 #include "paths.h"
 
 OpenFile open_files[FS_MAX_FILES] = {NULL};
@@ -13,51 +13,51 @@ OpenFile open_files[FS_MAX_FILES] = {NULL};
 // folders that are always present
 // initialize with hard links = 1 to make sure we never attempt deallocation
 D_File fs_root = {
-  .name = "/\0",
-  .next = NULL,
-  .parent = NULL,
-  .type = DIRECTORY,
-  .child = NULL,
-  .hard_links = 1,
-  .open_descripotors = 0,
-  .mode = 0,
+    .name = "/\0",
+    .next = NULL,
+    .parent = NULL,
+    .type = DIRECTORY,
+    .child = NULL,
+    .hard_links = 1,
+    .open_descripotors = 0,
+    .mode = 0,
 };
 static D_File stdio_folder = {
-  .name = "stdio\0",
-  .next = NULL,
-  .parent = NULL,
-  .type = DIRECTORY,
-  .child = NULL,
-  .hard_links = 1,
-  .open_descripotors = 0,
-  .mode = 0,
+    .name = "stdio\0",
+    .next = NULL,
+    .parent = NULL,
+    .type = DIRECTORY,
+    .child = NULL,
+    .hard_links = 1,
+    .open_descripotors = 0,
+    .mode = 0,
 };
 static D_File device_folder = {
-  .name = "dev\0",
-  .next = NULL,
-  .parent = NULL,
-  .type = DIRECTORY,
-  .child = NULL,
-  .hard_links = 1,
-  .open_descripotors = 0,
-  .mode = 0,
+    .name = "dev\0",
+    .next = NULL,
+    .parent = NULL,
+    .type = DIRECTORY,
+    .child = NULL,
+    .hard_links = 1,
+    .open_descripotors = 0,
+    .mode = 0,
 };
 
 // static devices
 static Device urandom_device = {
-  .state = NULL,
-  .read = urandom_read,
-  .write = urandom_write,
+    .state = NULL,
+    .read = urandom_read,
+    .write = urandom_write,
 };
 static D_File urandom_file = {
-  .name = "urandom\0",
-  .next = NULL,
-  .parent = NULL,
-  .type = DEVICE,
-  .device = &urandom_device,
-  .hard_links = 1,
-  .open_descripotors = 0,
-  .mode = S_IRUSR,
+    .name = "urandom\0",
+    .next = NULL,
+    .parent = NULL,
+    .type = DEVICE,
+    .device = &urandom_device,
+    .hard_links = 1,
+    .open_descripotors = 0,
+    .mode = S_IRUSR,
 };
 
 D_File *create_file(Path *name, char *content, size_t length, uint32_t mode) {
@@ -376,8 +376,8 @@ void setup_charpparray(char *data, size_t length, int *entries,
     if (data_index >= length)
       break;
     arguments++;
-    // are not at the end of the input and have a non space character so are at
-    // the start of an argument skip over current argument
+    // are not at the end of the input and have a non space character so are
+    // at the start of an argument skip over current argument
     while (data_index < length && data[data_index] != ' ') {
       // if is escape character, skip to end of escape
       if (data[data_index] == '\'' || data[data_index] == '\"') {
@@ -457,13 +457,13 @@ int fs_initialize(int *argc, char ***argv, char ***environ) {
   if ((error = link_file_to_folder(&fs_root, &device_folder)) != 0) {
     return error;
   }
- 
+
   // initialize and add urandom device
   urandom_init(0x39917A73ACA200E4ull); // TODO: get this from input struct
   if ((error = link_file_to_folder(&device_folder, &urandom_file)) != 0) {
     return error;
   }
-  
+
   // create stdio folder and stdout/stderr file
   if ((error = link_file_to_folder(&fs_root, &stdio_folder)) != 0) {
     return error;
@@ -685,7 +685,7 @@ int add_output_from_file(D_File *file, Path previous_path, size_t set_index) {
   return 0;
 }
 
-int fs_terminate() { 
+int fs_terminate() {
   // go through output set names and find all files in folders that are
   // named after them
   size_t output_sets = dandelion_output_set_count();

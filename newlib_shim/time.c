@@ -12,17 +12,17 @@
 extern int errno;
 
 #if defined(__aarch64__)
-  static uint64_t __rdtsc() {
-    uint64_t t;
-    __asm volatile ("mrs %0, cntvct_el0" : "=r"(t));
-    return t;
-  }
+static uint64_t __rdtsc() {
+  uint64_t t;
+  __asm volatile("mrs %0, cntvct_el0" : "=r"(t));
+  return t;
+}
 #elif defined(__x86_64__)
-  static uint64_t __rdtsc() {
-    uint64_t t;
-    __asm volatile ("rdtsc": "=A"(t));
-    return t;
-  }
+static uint64_t __rdtsc() {
+  uint64_t t;
+  __asm volatile("rdtsc" : "=A"(t));
+  return t;
+}
 #else
 #error "Unsupported architecture"
 #endif
@@ -51,8 +51,10 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp) {
   return -1;
 }
 int clock_gettime(clockid_t clock_id, struct timespec *tp) {
-  // TODO add static timestamp at the start to offset here and possibly fix to get actual realtime instead of offset one
-  // TODO check if we need to differentiate any of these and if they need setup from the dandelion side
+  // TODO add static timestamp at the start to offset here and possibly fix to
+  // get actual realtime instead of offset one
+  // TODO check if we need to differentiate any of these and if they need setup
+  // from the dandelion side
   static char is_initialized = 0;
   static uint64_t base_time;
   if (is_initialized == 0) {

@@ -1,6 +1,6 @@
 #include "../include/dandelion/runtime.h"
-#include "../include/dandelion/system/system.h"
 
+#include "../include/dandelion/system/system.h"
 #include "runtime.h"
 
 #define sysdata __dandelion_system_data
@@ -183,11 +183,11 @@ static inline size_t get_sbrk_size(size_t size, size_t alignment) {
 /// The one at the start showing the occupation and the index of the end
 /// descriptor. The one at the end giving the index of the start one as well as
 /// occupation. The next slab can be found by indexing 1 past the start/end
-/// descriptor. MAX_VALUE is used as a place holder past the last allocation, to
-/// ensure we have space for a descriptor to describe how far it is to any new
-/// allocation. If the new allocation is not contiguous with the current one,
-/// this descriptor can be used to mark the space between the allocations as
-/// occupied.
+/// descriptor. MAX_VALUE is used as a place holder past the last allocation,
+/// to ensure we have space for a descriptor to describe how far it is to any
+/// new allocation. If the new allocation is not contiguous with the current
+/// one, this descriptor can be used to mark the space between the allocations
+/// as occupied.
 ///
 /// Example:
 /// Normal allocation
@@ -216,9 +216,9 @@ void *dandelion_alloc(size_t size, size_t alignment) {
   local_alignment = local_alignment == 0 ? 1 : local_alignment;
 
   if (free_root == NULL) {
-    // add 2 size_t to  ask size for minimal bookkeeping we need and alignment
-    // so we guarantee to get a usable allocation. Round size to multiple of
-    // default allocation.
+    // add 2 size_t to  ask size for minimal bookkeeping we need and
+    // alignment so we guarantee to get a usable allocation. Round size to
+    // multiple of default allocation.
     size_t allocation_size = get_sbrk_size(local_size, local_alignment);
     free_root = dandelion_sbrk(allocation_size);
     if (free_root == NULL) {
@@ -306,15 +306,15 @@ void *dandelion_alloc(size_t size, size_t alignment) {
   if (skip_indices != 0) {
     if (skip_indices < 3) {
       if (start != 0) {
-        // know that previous was occupied, otherwise would have been fused with
-        // start
+        // know that previous was occupied, otherwise would have been
+        // fused with start
         size_t previous_start = free_root[start - 1] & ~OCCUPIED_FLAG;
         free_root[previous_start] = (actual_start - 1) | OCCUPIED_FLAG;
         free_root[actual_start - 1] = previous_start | OCCUPIED_FLAG;
       } else {
-        // mark as occupied, this is either one or two indices. If it is one we
-        // write the same thing to it twice, if it is two we have an empty free
-        // allocation
+        // mark as occupied, this is either one or two indices. If it is
+        // one we write the same thing to it twice, if it is two we have
+        // an empty free allocation
         free_root[0] = (actual_start - 1);
         free_root[actual_start - 1] = 0;
       }
@@ -339,8 +339,8 @@ void *dandelion_alloc(size_t size, size_t alignment) {
     free_root[actual_end + 1] = end;
     free_root[end] = actual_end + 1;
   } else {
-    // only one or two indices to spare before next allocation, so just extend
-    // this allocation
+    // only one or two indices to spare before next allocation, so just
+    // extend this allocation
     actual_end = end;
   }
   free_root[actual_start] = actual_end | OCCUPIED_FLAG;

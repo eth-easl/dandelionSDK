@@ -1,11 +1,10 @@
+#include <dandelion/runtime.h>
+#include <dandelion/system/system.h>
+#include <stddef.h>
+
 #include "file_system.h"
 #include "include/fs_interface.h"
 #include "paths.h"
-
-#include <dandelion/runtime.h>
-#include <dandelion/system/system.h>
-
-#include <stddef.h>
 
 extern D_File fs_root;
 extern OpenFile open_files[];
@@ -302,8 +301,8 @@ int64_t dandelion_lseek(int file, int64_t offset, int whence) {
       to_advance = current->used;
     }
     // either advancing inside chunk is enough or there is no next chunk to
-    // advance to. That means we can take the smaller and advance by that much
-    // in any case.
+    // advance to. That means we can take the smaller and advance by that
+    // much in any case.
     to_advance = to_advance >= offset ? offset : to_advance;
     chunk_offset += to_advance;
     total_offset += to_advance;
@@ -344,7 +343,7 @@ size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset,
     return -EBADF;
   }
 
-  if(open_file->file->type == DEVICE){
+  if (open_file->file->type == DEVICE) {
     size_t result = open_file->file->device->read(ptr, len, offset, options);
     return result;
   } else if (open_file->file->type != FILE) {
@@ -375,7 +374,8 @@ size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset,
       }
     }
   } else {
-    // check if current chunk is set, and if not if the file has data to be read
+    // check if current chunk is set, and if not if the file has data to be
+    // read
     if (open_file->current_chunk == NULL) {
       // set to file chunk if there is one
       open_file->offset = 0;
@@ -401,8 +401,8 @@ size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset,
       // read everythin in chunk and go to next
       memcpy(ptr + read_bytes, current->data + chunk_offset, readable);
       read_bytes += readable;
-      // advance to next chunk if there is one, otherwise stay at this, so we
-      // can see new appended chunks in the future
+      // advance to next chunk if there is one, otherwise stay at this, so
+      // we can see new appended chunks in the future
       if (current->next != NULL) {
         current = current->next;
         chunk_offset = 0;
@@ -428,7 +428,7 @@ size_t dandelion_write(int file, char *ptr, size_t len, int64_t offset,
     return -EBADF;
   }
 
-  if(open_file->file->type == DEVICE){
+  if (open_file->file->type == DEVICE) {
     return open_file->file->device->write(ptr, len, offset, options);
   } else if (open_file->file->type != FILE) {
     return -EINVAL;
@@ -448,8 +448,9 @@ size_t dandelion_write(int file, char *ptr, size_t len, int64_t offset,
       current = d_file->content;
       // know that the file content is not NULL
       while (offset > 0) {
-        // if offset is within the current capacity make sure it is marked used
-        // to at least the point in offset and set the writer there
+        // if offset is within the current capacity make sure it is
+        // marked used to at least the point in offset and set the writer
+        // there
         if (offset < current->capacity) {
           chunk_offset = offset;
           current->used = offset > current->used ? offset : current->used;
@@ -469,8 +470,8 @@ size_t dandelion_write(int file, char *ptr, size_t len, int64_t offset,
         current = current->next;
       }
     } else {
-      // if have no chunck already check if file has a chunck and write to that
-      // otherwise allocate one
+      // if have no chunck already check if file has a chunck and write to
+      // that otherwise allocate one
       current = open_file->current_chunk;
       if (current == NULL) {
         if (d_file->content == NULL) {

@@ -1,13 +1,14 @@
-#include <malloc.h>
+#include <errno.h>
 #include <fnmatch.h>
 #include <iconv.h>
+#include <libgen.h>
+#include <malloc.h>
 #include <pwd.h>
 #include <regex.h>
 #include <setjmp.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
-#include <spawn.h>
 #include <sys/resource.h>
 #include <sys/signal.h>
 #include <sys/stat.h>
@@ -15,8 +16,6 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <wordexp.h>
-
-#include <errno.h>
 #undef errno
 extern int errno;
 
@@ -110,7 +109,8 @@ extern size_t dandelion_read(int file, char *ptr, size_t len, int64_t offset,
                              char options);
 #define USE_OFFSET 1
 #define MOVE_OFFSET 2
-_READ_WRITE_RETURN_TYPE read(int file, void *ptr, size_t len) {
+_READ_WRITE_RETURN_TYPE
+read(int file, void *ptr, size_t len) {
   return process_error(dandelion_read(file, ptr, len, 0, MOVE_OFFSET));
 }
 ssize_t pread(int file, void *ptr, size_t len, off_t offset) {
@@ -119,7 +119,8 @@ ssize_t pread(int file, void *ptr, size_t len, off_t offset) {
 
 extern size_t dandelion_write(int file, const char *ptr, size_t len,
                               int64_t offset, char options);
-_READ_WRITE_RETURN_TYPE write(int file, const void *ptr, size_t len) {
+_READ_WRITE_RETURN_TYPE
+write(int file, const void *ptr, size_t len) {
   return process_error(
       dandelion_write(file, (const char *)ptr, len, 0, MOVE_OFFSET));
 }
@@ -328,8 +329,9 @@ iconv_t iconv_open(const char *tocode, const char *fromcode) {
   return (iconv_t)-1;
 }
 
-size_t iconv(iconv_t cd, char **__restrict inbuf, size_t *__restrict inbytesleft,
-             char **__restrict outbuf, size_t *__restrict outbytesleft) {
+size_t iconv(iconv_t cd, char **__restrict inbuf,
+             size_t *__restrict inbytesleft, char **__restrict outbuf,
+             size_t *__restrict outbytesleft) {
   (void)cd;
   (void)inbuf;
   (void)inbytesleft;
@@ -400,8 +402,7 @@ int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t *file_actions) {
 int posix_spawnp(pid_t *restrict pid, const char *restrict file,
                  const posix_spawn_file_actions_t *file_actions,
                  const posix_spawnattr_t *restrict attrp,
-                 char *const argv[restrict],
-                 char *const envp[restrict]) {
+                 char *const argv[restrict], char *const envp[restrict]) {
   (void)pid;
   (void)file;
   (void)file_actions;
@@ -451,8 +452,8 @@ int utimensat(int dirfd, const char *pathname, const struct timespec times[2],
   return -1;
 }
 
-int getpwnam_r(const char *name, struct passwd *pwd, char *buffer, size_t buflen,
-               struct passwd **result) {
+int getpwnam_r(const char *name, struct passwd *pwd, char *buffer,
+               size_t buflen, struct passwd **result) {
   (void)name;
   (void)pwd;
   (void)buffer;

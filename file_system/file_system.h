@@ -1,9 +1,9 @@
 #ifndef __DANDELION_FILE_SYSTEM__
 #define __DANDELION_FILE_SYSTEM__
 
-#include "paths.h"
-
 #include <stdint.h>
+
+#include "paths.h"
 
 #ifndef FS_NAME_LENGTH
 #define FS_NAME_LENGTH 64
@@ -41,10 +41,10 @@ typedef struct FileChunk {
 
 typedef struct Device {
   // for devices that need state can store pointer to arbitrary function
-  void* state;
+  void *state;
   // functions a device needs to implement
-  size_t(*read)(char*, size_t, int64_t, char);
-  size_t(*write)(char*, size_t, int64_t, char);
+  size_t (*read)(char *, size_t, int64_t, char);
+  size_t (*write)(char *, size_t, int64_t, char);
 } Device;
 
 // Use D_File instead of File, to avoid potential naming overlap

@@ -81,11 +81,12 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex) {
   // check it is a valid mutex
   if ((current & DESTROYED) == 0)
     return EINVAL;
-  // check it is locked and not recursive, to give deadlock error, since we only
-  // have 1 thread
+  // check it is locked and not recursive, to give deadlock error, since we
+  // only have 1 thread
   if ((current & LOCKED) == 0 && (current & RECURSIVE) != 0)
     return EDEADLK;
-  // is either not locked, so can just lock it, or is recursive so can relock it
+  // is either not locked, so can just lock it, or is recursive so can relock
+  // it
   *mutex &= ~LOCKED;
   return 0;
 }
@@ -169,8 +170,7 @@ int pthread_cond_signal(pthread_cond_t *cond) { return EINVAL; }
 int pthread_cond_broadcast(pthread_cond_t *cond) { return EINVAL; }
 
 int pthread_barrier_init(pthread_barrier_t *barrier,
-                         const pthread_barrierattr_t *attr,
-                         unsigned count) {
+                         const pthread_barrierattr_t *attr, unsigned count) {
   (void)barrier;
   (void)attr;
   (void)count;

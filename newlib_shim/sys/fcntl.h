@@ -14,7 +14,8 @@
 #ifndef O_RSYNC
 #define O_RSYNC 0
 #endif
-/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/fcntl-linux.h */
+/* https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/bits/fcntl-linux.h
+ */
 #ifndef POSIX_FADV_NORMAL
 #define POSIX_FADV_NORMAL 0
 #define POSIX_FADV_RANDOM 1
@@ -31,8 +32,8 @@
 #endif
 
 __BEGIN_DECLS
-int posix_fadvise (int, off_t, off_t, int);
-int posix_fallocate (int, off_t, off_t);
+int posix_fadvise(int, off_t, off_t, int);
+int posix_fallocate(int, off_t, off_t);
 __END_DECLS
 
 #endif /* _SYS_FCNTL_H_ */
