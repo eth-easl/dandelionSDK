@@ -22,14 +22,14 @@ struct utmpx {
 };
 
 /* https://codebrowser.dev/glibc/glibc/sysdeps/gnu/bits/utmpx.h.html */
-#define EMPTY         0
-#define BOOT_TIME     2
-#define NEW_TIME      3
-#define OLD_TIME      4
-#define INIT_PROCESS  5
+#define EMPTY 0
+#define BOOT_TIME 2
+#define NEW_TIME 3
+#define OLD_TIME 4
+#define INIT_PROCESS 5
 #define LOGIN_PROCESS 6
-#define USER_PROCESS  7
-#define DEAD_PROCESS  8
+#define USER_PROCESS 7
+#define DEAD_PROCESS 8
 
 void endutxent(void);
 struct utmpx *getutxent(void);

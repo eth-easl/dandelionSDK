@@ -1,13 +1,12 @@
 #ifndef _SYS_UIO_H
-#define _SYS_UIO_H	1
+#define _SYS_UIO_H 1
 
 #include <sys/types.h>
 
 /* Structure for scatter/gather I/O.  */
-struct iovec
-{
-    void *iov_base;	/* Pointer to data.  */
-    size_t iov_len;	/* Length of data.  */
+struct iovec {
+  void *iov_base; /* Pointer to data.  */
+  size_t iov_len; /* Length of data.  */
 };
 
 /* Read data from file descriptor FD, and put the result in the
@@ -18,7 +17,7 @@ struct iovec
 
    This function is a cancellation point and therefore not marked with
    __THROW.  */
-extern ssize_t readv (int __fd, const struct iovec *__iovec, int __count);
+extern ssize_t readv(int __fd, const struct iovec *__iovec, int __count);
 
 /* Write data pointed by the buffers described by IOVEC, which
    is a vector of COUNT 'struct iovec's, to file descriptor FD.
@@ -28,6 +27,6 @@ extern ssize_t readv (int __fd, const struct iovec *__iovec, int __count);
 
    This function is a cancellation point and therefore not marked with
    __THROW.  */
-extern ssize_t writev (int __fd, const struct iovec *__iovec, int __count);
+extern ssize_t writev(int __fd, const struct iovec *__iovec, int __count);
 
 #endif // _SYS_UIO_H

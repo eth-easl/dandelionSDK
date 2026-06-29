@@ -9,14 +9,14 @@ extern "C" {
 
 /* https://codebrowser.dev/glibc/glibc/misc/mntent.h.html */
 #define MNTTYPE_IGNORE "ignore"
-#define MNTTYPE_NFS    "nfs"
-#define MNTTYPE_SWAP   "swap"
+#define MNTTYPE_NFS "nfs"
+#define MNTTYPE_SWAP "swap"
 #define MNTOPT_DEFAULTS "defaults"
-#define MNTOPT_RO      "ro"
-#define MNTOPT_RW      "rw"
-#define MNTOPT_SUID    "suid"
-#define MNTOPT_NOSUID  "nosuid"
-#define MNTOPT_NOAUTO  "noauto"
+#define MNTOPT_RO "ro"
+#define MNTOPT_RW "rw"
+#define MNTOPT_SUID "suid"
+#define MNTOPT_NOSUID "nosuid"
+#define MNTOPT_NOAUTO "noauto"
 
 struct mntent {
   char *mnt_fsname;

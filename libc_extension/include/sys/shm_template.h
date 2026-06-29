@@ -11,11 +11,12 @@ extern "C" {
 typedef unsigned long shmatt_t;
 
 /* https://github.com/torvalds/linux/blob/master/include/uapi/linux/shm.h */
-#define SHM_RDONLY  010000
-#define SHM_RND     020000
+#define SHM_RDONLY 010000
+#define SHM_RND 020000
 
-/* https://refspecs.linuxfoundation.org/LSB_2.0.1/LSB-Core-AMD64/LSB-Core-AMD64.diff.pdf */
-#define SHMLBA @PAGE_SIZE@
+/* https://refspecs.linuxfoundation.org/LSB_2.0.1/LSB-Core-AMD64/LSB-Core-AMD64.diff.pdf
+ */
+#define SHMLBA @PAGE_SIZE @
 
 struct shmid_ds {
   struct ipc_perm shm_perm;

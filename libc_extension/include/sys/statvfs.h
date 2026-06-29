@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include <sys/types.h>
 #include <errno.h>
+#include <sys/types.h>
 
 #define ST_RDONLY 1
 #define ST_NOSUID 2

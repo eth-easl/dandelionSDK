@@ -16,15 +16,15 @@ struct ipc_perm {
 };
 
 /* https://git.musl-libc.org/cgit/musl/tree/include/sys/ipc.h */
-#define IPC_CREAT   01000
-#define IPC_EXCL    02000
-#define IPC_NOWAIT  04000
+#define IPC_CREAT 01000
+#define IPC_EXCL 02000
+#define IPC_NOWAIT 04000
 #define IPC_PRIVATE ((key_t)0)
 
 /* https://github.com/torvalds/linux/blob/master/include/uapi/linux/ipc.h */
-#define IPC_RMID    0
-#define IPC_SET     1
-#define IPC_STAT    2
+#define IPC_RMID 0
+#define IPC_SET 1
+#define IPC_STAT 2
 
 key_t ftok(const char *, int);
 

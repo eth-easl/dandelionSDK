@@ -1,9 +1,7 @@
 #include <errno.h>
 #include <syslog.h>
 
-void closelog(void) {
-  errno = ENOSYS;
-}
+void closelog(void) { errno = ENOSYS; }
 
 void openlog(const char *ident, int option, int facility) {
   (void)ident;

@@ -1,7 +1,6 @@
 #include <aio.h>
 #include <errno.h>
 
-
 // https://man7.org/linux/man-pages/man7/aio.7.html
 
 int aio_cancel(int fd, struct aiocb *aiocbp) {

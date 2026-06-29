@@ -1,7 +1,8 @@
 #include <errno.h>
 #include <sys/mman.h>
 
-void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset) {
+void *mmap(void *addr, size_t length, int prot, int flags, int fd,
+           off_t offset) {
   (void)addr;
   (void)length;
   (void)prot;

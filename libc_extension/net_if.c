@@ -1,5 +1,5 @@
-#include <net/if.h>
 #include <errno.h>
+#include <net/if.h>
 
 void if_freenameindex(struct if_nameindex *ptr) {
   (void)ptr;

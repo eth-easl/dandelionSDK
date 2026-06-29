@@ -1,7 +1,8 @@
-#include <monetary.h>
 #include <errno.h>
+#include <monetary.h>
 // https://man7.org/linux/man-pages/man0/monetary.h.0p.html
-ssize_t strfmon(char *restrict s, size_t max, const char *restrict format, ...) {
+ssize_t strfmon(char *restrict s, size_t max, const char *restrict format,
+                ...) {
   (void)s;
   (void)max;
   (void)format;

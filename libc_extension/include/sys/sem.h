@@ -9,14 +9,14 @@ extern "C" {
 #endif
 
 /* https://github.com/torvalds/linux/blob/master/include/uapi/linux/sem.h */
-#define SEM_UNDO  0x1000
-#define GETNCNT   14
-#define GETPID    11
-#define GETVAL    12
-#define GETALL    13
-#define GETZCNT   15
-#define SETVAL    16
-#define SETALL    17
+#define SEM_UNDO 0x1000
+#define GETNCNT 14
+#define GETPID 11
+#define GETVAL 12
+#define GETALL 13
+#define GETZCNT 15
+#define SETVAL 16
+#define SETALL 17
 
 struct semid_ds {
   struct ipc_perm sem_perm;

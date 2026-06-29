@@ -1,7 +1,7 @@
-#include <sched.h>
 #include <errno.h>
+#include <sched.h>
 
-int sched_yield (void) {
+int sched_yield(void) {
   errno = ENOSYS;
   return -1;
 }

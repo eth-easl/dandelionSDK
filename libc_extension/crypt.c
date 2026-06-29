@@ -1,5 +1,5 @@
-#include <errno.h>
 #include <crypt.h>
+#include <errno.h>
 
 char *crypt(const char *phrase, const char *setting) {
   (void)phrase;

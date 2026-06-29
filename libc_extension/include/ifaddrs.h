@@ -1,7 +1,7 @@
 /* THIS IS A DUMMY HEADER */
 
 #ifndef _IFADDRS_H
-#define _IFADDRS_H	1
+#define _IFADDRS_H 1
 
 #include <sys/socket.h>
 
@@ -17,11 +17,11 @@ struct ifaddrs {
     struct sockaddr *ifu_broadaddr;
     struct sockaddr *ifu_dstaddr;
   } ifa_ifu;
-  
+
   void *ifa_data;
 };
 
-extern int getifaddrs (struct ifaddrs **__ifap);
-extern void freeifaddrs (struct ifaddrs *__ifa);
+extern int getifaddrs(struct ifaddrs **__ifap);
+extern void freeifaddrs(struct ifaddrs *__ifa);
 
 #endif /* ifaddrs.h */

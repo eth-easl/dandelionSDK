@@ -1,6 +1,6 @@
 #include <errno.h>
-#include <sys/sem.h>
 #include <stdarg.h>
+#include <sys/sem.h>
 
 int semctl(int semid, int semnum, int cmd, ...) {
   va_list ap;

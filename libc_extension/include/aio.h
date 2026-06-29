@@ -10,9 +10,9 @@
 extern "C" {
 #endif
 
-/* https://refspecs.linuxfoundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/librt-ddefs.html */
+/* https://refspecs.linuxfoundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/librt-ddefs.html
+ */
 
- 
 /* POSIX AIO cancellation status codes */
 #define AIO_CANCELED 0
 #define AIO_NOTCANCELED 1

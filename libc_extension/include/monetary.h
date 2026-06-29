@@ -1,9 +1,9 @@
 #ifndef _MONETARY_H_
 #define _MONETARY_H_
 
+#include <sys/_locale.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <sys/_locale.h>
 
 __BEGIN_DECLS
 
