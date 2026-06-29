@@ -10,7 +10,7 @@ configure_file(
 )
 # Render sys/utsname.h from the source template so field sizes track the configured UTSNAME_FIELD_SIZE.
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/sys/utsname_template.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/sys/utsname.template
     ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/utsname.h
     @ONLY
 )
