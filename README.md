@@ -100,7 +100,8 @@ The target platform and architecture are defined defined as an argument to cmake
 The default values are `DEBUG` using the architecture of the system that is running the build.
 Addtionally we also support `Debug` and `Release` builds with the standard CMake flag `-DCMAKE_BUILD_TYPE=<build type>`
 
-To also build libc and libc++ set the variable `-DNEWLIB=ON`.
+By default this also builds libc and libc++.
+To turn it off set the variable `-DNEWLIB=OFF`.
 For newlib to be built correctly the autoconf version 2.69.
 This also enables the build of the in memory file system,
 which can also be built without the other newlib builds by setting `-DDANDELION_FS=ON`

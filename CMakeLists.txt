@@ -10,7 +10,7 @@ include(CTest)
 
 # binary options
 option(FREESTANDING "toggles the include of memcpy, memset, memmove and memcmp" ON)
-option(NEWLIB "toggles builing of newlib on top of dandelion interface" OFF)
+option(NEWLIB "toggles builing of newlib on top of dandelion interface" ON)
 
 # string options
 set(ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "the architecture to build for")
@@ -162,7 +162,6 @@ if(NEWLIB)
     set(LLVM_CXX_FLAGS "-D_GNU_SOURCE=1")
     string(APPEND LLVM_CXX_FLAGS " -D__GNU__")
     string(APPEND LLVM_CXX_FLAGS " -D_POSIX_TIMERS")
-    string(APPEND LLVM_CXX_FLAGS " -D__rtems__")
     string(APPEND LLVM_CXX_FLAGS " -D_POSIX_READER_WRITER_LOCKS")
     string(APPEND LLVM_CXX_FLAGS " -D_UNIX98_THREAD_MUTEX_ATTRIBUTES")
     string(APPEND LLVM_CXX_FLAGS " -D__ELF__")
