@@ -19,9 +19,17 @@ static uint64_t __rdtsc() {
 }
 #elif defined(__x86_64__)
 static uint64_t __rdtsc() {
-  uint64_t t;
-  __asm volatile("rdtsc" : "=A"(t));
-  return t;
+  uint64_t time;
+  __asm__ __volatile__("rdtsc \n\
+                       shlq $32, %%rdx \n\
+                       orq %%rax, %%rdx"
+                       // output registers
+                       : "=d"(time)
+                       // input registers
+                       :
+                       // clobber registers
+                       : "rax");
+  return time;
 }
 #else
 #error "Unsupported architecture"
@@ -55,13 +63,7 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp) {
   // get actual realtime instead of offset one
   // TODO check if we need to differentiate any of these and if they need setup
   // from the dandelion side
-  static char is_initialized = 0;
-  static uint64_t base_time;
-  if (is_initialized == 0) {
-    base_time = __rdtsc();
-    is_initialized = 1;
-  }
-  uint64_t time_diff = __rdtsc() - base_time;
+  uint64_t time_diff = __rdtsc();
   uint64_t divisor = 1000000000;
   tp->tv_nsec = time_diff % divisor;
   tp->tv_sec = time_diff / divisor;
