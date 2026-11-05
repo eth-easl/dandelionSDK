@@ -1,4 +1,4 @@
-add_library(${RUNTIME_LIB} STATIC runtime.c)
+add_library(${RUNTIME_LIB} STATIC runtime.c meta_function.c)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(${RUNTIME_LIB} PRIVATE DEBUG)
@@ -6,12 +6,13 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 endif()
 
 target_sources(${RUNTIME_LIB}
-    PRIVATE runtime.c
+    PRIVATE runtime.c meta_function.c
     PUBLIC FILE_SET public_headers TYPE HEADERS
     BASE_DIRS ${DANDELION_ROOT}/include
     FILES
     ${DANDELION_ROOT}/include/dandelion/crt.h
     ${DANDELION_ROOT}/include/dandelion/io_buffer.h
+    ${DANDELION_ROOT}/include/dandelion/meta_function.h
     ${DANDELION_ROOT}/include/dandelion/runtime.h
     ${DANDELION_ROOT}/include/dandelion/system/system.h
 )
