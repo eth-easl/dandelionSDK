@@ -2,9 +2,10 @@
 
 #include "../include/dandelion/runtime.h"
 
-// size of an input_metadata item: number of items and total size, both as
-// little endian u64
-#define INPUT_METADATA_ITEM_SIZE 16
+// size of an input metadata item: number of items, summed size of the items
+// with known size and number of items with unknown size, all as little endian
+// u64
+#define INPUT_METADATA_ITEM_SIZE 24
 
 static int ident_equals(const char *ident, size_t ident_len, const char *name,
                         size_t name_len) {
@@ -83,7 +84,8 @@ int dandelion_meta_get_input(size_t idx, DandelionMetaInput *input) {
   input->ident = item->ident;
   input->ident_len = item->ident_len;
   input->num_items = read_le_u64(data);
-  input->total_size = read_le_u64(data + 8);
+  input->known_size = read_le_u64(data + 8);
+  input->num_unknown_size = read_le_u64(data + 16);
   return 0;
 }
 

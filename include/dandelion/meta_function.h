@@ -14,9 +14,12 @@ extern "C" {
         plan (info = x) (a, b, c) => (d);
     Its planner gets the planner params (`info`) as the first input sets, as
     for any other function, and in addition:
-    - the input set "input_metadata", describing the data inputs (`a, b, c`)
-    - the input set "output_metadata", naming the outputs (`d`)
-    It returns the source of a composition in the output set "composition".
+    - the input set DANDELION_META_INPUT_METADATA_SET, describing the data
+      inputs (`a, b, c`)
+    - the input set DANDELION_META_OUTPUT_METADATA_SET, naming the outputs
+      (`d`)
+    It returns the source of a composition in the output set
+    DANDELION_META_COMPOSITION_SET.
     That composition is run on the data inputs and produces the outputs, both
     matched by position: its first input set gets `a`, its first output set
     becomes `d` and so on.
@@ -34,8 +37,11 @@ typedef struct DandelionMetaInput {
   size_t ident_len;
   // Number of items in the set
   size_t num_items;
-  // Summed size of all items in the set in bytes
-  size_t total_size;
+  // Summed size in bytes of the items whose size is known
+  size_t known_size;
+  // Number of items whose size is not known yet (IO items that are only
+  // fetched when the plan runs). They are not part of known_size.
+  size_t num_unknown_size;
 } DandelionMetaInput;
 
 // Description of an output of the metafunction application
