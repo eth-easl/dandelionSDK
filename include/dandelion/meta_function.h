@@ -22,8 +22,8 @@ extern "C" {
     becomes `d` and so on.
 */
 
-#define DANDELION_META_INPUT_METADATA_SET "input_metadata"
-#define DANDELION_META_OUTPUT_METADATA_SET "output_metadata"
+#define DANDELION_META_INPUT_METADATA_SET "__dandelion_metadata_in"
+#define DANDELION_META_OUTPUT_METADATA_SET "__dandelion_metadata_out"
 #define DANDELION_META_COMPOSITION_SET "composition"
 
 // Description of a data input of the metafunction application
