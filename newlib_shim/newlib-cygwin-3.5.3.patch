@@ -568,6 +568,21 @@ index 23a9863e..08f8df05 100644
  #endif
  
  _END_STD_C
+ diff --git a/newlib/libc/include/string.h b/newlib/libc/include/string.h
+index 32199c02..cfdffc39 100644
+--- a/newlib/libc/include/string.h
++++ b/newlib/libc/include/string.h
+@@ -93,9 +93,7 @@ char  *_strndup_r (struct _reent *, const char *, size_t);
+    _GNU_SOURCE, you get the GNU version; otherwise you get the POSIX
+    version.  POSIX requires that #undef strerror_r will still let you
+    invoke the underlying function, but that requires gcc support.  */
+-#if __GNU_VISIBLE
+-char   *strerror_r (int, char *, size_t);
+-#elif __POSIX_VISIBLE >= 200112
++#if __POSIX_VISIBLE >= 200112
+ # ifdef __GNUC__
+ int    strerror_r (int, char *, size_t)
+ #ifdef __ASMNAME
 diff --git a/newlib/libc/include/stdio.h b/newlib/libc/include/stdio.h
 index 77966578..248a39ff 100644
 --- a/newlib/libc/include/stdio.h

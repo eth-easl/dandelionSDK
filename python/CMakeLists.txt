@@ -67,12 +67,6 @@ ExternalProject_Add(cpython
         GIT_SHALLOW    1
         UPDATE_DISCONNECTED 1
 
-        # Apply your local patch after checkout/update
-        PATCH_COMMAND
-        ${CMAKE_COMMAND} -E echo "Patching CPython with cpython-${CPYTHON_TAG}.patch"
-        COMMAND
-        ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> patch -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/cpython-${CPYTHON_TAG}.patch"
-
         # Configure step with environment variables
         CONFIGURE_COMMAND
         ${CMAKE_COMMAND} -E env
