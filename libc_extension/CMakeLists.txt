@@ -71,6 +71,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/cpuset.h
     include/sys/dirent.h
     include/sys/ipc.h
+    include/sys/ioctl.h
     include/sys/mman.h
     include/sys/msg.h
     include/sys/sem.h
@@ -80,6 +81,7 @@ target_sources(${LIBC_EXTENSION}
     include/sys/socket.h
     include/sys/statvfs.h
     include/sys/termios.h
+    include/sys/utime.h
     include/sys/uio.h
     include/sys/un.h
     ${LIBC_EXTENSION_GENERATED_INCLUDE_DIR}/sys/utsname.h

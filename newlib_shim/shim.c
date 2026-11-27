@@ -25,12 +25,17 @@ extern int fcloseall(void);
 
 extern void dandelion_init(void);
 extern void dandelion_exit(int errcode);
+extern void __dandelion_system_set_thread_pointer(void* ptr);
+extern void *memcpy(void *dest, const void *src, size_t n);
+extern void *memset(void *dest, int c, size_t n);
 
 extern int fs_initialize(int *argc, char ***argv, char ***environ);
 extern int fs_terminate();
 extern int main(int argc, char *argv[]);
 extern void __libc_init_array();
 extern void __libc_fini_array();
+extern char __tdata_start[], __tdata_end[];
+extern char __tbss_start[], __tbss_end[];
 
 static inline int process_error(int error) {
   if (error < 0) {
@@ -42,6 +47,30 @@ static inline int process_error(int error) {
 }
 
 int __initialization() {
+  // Initialize TLS for only working thread
+  size_t tdata_size = (size_t)(__tdata_end - __tdata_start);
+  size_t tbss_size = (size_t)(__tbss_end - __tbss_start);
+  size_t tls_size = tdata_size + tbss_size;
+
+  #if defined(__x86_64__)
+    // thread local storage is .tdata then .tbss then self pointer which is where the end of the thread data is.
+    // round up for alignment
+    tls_size = (tls_size + 15) & ~(size_t)15;
+    // Add space for the self pointer
+    uint8_t* thread_storage = (uint8_t*) malloc(tls_size + 8);
+    memcpy(thread_storage, __tdata_start, tdata_size);
+    memset(thread_storage + tdata_size, 0, tbss_size);
+    uint8_t* thread_local_pointer = thread_storage + tls_size;
+    *(uint8_t**)thread_local_pointer = thread_local_pointer;
+  #elif defined(__aarch64__)
+    // TBC points to 16 byte header before .tdata
+    uint8_t* thread_local_pointer = (uint8_t*) malloc(tls_size + 16);
+    memcpy(thread_local_pointer + 16, __tdata_start, tdata_size);
+    memset(thread_local_pointer + 16 + tdata_size, 0, tbss_size);
+  #endif
+  __dandelion_system_set_thread_pointer((void*)thread_local_pointer);
+
+  // Initialize file system
   int errcode = 0;
   int argc;
   char **argv;
@@ -52,6 +81,7 @@ int __initialization() {
   __libc_init_array();
   errcode = main(argc, argv);
   __libc_fini_array();
+  // Close all files and terminate file system
   fcloseall();
   fs_terminate();
   return errcode;

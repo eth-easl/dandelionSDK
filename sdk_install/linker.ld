@@ -12,5 +12,17 @@ SECTIONS{
     }
     __eh_frame_hdr_start = SIZEOF(.eh_frame_hdr) > 0 ? ADDR(.eh_frame_hdr) : 0;
     __eh_frame_hdr_end = SIZEOF(.eh_frame_hdr) > 0 ? . : 0;
+
+    .tdata : ALIGN(8) {
+        __tdata_start = .;
+        *(.tdata .tdata.*)
+        __tdata_end = .;
+    } 
+
+    .tbss (NOLOAD) : ALIGN(8) {
+        __tbss_start = .;
+        *(.tbss .tbss.*)
+        __tbss_end = .;
+    } 
 }
 INSERT BEFORE .text;

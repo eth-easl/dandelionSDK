@@ -45,6 +45,7 @@ extern "C" {
 #define LOG_DEBUG 7
 
 #define LOG_MASK(pri) (1 << (pri))
+#define LOG_UPTO(pri) ((1 << (pri + 1)) - 1)
 
 void closelog(void);
 void openlog(const char *, int, int);

@@ -8,6 +8,8 @@
 
 # compiler flags
 -fPIE
+-ftls-model=local-exec
+-fno-emulated-tls
 #-march=haswell
 #-mtune=haswell
 

@@ -136,7 +136,10 @@ char *getcwd(char *__buf, size_t __size) { return "/"; }
 // int lockf(int __fd, int __cmd, off_t __len);
 // #endif
 // long pathconf (const char *__path, int __name);
-// int pause (void);
+int pause (void){
+  *__errno() = ENOSYS;
+  return -1;
+}
 // #if __POSIX_VISIBLE >= 199506
 // int pthread_atfork (void (*)(void), void (*)(void), void (*)(void));
 // #endif

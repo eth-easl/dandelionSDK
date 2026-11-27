@@ -68,6 +68,10 @@ if(NEWLIB)
     set(FILE_SYSTEM_LIB "dandelion_file_system")
     add_subdirectory(file_system)
 
+    # Create folder at configuration time to avoid issues with includes
+    file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include)
+    file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/sys)
+
     set(NEWLIB_C_FLAGS "--target=${ARCHITECTURE}-none-elf")
     string(APPEND NEWLIB_C_FLAGS " -nostdinc")
     string(APPEND NEWLIB_C_FLAGS " -nostdlib")
@@ -98,8 +102,6 @@ if(NEWLIB)
         GIT_SHALLOW ON
         # update disconnected to prevent pulling and rebuilding every time
         UPDATE_DISCONNECTED 1
-        PATCH_COMMAND cd <SOURCE_DIR>
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/newlib_shim/patch_script <SOURCE_DIR> <BINARY_DIR>
         CONFIGURE_COMMAND cd <BINARY_DIR> 
         # official recoomendation is to build out of source dir with newlib and the option --with-newlib, but that build fails
         COMMAND CC=${NEWLIB_COMPILER} <SOURCE_DIR>/newlib/configure --prefix=<INSTALL_DIR> ${NEWLIB_CONFIG_ARGS}
@@ -112,9 +114,15 @@ if(NEWLIB)
                 <INSTALL_DIR>/${ARCHITECTURE}-dandelion/lib
                 ${CMAKE_INSTALL_PREFIX}/lib 
     )
-    # Create folder at configuration time to avoid issues with includes
-    file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include)
-    file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/sys)
+    # Make sure patch script is rerun if any file in that folder changes
+    file(GLOB_RECURSE NEWLIB_DEPENDENCIES "${CMAKE_CURRENT_SOURCE_DIR}/newlib_shim/*")
+    ExternalProject_Add_Step(newlib patch_custom
+        COMMENT "Applying newlib patches"
+        COMMAND "${CMAKE_COMMAND}" -E chdir <SOURCE_DIR> ${CMAKE_CURRENT_SOURCE_DIR}/newlib_shim/patch_script <SOURCE_DIR> <BINARY_DIR>
+        DEPENDEES download update
+        DEPENDERS configure
+        DEPENDS ${NEWLIB_DEPENDENCIES}
+    )
 
     add_library(dlibc INTERFACE IMPORTED)
     target_compile_options(dlibc INTERFACE 
