@@ -118,7 +118,7 @@ if(NEWLIB)
     file(GLOB_RECURSE NEWLIB_DEPENDENCIES "${CMAKE_CURRENT_SOURCE_DIR}/newlib_shim/*")
     ExternalProject_Add_Step(newlib patch_custom
         COMMENT "Applying newlib patches"
-        COMMAND "${CMAKE_COMMAND}" -E chdir <SOURCE_DIR> ${CMAKE_CURRENT_SOURCE_DIR}/newlib_shim/patch_script <SOURCE_DIR> <BINARY_DIR>
+        COMMAND "${CMAKE_COMMAND}" -E chdir <SOURCE_DIR> ${CMAKE_CURRENT_SOURCE_DIR}/newlib_shim/patch_script <SOURCE_DIR> <STAMP_DIR>
         DEPENDEES download update
         DEPENDERS configure
         DEPENDS ${NEWLIB_DEPENDENCIES}

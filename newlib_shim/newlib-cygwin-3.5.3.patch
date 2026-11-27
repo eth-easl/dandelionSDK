@@ -655,6 +655,21 @@ index fd89f5ba..c8cfc9fc 100644
  #ifndef __CYGWIN__
  char *	__itoa (int, char *, int);
  char *	__utoa (unsigned, char *, int);
+diff --git a/newlib/libc/include/string.h b/newlib/libc/include/string.h
+index 32199c02..cfdffc39 100644
+--- a/newlib/libc/include/string.h
++++ b/newlib/libc/include/string.h
+@@ -93,9 +93,7 @@ char 	*_strndup_r (struct _reent *, const char *, size_t);
+    _GNU_SOURCE, you get the GNU version; otherwise you get the POSIX
+    version.  POSIX requires that #undef strerror_r will still let you
+    invoke the underlying function, but that requires gcc support.  */
+-#if __GNU_VISIBLE
+-char	*strerror_r (int, char *, size_t);
+-#elif __POSIX_VISIBLE >= 200112
++#if __POSIX_VISIBLE >= 200112
+ # ifdef __GNUC__
+ int	strerror_r (int, char *, size_t)
+ #ifdef __ASMNAME
 diff --git a/newlib/libc/include/sys/_default_fcntl.h b/newlib/libc/include/sys/_default_fcntl.h
 index ce721fa2..87868abc 100644
 --- a/newlib/libc/include/sys/_default_fcntl.h
@@ -719,6 +734,19 @@ index 75e9e1cb..81352bac 100644
  typedef struct {
    int   is_initialized;  /* is this structure initialized? */
    int   init_executed;   /* has the initialization routine been run? */
+diff --git a/newlib/libc/include/sys/_types.h b/newlib/libc/include/sys/_types.h
+index d1112d5d..c1f4f5bb 100644
+--- a/newlib/libc/include/sys/_types.h
++++ b/newlib/libc/include/sys/_types.h
+@@ -189,7 +189,7 @@ typedef	_CLOCK_T_	__clock_t;
+ typedef	_TIME_T_	__time_t;
+ 
+ #ifndef __machine_clockid_t_defined
+-#define	_CLOCKID_T_ 	unsigned long
++#define	_CLOCKID_T_ 	unsigned int
+ #endif
+ 
+ typedef	_CLOCKID_T_	__clockid_t;
 diff --git a/newlib/libc/include/sys/config.h b/newlib/libc/include/sys/config.h
 index 5dcc77a8..c327cc53 100644
 --- a/newlib/libc/include/sys/config.h
@@ -1338,7 +1366,7 @@ index 24d8407d..c2298733 100644
  include %D%/a29khif/Makefile.inc
  endif
 diff --git a/newlib/libm/ld/s_nextafterl.c b/newlib/libm/ld/s_nextafterl.c
-index 9c61a436..d535417b 100644
+index 9c61a436..2ea5e285 100644
 --- a/newlib/libm/ld/s_nextafterl.c
 +++ b/newlib/libm/ld/s_nextafterl.c
 @@ -77,4 +77,4 @@ nextafterl(long double x, long double y)

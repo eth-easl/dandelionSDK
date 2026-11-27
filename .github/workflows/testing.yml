@@ -182,60 +182,60 @@ jobs:
           - host: "ubuntu-24.04-arm"
             cpu: "aarch64"
 
-  runs-on: ${{ matrix.host }}
+    runs-on: ${{ matrix.host }}
     timeout-minutes: 120
     env:
       SDK_SRC: ${{ github.workspace }}/dandelionSDK
       SDK_INSTALL: ${{ github.workspace }}/dandelion_sdk
       BUILD_DIR: ${{ github.workspace }}/build
 
-  steps:
-    - uses: actions/checkout@v6
-      with:
-        path: dandelionSDK
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: dandelionSDK
 
-    - uses: actions/setup-python@v6
-      with:
-        python-version: "3.14"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
 
-    - name: Install test dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends \
-          build-essential ca-certificates make file \
-          wget gpg lsb-release software-properties-common \
-          gcc g++ automake curl
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential ca-certificates make file \
+            wget gpg lsb-release software-properties-common \
+            gcc g++ automake curl
 
-    - name: Install clang-20
-      run: |
-        wget https://apt.llvm.org/llvm.sh -O /tmp/llvm.sh
-        chmod +x /tmp/llvm.sh
-        sudo /tmp/llvm.sh 20
-        sudo ln -sf /usr/bin/ld.lld-20 /usr/bin/ld.lld
+      - name: Install clang-20
+        run: |
+          wget https://apt.llvm.org/llvm.sh -O /tmp/llvm.sh
+          chmod +x /tmp/llvm.sh
+          sudo /tmp/llvm.sh 20
+          sudo ln -sf /usr/bin/ld.lld-20 /usr/bin/ld.lld
 
-    - uses: actions/download-artifact@v4
-      with:
-        name: release-package-Release-debug-${{ matrix.cpu }}
-        path: downloaded-package
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-package-Release-debug-${{ matrix.cpu }}
+          path: downloaded-package
 
-    - name: Unpack release SDK for libc-test
-      run: |
-        rm -rf "$SDK_INSTALL"
-        mkdir -p "$SDK_INSTALL"
-        tar -xzf "downloaded-package/dandelion_sdk_Release_debug_${{ matrix.cpu }}.tar.gz" -C "$GITHUB_WORKSPACE"
+      - name: Unpack release SDK for libc-test
+        run: |
+          rm -rf "$SDK_INSTALL"
+          mkdir -p "$SDK_INSTALL"
+          tar -xzf "downloaded-package/dandelion_sdk_Release_debug_${{ matrix.cpu }}.tar.gz" -C "$GITHUB_WORKSPACE"
 
-    - name: Create compiler wrapper from release SDK
-      run: |
-        "$SDK_INSTALL/create-compiler.sh" -c clang-20
-        chmod u+x "$SDK_INSTALL/${{ matrix.cpu }}-unknown-dandelion-clang"
+      - name: Create compiler wrapper from release SDK
+        run: |
+          "$SDK_INSTALL/create-compiler.sh" -c clang-20
+          chmod u+x "$SDK_INSTALL/${{ matrix.cpu }}-unknown-dandelion-clang"
 
-    - name: Compile cpython
-      run: |
-        mkdir $BUILD_DIR
-        cd $BUILD_DIR
-        cmake $SDK_SRC/python -DDANDELION_CLANG="$SDK_INSTALL/${{ matrix.cpu }}-unknown-dandelion-clang"
-        make -j
-        
+      - name: Compile cpython
+        run: |
+          mkdir $BUILD_DIR
+          cd $BUILD_DIR
+          cmake $SDK_SRC/python -DDANDELION_CLANG="$SDK_INSTALL/${{ matrix.cpu }}-unknown-dandelion-clang"
+          make -j
+          
 
   publish-release:
     needs:
