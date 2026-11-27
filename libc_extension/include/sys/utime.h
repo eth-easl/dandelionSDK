@@ -5,14 +5,13 @@
 extern "C" {
 #endif
 
-struct utimbuf 
-{
+struct utimbuf {
   time_t actime;
-  time_t modtime; 
+  time_t modtime;
 };
 
 // TODO: These are stub implementations, implement properly:
-int utime(const char *path, const struct utimbuf *_Nullable times) {return 0;}
+int utime(const char *path, const struct utimbuf *_Nullable times) { return 0; }
 
 #ifdef __cplusplus
 };

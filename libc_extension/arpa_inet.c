@@ -4,21 +4,15 @@
 #if defined(__x86_64__) || defined(__aarch64__)
 // reverse 4 byte number
 uint32_t htonl(uint32_t host_num) {
-  return (host_num << 24) | (host_num >> 24) |
-    ((host_num & 0x00FF0000) >> 8) | ((host_num & 0x0000FF00) << 8);
+  return (host_num << 24) | (host_num >> 24) | ((host_num & 0x00FF0000) >> 8) |
+         ((host_num & 0x0000FF00) << 8);
 }
 
-uint16_t htons(uint16_t host_num){
-  return (host_num << 8) | (host_num >> 8);
-}
-uint32_t ntohl(uint32_t host_num){
-  return htonl(host_num);
-}
-uint16_t ntohs(uint16_t host_num){
-  return htons(host_num);
-}
+uint16_t htons(uint16_t host_num) { return (host_num << 8) | (host_num >> 8); }
+uint32_t ntohl(uint32_t host_num) { return htonl(host_num); }
+uint16_t ntohs(uint16_t host_num) { return htons(host_num); }
 #else
-  #error "Compiling for machine with unknown endianness"
+#error "Compiling for machine with unknown endianness"
 #endif
 
 in_addr_t inet_addr(const char *cp) {

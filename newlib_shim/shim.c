@@ -25,7 +25,7 @@ extern int fcloseall(void);
 
 extern void dandelion_init(void);
 extern void dandelion_exit(int errcode);
-extern void __dandelion_system_set_thread_pointer(void* ptr);
+extern void __dandelion_system_set_thread_pointer(void *ptr);
 extern void *memcpy(void *dest, const void *src, size_t n);
 extern void *memset(void *dest, int c, size_t n);
 
@@ -52,23 +52,23 @@ int __initialization() {
   size_t tbss_size = (size_t)(__tbss_end - __tbss_start);
   size_t tls_size = tdata_size + tbss_size;
 
-  #if defined(__x86_64__)
-    // thread local storage is .tdata then .tbss then self pointer which is where the end of the thread data is.
-    // round up for alignment
-    tls_size = (tls_size + 15) & ~(size_t)15;
-    // Add space for the self pointer
-    uint8_t* thread_storage = (uint8_t*) malloc(tls_size + 8);
-    memcpy(thread_storage, __tdata_start, tdata_size);
-    memset(thread_storage + tdata_size, 0, tbss_size);
-    uint8_t* thread_local_pointer = thread_storage + tls_size;
-    *(uint8_t**)thread_local_pointer = thread_local_pointer;
-  #elif defined(__aarch64__)
-    // TBC points to 16 byte header before .tdata
-    uint8_t* thread_local_pointer = (uint8_t*) malloc(tls_size + 16);
-    memcpy(thread_local_pointer + 16, __tdata_start, tdata_size);
-    memset(thread_local_pointer + 16 + tdata_size, 0, tbss_size);
-  #endif
-  __dandelion_system_set_thread_pointer((void*)thread_local_pointer);
+#if defined(__x86_64__)
+  // thread local storage is .tdata then .tbss then self pointer which is where
+  // the end of the thread data is. round up for alignment
+  tls_size = (tls_size + 15) & ~(size_t)15;
+  // Add space for the self pointer
+  uint8_t *thread_storage = (uint8_t *)malloc(tls_size + 8);
+  memcpy(thread_storage, __tdata_start, tdata_size);
+  memset(thread_storage + tdata_size, 0, tbss_size);
+  uint8_t *thread_local_pointer = thread_storage + tls_size;
+  *(uint8_t **)thread_local_pointer = thread_local_pointer;
+#elif defined(__aarch64__)
+  // TBC points to 16 byte header before .tdata
+  uint8_t *thread_local_pointer = (uint8_t *)malloc(tls_size + 16);
+  memcpy(thread_local_pointer + 16, __tdata_start, tdata_size);
+  memset(thread_local_pointer + 16 + tdata_size, 0, tbss_size);
+#endif
+  __dandelion_system_set_thread_pointer((void *)thread_local_pointer);
 
   // Initialize file system
   int errcode = 0;
