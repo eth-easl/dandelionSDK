@@ -168,7 +168,7 @@ ExternalProject_Add(cpython
         MODULE_BUILDTYPE=static
         CONFIG_SITE=${CMAKE_CURRENT_SOURCE_DIR}/config.site
         CC=${DANDELION_CLANG}
-        CFLAGS=-g3\ -O2\ -I${CMAKE_BINARY_DIR}/python_deps/include
+        CFLAGS=-g3\ -O2\ -D__GLIBC__\ -I${CMAKE_BINARY_DIR}/python_deps/include
         HOST_CFLAGS=-Wno-unused-value\ -Wno-empty-body\ -Qunused-arguments
         LDFLAGS=-fuse-ld=lld\ -L${CMAKE_BINARY_DIR}/python_deps/lib
         LDSHARED=${DANDELION_CLANG}

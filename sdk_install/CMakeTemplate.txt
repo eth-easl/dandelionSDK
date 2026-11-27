@@ -42,9 +42,7 @@ target_include_directories(dlibc INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include/sys"
 )
 target_compile_options(dlibc INTERFACE
-    -D_GNU_SOURCE=1
-    -D__GNU__
-    -D__rtems__
+    -D__DANDELION__
 )
 target_link_libraries(dlibc INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/lib/libc.a"
@@ -63,8 +61,7 @@ target_include_directories(dlibcxx INTERFACE
 )
 target_compile_options(dlibcxx INTERFACE
     -D_GNU_SOURCE=1
-    -D__GNU__
-    -D__rtems__
+    -D__DANDELION__
 )
 target_link_libraries(dlibcxx INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/lib/libc++.a"
