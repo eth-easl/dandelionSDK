@@ -627,21 +627,6 @@ index fd89f5ba..c8cfc9fc 100644
  #ifndef __CYGWIN__
  char *	__itoa (int, char *, int);
  char *	__utoa (unsigned, char *, int);
-diff --git a/newlib/libc/include/string.h b/newlib/libc/include/string.h
-index 32199c02..cfdffc39 100644
---- a/newlib/libc/include/string.h
-+++ b/newlib/libc/include/string.h
-@@ -93,9 +93,7 @@ char 	*_strndup_r (struct _reent *, const char *, size_t);
-    _GNU_SOURCE, you get the GNU version; otherwise you get the POSIX
-    version.  POSIX requires that #undef strerror_r will still let you
-    invoke the underlying function, but that requires gcc support.  */
--#if __GNU_VISIBLE
--char	*strerror_r (int, char *, size_t);
--#elif __POSIX_VISIBLE >= 200112
-+#if __POSIX_VISIBLE >= 200112
- # ifdef __GNUC__
- int	strerror_r (int, char *, size_t)
- #ifdef __ASMNAME
 diff --git a/newlib/libc/include/sys/_default_fcntl.h b/newlib/libc/include/sys/_default_fcntl.h
 index ce721fa2..87868abc 100644
 --- a/newlib/libc/include/sys/_default_fcntl.h
