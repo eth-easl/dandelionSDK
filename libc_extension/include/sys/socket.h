@@ -284,7 +284,7 @@ enum {
        ? (struct cmsghdr *)(mhdr)->msg_control                                 \
        : (struct cmsghdr *)0)
 #define CMSG_ALIGN(len)                                                        \
-  (((len) + sizeof(size_t) - 1) & (size_t) ~(sizeof(size_t) - 1))
+  (((len) + sizeof(size_t) - 1) & ~(size_t)(sizeof(size_t) - 1))
 #define CMSG_SPACE(len) (CMSG_ALIGN(len) + CMSG_ALIGN(sizeof(struct cmsghdr)))
 #define CMSG_LEN(len) (CMSG_ALIGN(sizeof(struct cmsghdr)) + (len))
 
