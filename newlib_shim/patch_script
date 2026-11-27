@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-# expect $1 to be the source dir and $2 the bin dir
+# expect $1 to be the source dir and $2 the stamp dir
 # check if patch already has been applied
 THIS_DIR=$(dirname $0)
 if ! test -f $2/patch_applied
