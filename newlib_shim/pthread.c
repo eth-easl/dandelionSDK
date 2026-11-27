@@ -338,3 +338,60 @@ int pthread_atfork(void (*prepare)(void), void (*parent)(void),
                    void (*child)(void)) {
   return ENOMEM;
 }
+
+int pthread_attr_init(pthread_attr_t *__attr) { return ENOSYS; }
+int pthread_attr_destroy(pthread_attr_t *__attr) { return EINVAL; }
+int pthread_attr_setstack(pthread_attr_t *attr, void *__stackaddr,
+                          size_t __stacksize);
+int pthread_attr_getstack(const pthread_attr_t *attr, void **__stackaddr,
+                          size_t *__stacksize) {
+  return ENOSYS;
+}
+int pthread_attr_getstacksize(const pthread_attr_t *__attr,
+                              size_t *__stacksize) {
+  return EINVAL;
+}
+int pthread_attr_setstacksize(pthread_attr_t *__attr, size_t __stacksize) {
+  return EINVAL;
+}
+int pthread_attr_getstackaddr(const pthread_attr_t *__attr,
+                              void **__stackaddr) {
+  return EINVAL;
+}
+int pthread_attr_setstackaddr(pthread_attr_t *__attr, void *__stackaddr) {
+  return EINVAL;
+}
+int pthread_attr_getdetachstate(const pthread_attr_t *__attr,
+                                int *__detachstate) {
+  return EINVAL;
+}
+int pthread_attr_setdetachstate(pthread_attr_t *__attr, int __detachstate) {
+  return EINVAL;
+}
+int pthread_attr_getguardsize(const pthread_attr_t *__attr,
+                              size_t *__guardsize) {
+  return EINVAL;
+}
+int pthread_attr_setguardsize(pthread_attr_t *__attr, size_t __guardsize) {
+  return EINVAL;
+}
+int pthread_attr_setscope(pthread_attr_t *__attr, int __contentionscope) {
+  return EINVAL;
+}
+int pthread_attr_getscope(const pthread_attr_t *__attr,
+                          int *__contentionscope) {
+  return EINVAL;
+}
+int pthread_attr_setinheritsched(pthread_attr_t *__attr, int __inheritsched) {
+  return EINVAL;
+}
+int pthread_attr_getinheritsched(const pthread_attr_t *__attr,
+                                 int *__inheritsched) {
+  return EINVAL;
+}
+int pthread_attr_setschedpolicy(pthread_attr_t *__attr, int __policy) {
+  return EINVAL;
+}
+int pthread_attr_getschedpolicy(const pthread_attr_t *__attr, int *__policy) {
+  return EINVAL;
+}

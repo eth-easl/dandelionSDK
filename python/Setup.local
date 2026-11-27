@@ -1,0 +1,9 @@
+# Edit this file for local setup changes
+*disabled*
+mmap
+resource
+select
+_multiprocessing
+_posixsubprocess
+
+# needs a new line after last module
